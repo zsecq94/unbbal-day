@@ -106,26 +106,28 @@
   pointer-events: none;
 }
 
-/* Page bodies. Forward: the hub recedes, the game rises. Back: reversed. */
+/* Page bodies. One thing at a time: the old page leaves fast, the frame
+   travels, and the new page's content arrives once the frame has settled.
+   Forward: the hub recedes, the game rises. Back: reversed. */
 ::view-transition-old(.nav-forward) {
   animation:
-    160ms ease-in both vt-fade reverse,
-    360ms ease-in both vt-approach reverse;
+    120ms ease-in both vt-fade reverse,
+    300ms ease-in both vt-approach reverse;
 }
 ::view-transition-new(.nav-forward) {
   animation:
-    220ms ease-out 120ms both vt-fade,
-    420ms var(--ease-out-soft) both vt-rise;
+    220ms ease-out 220ms both vt-fade,
+    360ms var(--ease-out-soft) 160ms both vt-rise;
 }
 ::view-transition-old(.nav-back) {
   animation:
-    160ms ease-in both vt-fade reverse,
-    360ms ease-in both vt-rise reverse;
+    120ms ease-in both vt-fade reverse,
+    300ms ease-in both vt-rise reverse;
 }
 ::view-transition-new(.nav-back) {
   animation:
-    220ms ease-out 120ms both vt-fade,
-    420ms var(--ease-out-soft) both vt-approach;
+    220ms ease-out 140ms both vt-fade,
+    380ms var(--ease-out-soft) 60ms both vt-approach;
 }
 
 /* Shared elements. The pressed tile's frame grows into the stage frame
@@ -133,7 +135,7 @@
    the symbol and the brand mark travel on top of everything. */
 ::view-transition-group(.grow),
 ::view-transition-group(.morph) {
-  animation-duration: 420ms;
+  animation-duration: 380ms;
   animation-timing-function: var(--ease-out-soft);
 }
 ::view-transition-group(.grow) {
@@ -151,7 +153,7 @@
 ::view-transition-old(.morph),
 ::view-transition-new(.morph) {
   block-size: 100%;
-  animation-duration: 420ms;
+  animation-duration: 380ms;
   animation-timing-function: var(--ease-out-soft);
 }
 

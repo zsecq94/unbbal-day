@@ -7,3 +7,6 @@ import { notFound } from 'next/navigation'
 export default function CatchAll() {
   notFound()
 }
+
+/* A 404 never needs to be an instant navigation; skip the dev validation. */
+export const instant = false

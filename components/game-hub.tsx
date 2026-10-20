@@ -24,10 +24,7 @@ import {
 
 export type HubCopy = {
   idle: string
-  /** Contains a `{name}` placeholder. */
-  launching: string
   tileHint: string
-  tileLaunching: string
   keys: { move: string; start: string }
   kinds: Record<GameKind, string>
 }
@@ -94,8 +91,9 @@ function nearestInDirection(
 
 /**
  * The hub is a grid of tiles, each a link into its game. Arrow keys roam the
- * grid (roving tabindex), Enter/Space follow the link. The tile a visitor
- * pressed lights up until the game page takes over.
+ * grid (roving tabindex), Enter/Space follow the link. Pressing a tile is
+ * answered by motion alone: it dips like a button, then its frame grows into
+ * the game stage (see `GameStage`).
  */
 export function GameHub({
   hero,
@@ -108,39 +106,31 @@ export function GameHub({
   locale: Locale
   copy: HubCopy
 }) {
-  /** Tile whose navigation is in flight. */
-  const [launching, setLaunching] = useState<string | null>(null)
   /** Tile that currently has keyboard focus. */
   const [activeKey, setActiveKey] = useState<string | null>(null)
   /** Tile that owns the single tab stop. */
   const [focusKey, setFocusKey] = useState<string>(games[0].key)
   const tileRefs = useRef<(HTMLAnchorElement | null)[]>([])
 
-  const launchingGame = games.find((g) => g.key === launching) ?? null
   const activeGame = games.find((g) => g.key === activeKey) ?? null
 
   // Next keeps the hub mounted (hidden) while a game is open. Clear the
-  // transient press/focus state on the way out, and on the way back restore
-  // the scroll position saved at press time (see `launch`) so the stage
+  // focus highlight on the way out, and on the way back restore the scroll
+  // position and focus saved at press time (see `launch`) so the stage
   // shrinks into a tile that is actually on screen.
   const saved = useRef<{ scrollY: number; index: number } | null>(null)
   useLayoutEffect(() => {
     if (saved.current) {
       window.scrollTo(0, saved.current.scrollY)
-      // Keyboard visitors land back on the tile they launched.
       tileRefs.current[saved.current.index]?.focus({ preventScroll: true })
     }
-    return () => {
-      setLaunching(null)
-      setActiveKey(null)
-    }
+    return () => setActiveKey(null)
   }, [])
 
-  const launch = (key: string, index: number) => {
+  const launch = (index: number) => {
     // Read the scroll position before the game page enters the DOM: once it
     // does, scroll anchoring shifts `scrollY` by the new page's height.
     saved.current = { scrollY: window.scrollY, index }
-    setLaunching(key)
   }
 
   const moveFocus = useCallback(
@@ -183,10 +173,9 @@ export function GameHub({
       href={gamePath(locale, game.key)}
       index={index}
       size={TILE_SIZE[game.key] ?? 'sm'}
-      launching={launching === game.key}
       tabIndex={focusKey === game.key ? 0 : -1}
       copy={copy}
-      onNavigate={() => launch(game.key, index)}
+      onNavigate={() => launch(index)}
       onFocus={() => {
         setFocusKey(game.key)
         setActiveKey(game.key)
@@ -195,10 +184,6 @@ export function GameHub({
       onKeyDown={(e) => onTileKeyDown(index, e)}
     />
   )
-
-  const status = launchingGame
-    ? copy.launching.replace('{name}', launchingGame.name)
-    : (activeGame?.name ?? copy.idle)
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[1920px] flex-col gap-3 px-4 py-4 sm:px-6 sm:py-6 xl:px-10 xl:py-10 fit:h-dvh fit:py-[clamp(1.25rem,3.7vh,2.5rem)]">
@@ -216,18 +201,11 @@ export function GameHub({
           <span
             aria-hidden="true"
             className={`size-2.5 shrink-0 border transition-colors duration-200 motion-reduce:transition-none ${
-              launchingGame || activeGame
-                ? 'border-brand bg-brand'
-                : 'border-ink-3'
+              activeGame ? 'border-brand bg-brand' : 'border-ink-3'
             }`}
           />
-          <span
-            role="status"
-            aria-live={launchingGame ? 'polite' : 'off'}
-            aria-atomic="true"
-            className={launchingGame || activeGame ? 'text-ink' : 'text-ink-2'}
-          >
-            {status}
+          <span className={activeGame ? 'text-ink' : 'text-ink-2'}>
+            {activeGame?.name ?? copy.idle}
           </span>
         </p>
         <KeyHints labels={copy.keys} />
@@ -259,27 +237,12 @@ function KeyHints({ labels }: { labels: HubCopy['keys'] }) {
   )
 }
 
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" className="size-4">
-      <rect x="0.75" y="0.75" width="14.5" height="14.5" fill="currentColor" />
-      <path
-        d="M4 8.2 L6.8 11 L12 5.2"
-        fill="none"
-        stroke="var(--color-brand)"
-        strokeWidth="2"
-      />
-    </svg>
-  )
-}
-
 type GameTileProps = {
   ref: (el: HTMLAnchorElement | null) => void
   game: Game
   href: string
   index: number
   size: TileSize
-  launching: boolean
   tabIndex: number
   copy: HubCopy
   onNavigate: () => void
@@ -289,9 +252,11 @@ type GameTileProps = {
 }
 
 /**
- * A tile is a link. It's wrapped in a named view transition so, on the way
- * into a game, it morphs into the stage frame while its symbol flies to the
- * stage header (see `GameFrame`).
+ * A tile is a link. Its frame is a named shared element that grows into the
+ * stage frame, and its symbol flies to the stage header (see `GameStage`).
+ * `prefetch` is explicit so the game's own content (which depends on the URL)
+ * is ready before the click; otherwise the stage would suspend and no morph
+ * pair would form.
  */
 function GameTile({
   ref,
@@ -299,7 +264,6 @@ function GameTile({
   href,
   index,
   size,
-  launching,
   tabIndex,
   copy,
   onNavigate,
@@ -322,10 +286,10 @@ function GameTile({
     <Link
       ref={ref}
       href={href}
+      prefetch={true}
       transitionTypes={[NAV_FORWARD]}
       aria-labelledby={nameId}
       aria-describedby={descId}
-      aria-busy={launching || undefined}
       tabIndex={tabIndex}
       onNavigate={onNavigate}
       onFocus={onFocus}
@@ -334,19 +298,18 @@ function GameTile({
       onPointerMove={onPointerMove}
       style={{ '--motion': game.motion } as CSSProperties}
       className={[
-        'group relative flex cursor-pointer flex-col overflow-hidden rounded-tile text-left',
+        'group relative flex cursor-pointer flex-col overflow-hidden rounded-tile text-left text-ink',
         'px-6 pt-6 pb-6 sm:px-7 sm:pt-[26px] sm:pb-7',
+        'transition-transform duration-150 ease-out-soft active:scale-[0.985] motion-reduce:transition-none motion-reduce:active:scale-100',
         'outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink focus-visible:outline-solid',
         big
           ? 'min-h-[18rem] md:min-h-[22rem] fit:min-h-0'
           : 'min-h-[14rem] md:min-h-[16rem] fit:min-h-[clamp(14rem,30.5vh,20.75rem)]',
-        launching ? 'text-white' : 'text-ink',
         PLACEMENT[game.key],
       ].join(' ')}
     >
       {/* The frame alone is the shared element: a flat rect scales cleanly,
-          while the text above it fades with the page. The pressed colour
-          skips its transition so the snapshot catches it. */}
+          while the text above it fades with the page. */}
       <ViewTransition
         name={tileTransition(game.key)}
         share="grow"
@@ -354,96 +317,70 @@ function GameTile({
       >
         <span
           aria-hidden="true"
-          className={`absolute inset-0 rounded-tile border ${
-            launching
-              ? 'border-brand bg-brand'
-              : 'border-line bg-tile transition-[background-color,border-color] duration-200 motion-reduce:transition-none group-lit:border-brand-hi/70 group-lit:bg-tile-lit'
-          }`}
+          className="absolute inset-0 rounded-tile border border-line bg-tile transition-[background-color,border-color] duration-200 motion-reduce:transition-none group-lit:border-brand-hi/70 group-lit:bg-tile-lit"
         />
       </ViewTransition>
-      <>
-        {launching ? (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 column-lines [--column-line:rgb(255_255_255/0.12)]"
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 spotlight motion-reduce:transition-none group-lit:opacity-100"
+      />
+
+      <span
+        aria-hidden="true"
+        className="relative flex items-center justify-between font-mono text-xs font-medium tracking-[0.12em] text-ink-3"
+      >
+        <span>{pad2(index + 1)}</span>
+        <span className="inline-flex items-center gap-2 font-sans text-[13px] font-bold tracking-normal text-ink-2 group-lit:hidden">
+          {kind}
+        </span>
+        <span className="hidden items-center gap-2 text-brand-hi group-lit:inline-flex">
+          {copy.tileHint} <span aria-hidden="true">↵</span>
+        </span>
+      </span>
+
+      <span
+        aria-hidden="true"
+        className={`relative flex min-h-0 flex-1 items-center justify-center text-ink-3 transition-colors duration-200 motion-reduce:transition-none group-lit:text-brand-hi ${
+          big ? 'py-5' : 'py-4 fit:py-[clamp(0.5rem,1.5vh,1rem)]'
+        }`}
+      >
+        <ViewTransition
+          name={symbolTransition(game.key)}
+          share="morph"
+          default="none"
+        >
+          <GameSymbol
+            gameKey={game.key}
+            className={[
+              SYMBOL_SIZE[size],
+              big ? 'stroke-[1.8]' : 'stroke-[1.6]',
+              'transition-transform duration-[450ms] ease-out-soft motion-reduce:transition-none',
+              'group-lit:[transform:var(--motion)] motion-reduce:group-lit:transform-none',
+            ].join(' ')}
           />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 spotlight motion-reduce:transition-none group-lit:opacity-100"
-          />
-        )}
+        </ViewTransition>
+      </span>
 
-        <span
-          aria-hidden="true"
-          className={`relative flex items-center justify-between font-mono text-xs font-medium tracking-[0.12em] ${
-            launching ? 'text-white/80' : 'text-ink-3'
-          }`}
-        >
-          <span>{pad2(index + 1)}</span>
-          {launching ? (
-            <span className="inline-flex items-center gap-2 text-white">
-              <CheckIcon />
-              {copy.tileLaunching}
-            </span>
-          ) : (
-            <>
-              <span className="inline-flex items-center gap-2 font-sans text-[13px] font-bold tracking-normal text-ink-2 group-lit:hidden">
-                {kind}
-              </span>
-              <span className="hidden items-center gap-2 text-brand-hi group-lit:inline-flex">
-                {copy.tileHint} <span aria-hidden="true">↵</span>
-              </span>
-            </>
-          )}
-        </span>
-
-        <span
-          aria-hidden="true"
-          className={`relative flex min-h-0 flex-1 items-center justify-center transition-colors ${big ? 'py-5' : 'py-4 fit:py-[clamp(0.5rem,1.5vh,1rem)]'} duration-200 motion-reduce:transition-none ${
-            launching ? 'text-white' : 'text-ink-3 group-lit:text-brand-hi'
-          }`}
-        >
-          <ViewTransition
-            name={symbolTransition(game.key)}
-            share="morph"
-            default="none"
-          >
-            <GameSymbol
-              gameKey={game.key}
-              className={[
-                SYMBOL_SIZE[size],
-                big ? 'stroke-[1.8]' : 'stroke-[1.6]',
-                'transition-transform duration-[450ms] ease-out-soft motion-reduce:transition-none',
-                launching
-                  ? ''
-                  : 'group-lit:[transform:var(--motion)] motion-reduce:group-lit:transform-none',
-              ].join(' ')}
-            />
-          </ViewTransition>
-        </span>
-
-        <span
-          id={nameId}
-          className={`relative block leading-[1.12] font-[750] break-keep ${NAME_SIZE[size]} ${
-            big
-              ? ''
-              : 'max-md:[&:lang(en)]:flex max-md:[&:lang(en)]:min-h-[2.24em] max-md:[&:lang(en)]:items-end xl:max-2xl:[&:lang(en)]:flex xl:max-2xl:[&:lang(en)]:min-h-[2.24em] xl:max-2xl:[&:lang(en)]:items-end'
-          }`}
-        >
-          {game.name}
-        </span>
-        <span
-          id={descId}
-          className={`relative mt-2.5 block tracking-[-0.015em] break-keep ${
-            big
-              ? 'text-[clamp(1rem,1vw,1.125rem)] sm:mt-3.5'
-              : 'min-h-[3.1em] text-[15.5px] leading-[1.55] xl:max-2xl:min-h-[4.65em] max-md:[&:lang(en)]:min-h-[6.2em]'
-          } ${launching ? 'text-white/85' : 'text-ink-2'}`}
-        >
-          {game.description}
-        </span>
-      </>
+      <span
+        id={nameId}
+        className={`relative block leading-[1.12] font-[750] break-keep ${NAME_SIZE[size]} ${
+          big
+            ? ''
+            : 'max-md:[&:lang(en)]:flex max-md:[&:lang(en)]:min-h-[2.24em] max-md:[&:lang(en)]:items-end xl:max-2xl:[&:lang(en)]:flex xl:max-2xl:[&:lang(en)]:min-h-[2.24em] xl:max-2xl:[&:lang(en)]:items-end'
+        }`}
+      >
+        {game.name}
+      </span>
+      <span
+        id={descId}
+        className={`relative mt-2.5 block tracking-[-0.015em] break-keep text-ink-2 ${
+          big
+            ? 'text-[clamp(1rem,1vw,1.125rem)] sm:mt-3.5'
+            : 'min-h-[3.1em] text-[15.5px] leading-[1.55] xl:max-2xl:min-h-[4.65em] max-md:[&:lang(en)]:min-h-[6.2em]'
+        }`}
+      >
+        {game.description}
+      </span>
     </Link>
   )
 }

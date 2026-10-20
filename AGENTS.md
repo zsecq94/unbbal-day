@@ -29,13 +29,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - 허브는 `/[lang]`, 게임은 `/[lang]/games/[game]`이다. 경로 문자열은 `lib/routes.ts`의 `hubPath()`, `gamePath()`로만 만든다.
 - `app/[lang]/games/[game]/page.tsx`는 `GAMES`로 `generateStaticParams`해 모든 게임·로케일을 정적 생성한다. 로케일 아래 어떤 라우트에도 안 걸리는 경로는 `app/[lang]/[...rest]/page.tsx`가 `notFound()`로 보내고 `app/[lang]/not-found.tsx`가 그린다. 모르는 게임 키는 `[game]` 라우트가 먼저 잡으므로 `proxy.ts`가 `/[lang]/404`로 리라이트한다(정적 셸이 먼저 스트리밍되면 200이 나가서 페이지 안의 `notFound()`만으로는 부족하다).
-- 게임 화면은 `components/games/registry.ts`의 `GAME_SCREENS`에 키로 등록한다. 등록이 없으면 `components/game-coming-soon.tsx`가 나온다. 스테이지 프레임은 `components/game-frame.tsx`, 허브 밖 페이지 공통 상단바(홈 링크·로고·언어)는 `components/top-bar.tsx`다.
+- 게임 화면은 `components/games/registry.ts`의 `GAME_SCREENS`에 키로 등록한다. 등록이 없으면 `components/game-coming-soon.tsx`가 나온다. 스테이지는 `components/game-stage.tsx`, 허브 밖 페이지의 본문 틀과 상단바(홈 링크·로고·언어)는 `components/page-frame.tsx`, `components/top-bar.tsx`다.
 - 게임 페이지의 `title`은 게임 이름만 넣는다. 루트 레이아웃의 `title.template`이 브랜드명을 붙인다.
+- `partialPrefetching`이 켜져 있다. `params`는 페이지 최상위에서 `await`하지 않고 `<Suspense>` 안의 자식 컴포넌트에서 읽는다(`app/[lang]/games/[game]/page.tsx`의 `Stage`). URL에 안 묶이는 상단바는 바깥에 둔다. 게임으로 가는 링크는 `prefetch={true}`로 URL별 내용까지 미리 받아야 전환 모프가 성립한다.
 
 ## 페이지 전환
 
 - React `ViewTransition`을 쓴다. 어휘(전환 타입, 공유 요소 이름)는 `lib/transitions.ts`에, 모션 CSS는 `app/globals.css`의 "View transitions"에 둔다.
 - 페이지의 루트 요소는 `components/page-transition.tsx`의 `PageTransition`으로 감싼다. 링크는 `transitionTypes`로 방향을 붙인다(허브→게임 `NAV_FORWARD`, 게임→허브 `NAV_BACK`). 타입 없는 이동(브라우저 뒤로가기 등)은 즉시 교체되고 공유 요소만 모프한다.
+- 눌림 피드백은 색이 아니라 모션으로만 준다. 타일은 `active:`에서 살짝 눌리고, 바로 프레임이 스테이지로 자라난다. 순서는 "이전 페이지 퇴장(120ms) → 프레임 이동(380ms) → 새 페이지 내용 등장(220ms부터)"이며 한 번에 한 가지만 움직인다.
 - 공유 요소: 타일 프레임 ↔ 스테이지 프레임(`tileTransition`, `share="grow"`), 타일 심볼 ↔ 스테이지 헤더 심볼(`symbolTransition`, `share="morph"`), 로고(`BRAND_TRANSITION`, `share="morph"`). 프레임은 내용 없는 `absolute inset-0` span만 이름 붙인다. 스냅샷은 박스 밖 내용을 잘라내지 않아서 내용이 든 요소를 이름 붙이면 크기가 바뀔 때 새어 나온다. 이름 있는 `ViewTransition`에는 항상 `default="none"`을 함께 둔다.
 - 자동 페어가 되려면 목적지 페이지가 프리페치돼 같은 커밋에 렌더돼야 한다. 게임 페이지에 요청 시점 값을 넣을 때는 Suspense 경계 안에 두어 정적 셸을 유지한다.
 - `cacheComponents`에서는 이전 페이지가 언마운트되지 않고 `Activity`로 숨겨진다. 허브는 일시적 상태 초기화를 `useLayoutEffect` 클린업에서 하고, 누른 시점의 스크롤 위치·타일을 저장했다가 다시 보일 때 복원한다(`components/game-hub.tsx`). 허브로 돌아가는 링크는 `scroll={false}`를 붙여 Next의 스크롤 처리가 복원을 덮지 않게 한다.

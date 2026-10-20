@@ -69,9 +69,7 @@
   },
   "hub": {
     "idle": "마음이 가는 게임을 골라보세요.",
-    "launching": "{name} 시작하는 중…",
     "tileHint": "시작",
-    "tileLaunching": "시작 중",
     "keys": {
       "move": "이동",
       "start": "시작"

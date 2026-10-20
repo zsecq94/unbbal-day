@@ -1,9 +1,12 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import { GameComingSoon } from '@/components/game-coming-soon'
-import { GameFrame } from '@/components/game-frame'
+import { GameStage, GameStageFallback } from '@/components/game-stage'
 import { GAME_SCREENS } from '@/components/games/registry'
+import { PageFrame } from '@/components/page-frame'
 import { PageTransition } from '@/components/page-transition'
+import { TopBar } from '@/components/top-bar'
 import { GAMES, isGameKey } from '@/lib/games'
 import { LOCALES } from '@/lib/i18n'
 import { gamePath } from '@/lib/routes'
@@ -31,7 +34,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function GamePage({ params }: Props) {
+/**
+ * The top bar is URL-independent and lives in the shared app shell. Which
+ * game to show depends on the URL, so that part is read behind Suspense; hub
+ * tiles prefetch it per link so the stage is ready before the click.
+ */
+export default function GamePage({ params }: Props) {
+  return (
+    <PageTransition>
+      <PageFrame>
+        <TopBar />
+        <Suspense fallback={<GameStageFallback />}>
+          <Stage params={params} />
+        </Suspense>
+      </PageFrame>
+    </PageTransition>
+  )
+}
+
+async function Stage({ params }: Pick<Props, 'params'>) {
   const { game: key } = await params
   if (!isGameKey(key)) notFound()
 
@@ -41,25 +62,12 @@ export default async function GamePage({ params }: Props) {
   const Screen = GAME_SCREENS[key]
 
   return (
-    <PageTransition>
-      <GameFrame
-        locale={locale}
-        game={game}
-        index={index}
-        copy={{
-          brand: dict.brand.name,
-          kind: dict.kinds[game.kind],
-          back: dict.nav.back,
-          backLabel: dict.nav.backLabel,
-          localeSwitch: dict.localeSwitch,
-        }}
-      >
-        {Screen ? (
-          <Screen game={game} locale={locale} />
-        ) : (
-          <GameComingSoon game={game} copy={dict.game.comingSoon} />
-        )}
-      </GameFrame>
-    </PageTransition>
+    <GameStage game={game} index={index} kind={dict.kinds[game.kind]}>
+      {Screen ? (
+        <Screen game={game} locale={locale} />
+      ) : (
+        <GameComingSoon game={game} copy={dict.game.comingSoon} />
+      )}
+    </GameStage>
   )
 }

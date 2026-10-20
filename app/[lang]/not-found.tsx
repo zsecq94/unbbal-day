@@ -1,22 +1,16 @@
+import { PageFrame } from '@/components/page-frame'
 import { PageTransition } from '@/components/page-transition'
 import { TopBar } from '@/components/top-bar'
-import { getDictionary, getLocale } from './dictionaries'
+import { getDictionary } from './dictionaries'
 
 /** Rendered for `notFound()` anywhere under a locale, including the catch-all. */
 export default async function NotFound() {
-  const [dict, locale] = await Promise.all([getDictionary(), getLocale()])
+  const dict = await getDictionary()
 
   return (
     <PageTransition>
-      <main className="mx-auto flex min-h-dvh w-full max-w-[1920px] flex-col gap-3 px-4 py-4 sm:px-6 sm:py-6 xl:px-10 xl:py-10">
-        <TopBar
-          locale={locale}
-          copy={{
-            brand: dict.brand.name,
-            ...dict.nav,
-            localeSwitch: dict.localeSwitch,
-          }}
-        />
+      <PageFrame>
+        <TopBar />
         <section
           aria-labelledby="not-found-title"
           className="flex flex-1 flex-col overflow-hidden rounded-tile border border-line bg-tile"
@@ -38,7 +32,7 @@ export default async function NotFound() {
             </div>
           </div>
         </section>
-      </main>
+      </PageFrame>
     </PageTransition>
   )
 }
