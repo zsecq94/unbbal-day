@@ -1,17 +1,21 @@
 import { GameHub } from '@/components/game-hub'
 import { Hero } from '@/components/hero'
+import { PageTransition } from '@/components/page-transition'
 import { GAMES } from '@/lib/games'
-import { getDictionary } from './dictionaries'
+import { getDictionary, getLocale } from './dictionaries'
 
 export default async function Home() {
-  const dict = await getDictionary()
+  const [dict, locale] = await Promise.all([getDictionary(), getLocale()])
   const games = GAMES.map((game) => ({ ...game, ...dict.games[game.key] }))
 
   return (
-    <GameHub
-      hero={<Hero />}
-      games={games}
-      copy={{ ...dict.hub, kinds: dict.kinds }}
-    />
+    <PageTransition>
+      <GameHub
+        hero={<Hero />}
+        games={games}
+        locale={locale}
+        copy={{ ...dict.hub, kinds: dict.kinds }}
+      />
+    </PageTransition>
   )
 }

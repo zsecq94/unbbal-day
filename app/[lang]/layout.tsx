@@ -15,9 +15,13 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()])
+  const [{ meta, brand }, locale] = await Promise.all([
+    getDictionary(),
+    getLocale(),
+  ])
   return {
-    title: meta.title,
+    // Child pages (games) set a plain title and get the brand suffixed.
+    title: { default: meta.title, template: `%s · ${brand.name}` },
     description: meta.description,
     alternates: {
       canonical: `/${locale}`,

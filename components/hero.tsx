@@ -1,8 +1,10 @@
+import { ViewTransition } from 'react'
 import { getDictionary, getLocale } from '@/app/[lang]/dictionaries'
 import { LocaleSwitch } from '@/components/locale-switch'
 import { Logo } from '@/components/logo'
 import { TodayDate } from '@/components/today-date'
 import { GAMES, SOLO_COUNT, TOGETHER_COUNT, pad2 } from '@/lib/games'
+import { BRAND_TRANSITION } from '@/lib/transitions'
 
 export async function Hero() {
   const [dict, locale] = await Promise.all([getDictionary(), getLocale()])
@@ -14,7 +16,9 @@ export async function Hero() {
       className="relative flex flex-col overflow-hidden rounded-tile border border-line bg-tile column-lines px-6 pt-6 pb-7 sm:px-10 sm:pt-[34px] sm:pb-9 md:col-span-12 xl:col-span-5 fit:pt-[clamp(1.5rem,3.2vh,2.125rem)] fit:pb-[clamp(1.5rem,3.3vh,2.25rem)]"
     >
       <header className="flex items-center gap-3 fit:mb-6">
-        <Logo name={dict.brand.name} />
+        <ViewTransition name={BRAND_TRANSITION} share="morph" default="none">
+          <Logo name={dict.brand.name} />
+        </ViewTransition>
         <span className="ml-auto flex items-center gap-4 whitespace-nowrap">
           <span className="hidden sm:inline">
             <TodayDate label={hero.today} />

@@ -25,6 +25,21 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 미들웨어 파일은 `middleware.ts`가 아니라 `proxy.ts`다. 로케일 판별과 리다이렉트는 여기서 한다.
 - `cacheComponents`가 켜져 있다. 쿠키, 헤더, 현재 시각 같은 요청 시점 값은 정적 셸 바깥(Suspense 경계 안 또는 클라이언트)에서 다룬다. 방문자 시간대 기준 날짜는 `components/today-date.tsx`의 인라인 스크립트 방식을 쓴다.
 
+## 라우팅
+
+- 허브는 `/[lang]`, 게임은 `/[lang]/games/[game]`이다. 경로 문자열은 `lib/routes.ts`의 `hubPath()`, `gamePath()`로만 만든다.
+- `app/[lang]/games/[game]/page.tsx`는 `GAMES`로 `generateStaticParams`해 모든 게임·로케일을 정적 생성한다. 모르는 게임 키는 `proxy.ts`에서 404로 보낸다(셸이 먼저 스트리밍되면 200이 나가므로 페이지의 `notFound()`만으로는 부족하다).
+- 게임 화면은 `components/games/registry.ts`의 `GAME_SCREENS`에 키로 등록한다. 등록이 없으면 `components/game-coming-soon.tsx`가 나온다. 상단바와 스테이지 프레임은 `components/game-frame.tsx`가 그린다.
+- 게임 페이지의 `title`은 게임 이름만 넣는다. 루트 레이아웃의 `title.template`이 브랜드명을 붙인다.
+
+## 페이지 전환
+
+- React `ViewTransition`을 쓴다. 어휘(전환 타입, 공유 요소 이름)는 `lib/transitions.ts`에, 모션 CSS는 `app/globals.css`의 "View transitions"에 둔다.
+- 페이지의 루트 요소는 `components/page-transition.tsx`의 `PageTransition`으로 감싼다. 링크는 `transitionTypes`로 방향을 붙인다(허브→게임 `NAV_FORWARD`, 게임→허브 `NAV_BACK`). 타입 없는 이동(브라우저 뒤로가기 등)은 즉시 교체되고 공유 요소만 모프한다.
+- 공유 요소: 타일 ↔ 스테이지 프레임(`tileTransition`, `share="grow"`), 타일 심볼 ↔ 스테이지 헤더 심볼(`symbolTransition`, `share="morph"`), 로고(`BRAND_TRANSITION`, `share="morph"`). 이름 있는 `ViewTransition`에는 항상 `default="none"`을 함께 둔다.
+- 자동 페어가 되려면 목적지 페이지가 프리페치돼 같은 커밋에 렌더돼야 한다. 게임 페이지에 요청 시점 값을 넣을 때는 Suspense 경계 안에 두어 정적 셸을 유지한다.
+- `cacheComponents`에서는 이전 페이지가 언마운트되지 않고 `Activity`로 숨겨진다. 페이지의 일시적 상태는 `useLayoutEffect` 클린업에서 초기화한다(`components/game-hub.tsx` 참고).
+
 ## 다국어
 
 - 로케일은 `lib/i18n.ts`의 `LOCALES`(`ko`, `en`)가 기준이다. 기본값은 `ko`, 쿠키 이름은 `NEXT_LOCALE`.
@@ -37,7 +52,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## 게임 데이터
 
 - `lib/games.ts`에는 언어 무관 메타(`key`, `kind`, `motion`)만 둔다. 이름과 설명은 사전의 `games.<key>`에 둔다.
-- 게임을 추가할 때 손대는 곳은 `GameKey`와 `GAMES`, 두 사전의 `games.<key>`, `components/game-symbol.tsx`의 `SYMBOLS`, `components/game-hub.tsx`의 `PLACEMENT`다.
+- 게임을 추가할 때 손대는 곳은 `GameKey`와 `GAMES`, 두 사전의 `games.<key>`, `components/game-symbol.tsx`의 `SYMBOLS`, `components/game-hub.tsx`의 `PLACEMENT`다. 화면이 준비되면 `components/games/registry.ts`에 등록한다.
 - 허브 심볼은 48×48 그리드의 라인 아이콘이다. 채울 패스에는 `className="f"`를 붙인다.
 
 ## 스타일

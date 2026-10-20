@@ -97,3 +97,94 @@
     color: #fff;
   }
 }
+
+/* ─── View transitions ──────────────────────────────────────── */
+/* Vocabulary lives in lib/transitions.ts; pages opt in via PageTransition. */
+
+/* Keep the live page clickable while snapshots animate. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* Page bodies. Forward: the hub recedes, the game rises. Back: reversed. */
+::view-transition-old(.nav-forward) {
+  animation:
+    160ms ease-in both vt-fade reverse,
+    360ms ease-in both vt-approach reverse;
+}
+::view-transition-new(.nav-forward) {
+  animation:
+    220ms ease-out 120ms both vt-fade,
+    420ms var(--ease-out-soft) both vt-rise;
+}
+::view-transition-old(.nav-back) {
+  animation:
+    160ms ease-in both vt-fade reverse,
+    360ms ease-in both vt-rise reverse;
+}
+::view-transition-new(.nav-back) {
+  animation:
+    220ms ease-out 120ms both vt-fade,
+    420ms var(--ease-out-soft) both vt-approach;
+}
+
+/* Shared elements. The pressed tile grows into the stage with its content
+   anchored top-left (the stage header sits where the tile header was); the
+   symbol and the brand mark scale and travel between their two slots. */
+::view-transition-group(.grow),
+::view-transition-group(.morph) {
+  z-index: 10;
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out-soft);
+}
+::view-transition-old(.grow),
+::view-transition-new(.grow),
+::view-transition-old(.morph),
+::view-transition-new(.morph) {
+  block-size: 100%;
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out-soft);
+}
+::view-transition-image-pair(.grow) {
+  overflow: clip;
+  border-radius: var(--radius-tile);
+}
+::view-transition-old(.grow),
+::view-transition-new(.grow) {
+  object-fit: none;
+  object-position: top left;
+}
+
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes vt-rise {
+  from {
+    translate: 0 14px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes vt-approach {
+  from {
+    scale: 0.985;
+  }
+  to {
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

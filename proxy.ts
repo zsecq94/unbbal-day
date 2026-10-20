@@ -1,12 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { LOCALES, LOCALE_COOKIE, isLocale, matchLocale } from '@/lib/i18n'
+import { isGameKey } from '@/lib/games'
+import { LOCALE_COOKIE, isLocale, matchLocale } from '@/lib/i18n'
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const hasLocale = LOCALES.some(
-    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
-  )
-  if (hasLocale) return
+  const [, first, section, key, ...rest] = pathname.split('/')
+  if (isLocale(first)) {
+    // Unknown game keys 404 here, before the partially prerendered game shell
+    // starts streaming with a 200.
+    if (section === 'games' && key && !rest.length && !isGameKey(key)) {
+      request.nextUrl.pathname = `/${first}/404`
+      return NextResponse.rewrite(request.nextUrl)
+    }
+    return
+  }
 
   // A locale the visitor picked explicitly wins over the browser preference.
   const saved = request.cookies.get(LOCALE_COOKIE)?.value

@@ -69,13 +69,20 @@
   },
   "hub": {
     "idle": "Pick a game that speaks to you.",
-    "selected": "{name} selected · Coming soon",
-    "tileHint": "Select",
-    "tileSelected": "Selected",
+    "launching": "Starting {name}…",
+    "tileHint": "Play",
+    "tileLaunching": "Starting",
     "keys": {
       "move": "Move",
-      "select": "Select",
-      "clear": "Clear"
+      "start": "Play"
+    }
+  },
+  "game": {
+    "back": "Home",
+    "backLabel": "Back to home",
+    "comingSoon": {
+      "title": "Coming soon",
+      "tag": "COMING SOON"
     }
   }
 }

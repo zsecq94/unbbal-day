@@ -1,10 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import {
   useCallback,
-  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
+  ViewTransition,
   type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
@@ -12,14 +14,21 @@ import {
 } from 'react'
 import { GameSymbol } from '@/components/game-symbol'
 import { pad2, type Game, type GameKind } from '@/lib/games'
+import type { Locale } from '@/lib/i18n'
+import { gamePath } from '@/lib/routes'
+import {
+  NAV_FORWARD,
+  symbolTransition,
+  tileTransition,
+} from '@/lib/transitions'
 
 export type HubCopy = {
   idle: string
   /** Contains a `{name}` placeholder. */
-  selected: string
+  launching: string
   tileHint: string
-  tileSelected: string
-  keys: { move: string; select: string; clear: string }
+  tileLaunching: string
+  keys: { move: string; start: string }
   kinds: Record<GameKind, string>
 }
 
@@ -83,29 +92,42 @@ function nearestInDirection(
   return best
 }
 
+/**
+ * The hub is a grid of tiles, each a link into its game. Arrow keys roam the
+ * grid (roving tabindex), Enter/Space follow the link. The tile a visitor
+ * pressed lights up until the game page takes over.
+ */
 export function GameHub({
   hero,
   games,
+  locale,
   copy,
 }: {
   hero: ReactNode
   games: Game[]
+  locale: Locale
   copy: HubCopy
 }) {
-  const [selected, setSelected] = useState<string | null>(null)
+  /** Tile whose navigation is in flight. */
+  const [launching, setLaunching] = useState<string | null>(null)
+  /** Tile that currently has keyboard focus. */
+  const [activeKey, setActiveKey] = useState<string | null>(null)
+  /** Tile that owns the single tab stop. */
   const [focusKey, setFocusKey] = useState<string>(games[0].key)
-  const tileRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const tileRefs = useRef<(HTMLAnchorElement | null)[]>([])
 
-  const selectedGame = games.find((g) => g.key === selected) ?? null
+  const launchingGame = games.find((g) => g.key === launching) ?? null
+  const activeGame = games.find((g) => g.key === activeKey) ?? null
 
-  useEffect(() => {
-    if (!selected) return
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      if (e.key === 'Escape') setSelected(null)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [selected])
+  // Next keeps the hub mounted (hidden) while a game is open. Clear the
+  // transient press/focus state on the way out so a return shows a calm hub.
+  useLayoutEffect(
+    () => () => {
+      setLaunching(null)
+      setActiveKey(null)
+    },
+    []
+  )
 
   const moveFocus = useCallback(
     (to: number) => {
@@ -118,14 +140,19 @@ export function GameHub({
   )
 
   const onTileKeyDown = useCallback(
-    (index: number, e: KeyboardEvent<HTMLButtonElement>) => {
+    (index: number, e: KeyboardEvent<HTMLAnchorElement>) => {
       let to = -1
       if (ARROWS[e.key]) {
         const rects = tileRefs.current.map((el) => el!.getBoundingClientRect())
         to = nearestInDirection(rects, index, ARROWS[e.key])
       } else if (e.key === 'Home') to = 0
       else if (e.key === 'End') to = games.length - 1
-      else return
+      else if (e.key === ' ') {
+        // Links ignore Space; make the grid feel like buttons.
+        e.preventDefault()
+        e.currentTarget.click()
+        return
+      } else return
       e.preventDefault()
       if (to > -1) moveFocus(to)
     },
@@ -139,19 +166,25 @@ export function GameHub({
         tileRefs.current[index] = el
       }}
       game={game}
+      href={gamePath(locale, game.key)}
       index={index}
       size={TILE_SIZE[game.key] ?? 'sm'}
-      selected={selected === game.key}
+      launching={launching === game.key}
       tabIndex={focusKey === game.key ? 0 : -1}
       copy={copy}
-      onSelect={() => {
-        setSelected(game.key)
+      onNavigate={() => setLaunching(game.key)}
+      onFocus={() => {
         setFocusKey(game.key)
+        setActiveKey(game.key)
       }}
-      onFocus={() => setFocusKey(game.key)}
+      onBlur={() => setActiveKey((k) => (k === game.key ? null : k))}
       onKeyDown={(e) => onTileKeyDown(index, e)}
     />
   )
+
+  const status = launchingGame
+    ? copy.launching.replace('{name}', launchingGame.name)
+    : (activeGame?.name ?? copy.idle)
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[1920px] flex-col gap-3 px-4 py-4 sm:px-6 sm:py-6 xl:px-10 xl:py-10 fit:h-dvh fit:py-[clamp(1.25rem,3.7vh,2.5rem)]">
@@ -169,18 +202,18 @@ export function GameHub({
           <span
             aria-hidden="true"
             className={`size-2.5 shrink-0 border transition-colors duration-200 motion-reduce:transition-none ${
-              selectedGame ? 'border-brand bg-brand' : 'border-ink-3'
+              launchingGame || activeGame
+                ? 'border-brand bg-brand'
+                : 'border-ink-3'
             }`}
           />
           <span
             role="status"
-            aria-live="polite"
+            aria-live={launchingGame ? 'polite' : 'off'}
             aria-atomic="true"
-            className={selectedGame ? 'text-ink' : 'text-ink-2'}
+            className={launchingGame || activeGame ? 'text-ink' : 'text-ink-2'}
           >
-            {selectedGame
-              ? copy.selected.replace('{name}', selectedGame.name)
-              : copy.idle}
+            {status}
           </span>
         </p>
         <KeyHints labels={copy.keys} />
@@ -206,11 +239,7 @@ function KeyHints({ labels }: { labels: HubCopy['keys'] }) {
       </span>
       <span className="inline-flex items-center gap-2">
         <kbd className={key}>Enter</kbd>
-        {labels.select}
-      </span>
-      <span className="inline-flex items-center gap-2">
-        <kbd className={key}>Esc</kbd>
-        {labels.clear}
+        {labels.start}
       </span>
     </div>
   )
@@ -231,28 +260,37 @@ function CheckIcon() {
 }
 
 type GameTileProps = {
-  ref: (el: HTMLButtonElement | null) => void
+  ref: (el: HTMLAnchorElement | null) => void
   game: Game
+  href: string
   index: number
   size: TileSize
-  selected: boolean
+  launching: boolean
   tabIndex: number
   copy: HubCopy
-  onSelect: () => void
+  onNavigate: () => void
   onFocus: () => void
-  onKeyDown: (e: KeyboardEvent<HTMLButtonElement>) => void
+  onBlur: () => void
+  onKeyDown: (e: KeyboardEvent<HTMLAnchorElement>) => void
 }
 
+/**
+ * A tile is a link. It's wrapped in a named view transition so, on the way
+ * into a game, it morphs into the stage frame while its symbol flies to the
+ * stage header (see `GameFrame`).
+ */
 function GameTile({
   ref,
   game,
+  href,
   index,
   size,
-  selected,
+  launching,
   tabIndex,
   copy,
-  onSelect,
+  onNavigate,
   onFocus,
+  onBlur,
   onKeyDown,
 }: GameTileProps) {
   const kind = copy.kinds[game.kind]
@@ -260,114 +298,124 @@ function GameTile({
   const descId = `game-${game.key}-desc`
   const big = size !== 'sm'
 
-  const onPointerMove = (e: PointerEvent<HTMLButtonElement>) => {
+  const onPointerMove = (e: PointerEvent<HTMLAnchorElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
     e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
 
   return (
-    <button
-      ref={ref}
-      type="button"
-      aria-pressed={selected}
-      aria-labelledby={nameId}
-      aria-describedby={descId}
-      tabIndex={tabIndex}
-      onClick={onSelect}
-      onFocus={onFocus}
-      onKeyDown={onKeyDown}
-      onPointerMove={onPointerMove}
-      style={{ '--motion': game.motion } as CSSProperties}
-      className={[
-        'group relative flex cursor-pointer flex-col overflow-hidden rounded-tile border text-left',
-        'px-6 pt-6 pb-6 sm:px-7 sm:pt-[26px] sm:pb-7',
-        'transition-[background-color,border-color,box-shadow] duration-200 motion-reduce:transition-none',
-        'outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink focus-visible:outline-solid',
-        big
-          ? 'min-h-[18rem] md:min-h-[22rem] fit:min-h-0'
-          : 'min-h-[14rem] md:min-h-[16rem] fit:min-h-[clamp(14rem,30.5vh,20.75rem)]',
-        selected
-          ? 'border-brand bg-brand text-white shadow-[0_24px_60px_-24px_rgb(31_91_255/0.7)]'
-          : 'border-line bg-tile text-ink lit:border-brand-hi/70 lit:bg-tile-lit',
-        PLACEMENT[game.key],
-      ].join(' ')}
-    >
-      {selected ? (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 column-lines [--column-line:rgb(255_255_255/0.12)]"
-        />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 spotlight motion-reduce:transition-none group-lit:opacity-100"
-        />
-      )}
-
-      <span
-        aria-hidden="true"
-        className={`relative flex items-center justify-between font-mono text-xs font-medium tracking-[0.12em] ${
-          selected ? 'text-white/80' : 'text-ink-3'
-        }`}
+    <ViewTransition name={tileTransition(game.key)} share="grow" default="none">
+      <Link
+        ref={ref}
+        href={href}
+        transitionTypes={[NAV_FORWARD]}
+        aria-labelledby={nameId}
+        aria-describedby={descId}
+        aria-busy={launching || undefined}
+        tabIndex={tabIndex}
+        onNavigate={onNavigate}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        onPointerMove={onPointerMove}
+        style={{ '--motion': game.motion } as CSSProperties}
+        className={[
+          'group relative flex cursor-pointer flex-col overflow-hidden rounded-tile border text-left',
+          'px-6 pt-6 pb-6 sm:px-7 sm:pt-[26px] sm:pb-7',
+          'transition-[background-color,border-color,box-shadow] duration-200 motion-reduce:transition-none',
+          'outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink focus-visible:outline-solid',
+          big
+            ? 'min-h-[18rem] md:min-h-[22rem] fit:min-h-0'
+            : 'min-h-[14rem] md:min-h-[16rem] fit:min-h-[clamp(14rem,30.5vh,20.75rem)]',
+          launching
+            ? 'border-brand bg-brand text-white shadow-[0_24px_60px_-24px_rgb(31_91_255/0.7)]'
+            : 'border-line bg-tile text-ink lit:border-brand-hi/70 lit:bg-tile-lit',
+          PLACEMENT[game.key],
+        ].join(' ')}
       >
-        <span>{pad2(index + 1)}</span>
-        {selected ? (
-          <span className="inline-flex items-center gap-2 text-white">
-            <CheckIcon />
-            {copy.tileSelected}
-          </span>
+        {launching ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 column-lines [--column-line:rgb(255_255_255/0.12)]"
+          />
         ) : (
-          <>
-            <span className="inline-flex items-center gap-2 font-sans text-[13px] font-bold tracking-normal text-ink-2 group-lit:hidden">
-              {kind}
-            </span>
-            <span className="hidden items-center gap-2 text-brand-hi group-lit:inline-flex">
-              {copy.tileHint} <span aria-hidden="true">↵</span>
-            </span>
-          </>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 spotlight motion-reduce:transition-none group-lit:opacity-100"
+          />
         )}
-      </span>
 
-      <span
-        aria-hidden="true"
-        className={`relative flex min-h-0 flex-1 items-center justify-center transition-colors ${big ? 'py-5' : 'py-4 fit:py-[clamp(0.5rem,1.5vh,1rem)]'} duration-200 motion-reduce:transition-none ${
-          selected ? 'text-white' : 'text-ink-3 group-lit:text-brand-hi'
-        }`}
-      >
-        <GameSymbol
-          gameKey={game.key}
-          className={[
-            SYMBOL_SIZE[size],
-            big ? 'stroke-[1.8]' : 'stroke-[1.6]',
-            'transition-transform duration-[450ms] ease-out-soft motion-reduce:transition-none',
-            selected
+        <span
+          aria-hidden="true"
+          className={`relative flex items-center justify-between font-mono text-xs font-medium tracking-[0.12em] ${
+            launching ? 'text-white/80' : 'text-ink-3'
+          }`}
+        >
+          <span>{pad2(index + 1)}</span>
+          {launching ? (
+            <span className="inline-flex items-center gap-2 text-white">
+              <CheckIcon />
+              {copy.tileLaunching}
+            </span>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-2 font-sans text-[13px] font-bold tracking-normal text-ink-2 group-lit:hidden">
+                {kind}
+              </span>
+              <span className="hidden items-center gap-2 text-brand-hi group-lit:inline-flex">
+                {copy.tileHint} <span aria-hidden="true">↵</span>
+              </span>
+            </>
+          )}
+        </span>
+
+        <span
+          aria-hidden="true"
+          className={`relative flex min-h-0 flex-1 items-center justify-center transition-colors ${big ? 'py-5' : 'py-4 fit:py-[clamp(0.5rem,1.5vh,1rem)]'} duration-200 motion-reduce:transition-none ${
+            launching ? 'text-white' : 'text-ink-3 group-lit:text-brand-hi'
+          }`}
+        >
+          <ViewTransition
+            name={symbolTransition(game.key)}
+            share="morph"
+            default="none"
+          >
+            <GameSymbol
+              gameKey={game.key}
+              className={[
+                SYMBOL_SIZE[size],
+                big ? 'stroke-[1.8]' : 'stroke-[1.6]',
+                'transition-transform duration-[450ms] ease-out-soft motion-reduce:transition-none',
+                launching
+                  ? ''
+                  : 'group-lit:[transform:var(--motion)] motion-reduce:group-lit:transform-none',
+              ].join(' ')}
+            />
+          </ViewTransition>
+        </span>
+
+        <span
+          id={nameId}
+          className={`relative block leading-[1.12] font-[750] break-keep ${NAME_SIZE[size]} ${
+            big
               ? ''
-              : 'group-lit:[transform:var(--motion)] motion-reduce:group-lit:transform-none',
-          ].join(' ')}
-        />
-      </span>
-
-      <span
-        id={nameId}
-        className={`relative block leading-[1.12] font-[750] break-keep ${NAME_SIZE[size]} ${
-          big
-            ? ''
-            : 'max-md:[&:lang(en)]:flex max-md:[&:lang(en)]:min-h-[2.24em] max-md:[&:lang(en)]:items-end xl:max-2xl:[&:lang(en)]:flex xl:max-2xl:[&:lang(en)]:min-h-[2.24em] xl:max-2xl:[&:lang(en)]:items-end'
-        }`}
-      >
-        {game.name}
-      </span>
-      <span
-        id={descId}
-        className={`relative mt-2.5 block tracking-[-0.015em] break-keep ${
-          big
-            ? 'text-[clamp(1rem,1vw,1.125rem)] sm:mt-3.5'
-            : 'min-h-[3.1em] text-[15.5px] leading-[1.55] xl:max-2xl:min-h-[4.65em] max-md:[&:lang(en)]:min-h-[6.2em]'
-        } ${selected ? 'text-white/85' : 'text-ink-2'}`}
-      >
-        {game.description}
-      </span>
-    </button>
+              : 'max-md:[&:lang(en)]:flex max-md:[&:lang(en)]:min-h-[2.24em] max-md:[&:lang(en)]:items-end xl:max-2xl:[&:lang(en)]:flex xl:max-2xl:[&:lang(en)]:min-h-[2.24em] xl:max-2xl:[&:lang(en)]:items-end'
+          }`}
+        >
+          {game.name}
+        </span>
+        <span
+          id={descId}
+          className={`relative mt-2.5 block tracking-[-0.015em] break-keep ${
+            big
+              ? 'text-[clamp(1rem,1vw,1.125rem)] sm:mt-3.5'
+              : 'min-h-[3.1em] text-[15.5px] leading-[1.55] xl:max-2xl:min-h-[4.65em] max-md:[&:lang(en)]:min-h-[6.2em]'
+          } ${launching ? 'text-white/85' : 'text-ink-2'}`}
+        >
+          {game.description}
+        </span>
+      </Link>
+    </ViewTransition>
   )
 }

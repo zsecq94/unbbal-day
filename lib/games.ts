@@ -23,6 +23,11 @@ export const GAMES: GameMeta[] = [
   { key: 'racing', kind: 'together', motion: 'translate(6px, -4px)' },
 ]
 
+export const GAME_KEYS = GAMES.map((g) => g.key)
+
+export const isGameKey = (value: string): value is GameKey =>
+  GAME_KEYS.includes(value as GameKey)
+
 export const SOLO_COUNT = GAMES.filter((g) => g.kind === 'solo').length
 export const TOGETHER_COUNT = GAMES.length - SOLO_COUNT
 
