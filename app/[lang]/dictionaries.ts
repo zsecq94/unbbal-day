@@ -1,9 +1,14 @@
 import { notFound } from 'next/navigation'
 import { lang } from 'next/root-params'
 import { isLocale, type Locale } from '@/lib/i18n'
+import type en from './dictionaries/en.json'
 import type ko from './dictionaries/ko.json'
 
 export type Dictionary = typeof ko
+
+type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
+/** en.json의 키 구조가 ko.json과 다르면(특히 ko에 없는 키가 있으면) 여기서 타입 오류가 난다. */
+export const dictionariesMatch: Same<typeof en, Dictionary> = true
 
 const dictionaries: Record<Locale, () => Promise<Dictionary>> = {
   ko: () => import('./dictionaries/ko.json').then((m) => m.default),

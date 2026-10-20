@@ -11,8 +11,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## 프로젝트
 
 - 운빨데이. Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS 4, npm.
-- 명령은 `npm run dev`, `npm run build`, `npm run lint`, `npm run format`.
-- 타입체크(`npx tsc --noEmit`), ESLint, Prettier 검사, `next build`가 모두 통과하는 상태를 유지한다.
+- 명령은 `npm run dev`, `npm run build`, `npm run lint`, `npm run format`, `npm run check`.
+- `npm run check`(`next typegen`, 타입체크, ESLint, Prettier 검사)와 `npm run build`가 통과하는 상태를 유지한다. `git commit` 전에 훅이 `npm run check`를 자동 실행하고 실패하면 커밋을 막는다.
+- `.next/types` 생성 타입 때문에 tsc가 실패하면(라우트 삭제·이름변경 뒤) `next typegen` 또는 dev 서버 재시작으로 재생성한다.
 
 ## 코드 컨벤션
 
@@ -29,7 +30,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 로케일은 `lib/i18n.ts`의 `LOCALES`(`ko`, `en`)가 기준이다. 기본값은 `ko`, 쿠키 이름은 `NEXT_LOCALE`.
 - 현재 로케일과 사전은 `app/[lang]/dictionaries.ts`의 `getLocale()`, `getDictionary()`로 읽는다.
 - 사용자에게 보이는 문자열은 `app/[lang]/dictionaries/ko.json`, `en.json`에 둔다. 컴포넌트에 직접 쓰지 않는다.
-- `Dictionary` 타입은 `ko.json`에서 유도된다. 두 파일의 키 구조를 항상 같게 유지한다.
+- `Dictionary` 타입은 `ko.json`에서 유도된다. 두 파일의 키 구조를 항상 같게 유지한다. `dictionaries.ts`의 `dictionariesMatch` 타입 단언이 tsc에서 이를 검사한다.
 - 치환은 `{name}` 플레이스홀더, 본문 강조는 `{ "b": "..." }` 배열 패턴을 쓴다.
 - 로케일을 추가하면 `LOCALES`, 사전 파일, `components/locale-switch.tsx`의 경로 정규식을 함께 바꾼다.
 

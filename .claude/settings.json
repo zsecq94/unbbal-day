@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "ask": ["Bash(git push *)"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && out=$(npm run check --silent 2>&1) || { echo '커밋 전 검사 실패. npm run check 를 실행해 고친 뒤 다시 커밋하세요.' >&2; printf '%s\\n' \"$out\" | tail -40 >&2; exit 2; }",
+            "timeout": 120,
+            "onFailure": "block",
+            "statusMessage": "커밋 전 검사 실행 중 (typegen, tsc, eslint, prettier)"
+          }
+        ]
+      }
+    ]
+  }
+}
