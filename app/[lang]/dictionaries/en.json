@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "title": "Unbbal Day",
+    "description": "A little luck for you, a lot of fun together. From today's fortune to thrilling races, pick your game on Unbbal Day."
+  },
+  "brand": {
+    "name": "Unbbal Day"
+  },
+  "hero": {
+    "line1": "Feeling",
+    "accent": "lucky",
+    "rest": " today?",
+    "sub": [
+      "From a ",
+      {
+        "b": "little fortune"
+      },
+      " for you to ",
+      {
+        "b": "thrilling races"
+      },
+      " with friends."
+    ],
+    "counts": {
+      "games": "GAMES",
+      "solo": "SOLO",
+      "together": "TOGETHER"
+    },
+    "today": "TODAY"
+  },
+  "localeSwitch": {
+    "label": "Language",
+    "ko": "한국어",
+    "en": "English"
+  },
+  "kinds": {
+    "solo": "Solo",
+    "together": "Together"
+  },
+  "games": {
+    "fortune": {
+      "name": "Today's Fortune",
+      "description": "A quick look at the luck coming your way."
+    },
+    "lotto": {
+      "name": "Lucky Numbers",
+      "description": "Draw your lucky numbers from today's fortune."
+    },
+    "pinball": {
+      "name": "Pinball",
+      "description": "Bouncing marbles, a drop race anyone can win."
+    },
+    "ladder": {
+      "name": "Ladder Game",
+      "description": "Crossing paths lead everyone to their fate."
+    },
+    "wheel": {
+      "name": "Spin the Wheel",
+      "description": "Round and round, until fate stops it."
+    },
+    "horse": {
+      "name": "Horse Race",
+      "description": "Neck and neck to the very last stride."
+    },
+    "racing": {
+      "name": "Racing",
+      "description": "Stay sharp, the lead can flip before the finish."
+    }
+  },
+  "hub": {
+    "idle": "Pick a game that speaks to you.",
+    "selected": "{name} selected · Coming soon",
+    "tileHint": "Select",
+    "tileSelected": "Selected",
+    "keys": {
+      "move": "Move",
+      "select": "Select",
+      "clear": "Clear"
+    }
+  }
+}

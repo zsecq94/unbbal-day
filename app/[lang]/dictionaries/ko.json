@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "title": "운빨데이",
+    "description": "혼자 가볍게, 여럿이 즐겁게. 오늘의 운세부터 짜릿한 경주까지, 운빨데이에서 골라보세요."
+  },
+  "brand": {
+    "name": "운빨데이"
+  },
+  "hero": {
+    "line1": "어떤 재미에,",
+    "accent": "운이",
+    "rest": " 끌리나요?",
+    "sub": [
+      "나를 위한 ",
+      {
+        "b": "작은 운세"
+      },
+      "부터, 함께하는 ",
+      {
+        "b": "짜릿한 경주"
+      },
+      "까지."
+    ],
+    "counts": {
+      "games": "GAMES",
+      "solo": "혼자",
+      "together": "함께"
+    },
+    "today": "TODAY"
+  },
+  "localeSwitch": {
+    "label": "언어 선택",
+    "ko": "한국어",
+    "en": "English"
+  },
+  "kinds": {
+    "solo": "혼자",
+    "together": "함께"
+  },
+  "games": {
+    "fortune": {
+      "name": "오늘의 운세",
+      "description": "오늘 나에게 찾아올 운을 가볍게 확인해요."
+    },
+    "lotto": {
+      "name": "로또 번호 뽑기",
+      "description": "오늘의 운세에서 행운의 번호를 찾아요."
+    },
+    "pinball": {
+      "name": "핀볼",
+      "description": "통통 튀는 구슬, 끝까지 모르는 낙하 경주."
+    },
+    "ladder": {
+      "name": "사다리 타기",
+      "description": "엇갈리는 길 끝에서 각자의 결과를 만나요."
+    },
+    "wheel": {
+      "name": "원판 돌리기",
+      "description": "빙글 도는 원판, 멈추는 순간 운명이 결정돼요."
+    },
+    "horse": {
+      "name": "경마",
+      "description": "앞서거니 뒤서거니, 마지막까지 짜릿한 말 경주."
+    },
+    "racing": {
+      "name": "레이싱",
+      "description": "결승선까지 방심 금지, 순위가 뒤집히는 자동차 경주."
+    }
+  },
+  "hub": {
+    "idle": "마음이 가는 게임을 골라보세요.",
+    "selected": "{name} 선택됨 · 아직 준비 중이에요",
+    "tileHint": "선택",
+    "tileSelected": "선택됨",
+    "keys": {
+      "move": "이동",
+      "select": "선택",
+      "clear": "해제"
+    }
+  }
+}

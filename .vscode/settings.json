@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.css": "tailwindcss",
+    "turbo.json": "jsonc"
+  },
+  "tailwindCSS.lint.suggestCanonicalClasses": "ignore"
+}

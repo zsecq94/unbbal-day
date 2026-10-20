@@ -1,26 +1,99 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Design tokens ─────────────────────────────────────────── */
+@theme {
+  --color-canvas: #0a0a0a;
+  --color-tile: #121212;
+  --color-tile-lit: #161616;
+  --color-ink: #f3f3ef;
+  --color-ink-2: #aaaaa4;
+  --color-ink-3: #85857f;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-brand: #1f5bff;
+  --color-brand-hi: #4f86ff;
+
+  --font-sans:
+    'Wanted Sans Variable', 'Wanted Sans', -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+
+  --radius-tile: 8px;
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ─── Variants ──────────────────────────────────────────────── */
+/* "lit" = pointer hover (only on hover-capable devices) or keyboard focus */
+@custom-variant lit {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+  &:focus-visible {
+    @slot;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
+@custom-variant group-lit {
+  @media (hover: hover) {
+    :where(.group):hover & {
+      @slot;
+    }
+  }
+  :where(.group):focus-visible & {
+    @slot;
+  }
+}
+
+/* Desktop screens tall enough to hold the whole hub in one view */
+@custom-variant fit {
+  @media (width >= 80rem) and (height >= 47.5rem) {
+    @slot;
+  }
+}
+
+/* ─── Utilities ─────────────────────────────────────────────── */
+@utility column-lines {
+  background-image: linear-gradient(
+    to right,
+    var(--column-line, rgb(255 255 255 / 0.04)) 1px,
+    transparent 1px
+  );
+  background-size: calc(100% / 6) 100%;
+}
+
+@utility spotlight {
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 0.055),
+    transparent 60%
+  );
+}
+
+/* ─── Base ──────────────────────────────────────────────────── */
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-canvas);
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: var(--color-brand);
+    color: #fff;
+  }
 }
