@@ -77,12 +77,18 @@
       "start": "시작"
     }
   },
-  "game": {
+  "nav": {
     "back": "홈",
-    "backLabel": "홈으로 돌아가기",
+    "backLabel": "홈으로 돌아가기"
+  },
+  "game": {
     "comingSoon": {
       "title": "준비 중이에요",
       "tag": "COMING SOON"
     }
+  },
+  "notFound": {
+    "title": "여기엔 아무것도 없어요",
+    "body": "주소를 다시 확인하거나 홈으로 돌아가 주세요."
   }
 }

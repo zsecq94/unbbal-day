@@ -49,8 +49,8 @@ export default async function GamePage({ params }: Props) {
         copy={{
           brand: dict.brand.name,
           kind: dict.kinds[game.kind],
-          back: dict.game.back,
-          backLabel: dict.game.backLabel,
+          back: dict.nav.back,
+          backLabel: dict.nav.backLabel,
           localeSwitch: dict.localeSwitch,
         }}
       >

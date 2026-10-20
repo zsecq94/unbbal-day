@@ -128,14 +128,23 @@
     420ms var(--ease-out-soft) both vt-approach;
 }
 
-/* Shared elements. The pressed tile grows into the stage with its content
-   anchored top-left (the stage header sits where the tile header was); the
-   symbol and the brand mark scale and travel between their two slots. */
+/* Shared elements. The pressed tile's frame grows into the stage frame
+   underneath the page content (a flat rect scales without artifacts), while
+   the symbol and the brand mark travel on top of everything. */
 ::view-transition-group(.grow),
 ::view-transition-group(.morph) {
-  z-index: 10;
   animation-duration: 420ms;
   animation-timing-function: var(--ease-out-soft);
+}
+::view-transition-group(.grow) {
+  z-index: 0;
+}
+::view-transition-group(.nav-forward),
+::view-transition-group(.nav-back) {
+  z-index: 1;
+}
+::view-transition-group(.morph) {
+  z-index: 2;
 }
 ::view-transition-old(.grow),
 ::view-transition-new(.grow),
@@ -144,15 +153,6 @@
   block-size: 100%;
   animation-duration: 420ms;
   animation-timing-function: var(--ease-out-soft);
-}
-::view-transition-image-pair(.grow) {
-  overflow: clip;
-  border-radius: var(--radius-tile);
-}
-::view-transition-old(.grow),
-::view-transition-new(.grow) {
-  object-fit: none;
-  object-position: top left;
 }
 
 @keyframes vt-fade {

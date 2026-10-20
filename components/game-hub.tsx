@@ -120,14 +120,28 @@ export function GameHub({
   const activeGame = games.find((g) => g.key === activeKey) ?? null
 
   // Next keeps the hub mounted (hidden) while a game is open. Clear the
-  // transient press/focus state on the way out so a return shows a calm hub.
-  useLayoutEffect(
-    () => () => {
+  // transient press/focus state on the way out, and on the way back restore
+  // the scroll position saved at press time (see `launch`) so the stage
+  // shrinks into a tile that is actually on screen.
+  const saved = useRef<{ scrollY: number; index: number } | null>(null)
+  useLayoutEffect(() => {
+    if (saved.current) {
+      window.scrollTo(0, saved.current.scrollY)
+      // Keyboard visitors land back on the tile they launched.
+      tileRefs.current[saved.current.index]?.focus({ preventScroll: true })
+    }
+    return () => {
       setLaunching(null)
       setActiveKey(null)
-    },
-    []
-  )
+    }
+  }, [])
+
+  const launch = (key: string, index: number) => {
+    // Read the scroll position before the game page enters the DOM: once it
+    // does, scroll anchoring shifts `scrollY` by the new page's height.
+    saved.current = { scrollY: window.scrollY, index }
+    setLaunching(key)
+  }
 
   const moveFocus = useCallback(
     (to: number) => {
@@ -172,7 +186,7 @@ export function GameHub({
       launching={launching === game.key}
       tabIndex={focusKey === game.key ? 0 : -1}
       copy={copy}
-      onNavigate={() => setLaunching(game.key)}
+      onNavigate={() => launch(game.key, index)}
       onFocus={() => {
         setFocusKey(game.key)
         setActiveKey(game.key)
@@ -305,35 +319,49 @@ function GameTile({
   }
 
   return (
-    <ViewTransition name={tileTransition(game.key)} share="grow" default="none">
-      <Link
-        ref={ref}
-        href={href}
-        transitionTypes={[NAV_FORWARD]}
-        aria-labelledby={nameId}
-        aria-describedby={descId}
-        aria-busy={launching || undefined}
-        tabIndex={tabIndex}
-        onNavigate={onNavigate}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onKeyDown={onKeyDown}
-        onPointerMove={onPointerMove}
-        style={{ '--motion': game.motion } as CSSProperties}
-        className={[
-          'group relative flex cursor-pointer flex-col overflow-hidden rounded-tile border text-left',
-          'px-6 pt-6 pb-6 sm:px-7 sm:pt-[26px] sm:pb-7',
-          'transition-[background-color,border-color,box-shadow] duration-200 motion-reduce:transition-none',
-          'outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink focus-visible:outline-solid',
-          big
-            ? 'min-h-[18rem] md:min-h-[22rem] fit:min-h-0'
-            : 'min-h-[14rem] md:min-h-[16rem] fit:min-h-[clamp(14rem,30.5vh,20.75rem)]',
-          launching
-            ? 'border-brand bg-brand text-white shadow-[0_24px_60px_-24px_rgb(31_91_255/0.7)]'
-            : 'border-line bg-tile text-ink lit:border-brand-hi/70 lit:bg-tile-lit',
-          PLACEMENT[game.key],
-        ].join(' ')}
+    <Link
+      ref={ref}
+      href={href}
+      transitionTypes={[NAV_FORWARD]}
+      aria-labelledby={nameId}
+      aria-describedby={descId}
+      aria-busy={launching || undefined}
+      tabIndex={tabIndex}
+      onNavigate={onNavigate}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      onPointerMove={onPointerMove}
+      style={{ '--motion': game.motion } as CSSProperties}
+      className={[
+        'group relative flex cursor-pointer flex-col overflow-hidden rounded-tile text-left',
+        'px-6 pt-6 pb-6 sm:px-7 sm:pt-[26px] sm:pb-7',
+        'outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink focus-visible:outline-solid',
+        big
+          ? 'min-h-[18rem] md:min-h-[22rem] fit:min-h-0'
+          : 'min-h-[14rem] md:min-h-[16rem] fit:min-h-[clamp(14rem,30.5vh,20.75rem)]',
+        launching ? 'text-white' : 'text-ink',
+        PLACEMENT[game.key],
+      ].join(' ')}
+    >
+      {/* The frame alone is the shared element: a flat rect scales cleanly,
+          while the text above it fades with the page. The pressed colour
+          skips its transition so the snapshot catches it. */}
+      <ViewTransition
+        name={tileTransition(game.key)}
+        share="grow"
+        default="none"
       >
+        <span
+          aria-hidden="true"
+          className={`absolute inset-0 rounded-tile border ${
+            launching
+              ? 'border-brand bg-brand'
+              : 'border-line bg-tile transition-[background-color,border-color] duration-200 motion-reduce:transition-none group-lit:border-brand-hi/70 group-lit:bg-tile-lit'
+          }`}
+        />
+      </ViewTransition>
+      <>
         {launching ? (
           <span
             aria-hidden="true"
@@ -415,7 +443,7 @@ function GameTile({
         >
           {game.description}
         </span>
-      </Link>
-    </ViewTransition>
+      </>
+    </Link>
   )
 }

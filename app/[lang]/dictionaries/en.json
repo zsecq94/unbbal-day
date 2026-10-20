@@ -77,12 +77,18 @@
       "start": "Play"
     }
   },
-  "game": {
+  "nav": {
     "back": "Home",
-    "backLabel": "Back to home",
+    "backLabel": "Back to home"
+  },
+  "game": {
     "comingSoon": {
       "title": "Coming soon",
       "tag": "COMING SOON"
     }
+  },
+  "notFound": {
+    "title": "Nothing here",
+    "body": "Check the address or head back home."
   }
 }
