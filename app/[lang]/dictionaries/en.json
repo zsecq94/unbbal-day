@@ -70,10 +70,7 @@
   "hub": {
     "idle": "Pick a game that speaks to you.",
     "tileHint": "Play",
-    "keys": {
-      "move": "Move",
-      "start": "Play"
-    }
+    "copyright": "© 2026 Unbbal Day"
   },
   "nav": {
     "back": "Home",

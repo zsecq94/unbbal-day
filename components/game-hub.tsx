@@ -25,7 +25,7 @@ import {
 export type HubCopy = {
   idle: string
   tileHint: string
-  keys: { move: string; start: string }
+  copyright: string
   kinds: Record<GameKind, string>
 }
 
@@ -106,16 +106,17 @@ export function GameHub({
   locale: Locale
   copy: HubCopy
 }) {
-  /** Tile that currently has keyboard focus. */
-  const [activeKey, setActiveKey] = useState<string | null>(null)
+  /** Tile under the mouse pointer; the footer status line names it. */
+  const [hoverKey, setHoverKey] = useState<string | null>(null)
   /** Tile that owns the single tab stop. */
   const [focusKey, setFocusKey] = useState<string>(games[0].key)
   const tileRefs = useRef<(HTMLAnchorElement | null)[]>([])
 
-  const activeGame = games.find((g) => g.key === activeKey) ?? null
+  const hoverIndex = games.findIndex((g) => g.key === hoverKey)
+  const hovered = hoverIndex === -1 ? null : games[hoverIndex]
 
   // Next keeps the hub mounted (hidden) while a game is open. Clear the
-  // focus highlight on the way out, and on the way back restore the scroll
+  // hover status on the way out, and on the way back restore the scroll
   // position and focus saved at press time (see `launch`) so the stage
   // shrinks into a tile that is actually on screen.
   const saved = useRef<{ scrollY: number; index: number } | null>(null)
@@ -124,7 +125,7 @@ export function GameHub({
       window.scrollTo(0, saved.current.scrollY)
       tileRefs.current[saved.current.index]?.focus({ preventScroll: true })
     }
-    return () => setActiveKey(null)
+    return () => setHoverKey(null)
   }, [])
 
   const launch = (index: number) => {
@@ -176,11 +177,10 @@ export function GameHub({
       tabIndex={focusKey === game.key ? 0 : -1}
       copy={copy}
       onNavigate={() => launch(index)}
-      onFocus={() => {
-        setFocusKey(game.key)
-        setActiveKey(game.key)
-      }}
-      onBlur={() => setActiveKey((k) => (k === game.key ? null : k))}
+      onFocus={() => setFocusKey(game.key)}
+      onHover={(over) =>
+        setHoverKey((k) => (over ? game.key : k === game.key ? null : k))
+      }
       onKeyDown={(e) => onTileKeyDown(index, e)}
     />
   )
@@ -196,44 +196,39 @@ export function GameHub({
         {games.slice(2).map((g, i) => renderTile(g, i + 2))}
       </div>
 
+      {/* Status line: names the tile under the pointer, in the same voice as
+          the tiles' own index/kind row. Decorative only, so hidden from AT. */}
       <footer className="mt-1 flex min-h-[52px] items-center justify-between gap-6 border-t border-line-strong px-1">
-        <p className="flex items-center gap-3.5 text-base tracking-[-0.01em] sm:text-[17px]">
+        <p
+          aria-hidden="true"
+          className="flex min-w-0 items-center gap-3.5 font-mono text-xs font-medium tracking-[0.12em] text-ink-3"
+        >
           <span
-            aria-hidden="true"
             className={`size-2.5 shrink-0 border transition-colors duration-200 motion-reduce:transition-none ${
-              activeGame ? 'border-brand bg-brand' : 'border-ink-3'
+              hovered ? 'border-brand bg-brand' : 'border-ink-3'
             }`}
           />
-          <span className={activeGame ? 'text-ink' : 'text-ink-2'}>
-            {activeGame?.name ?? copy.idle}
-          </span>
+          {hovered ? (
+            <span className="flex min-w-0 items-center gap-3">
+              <span>{pad2(hoverIndex + 1)}</span>
+              <span className="truncate font-sans text-[13px] font-bold tracking-normal text-ink">
+                {hovered.name}
+              </span>
+              <span className="ml-1 font-sans text-[13px] font-bold tracking-normal text-ink-3">
+                {copy.kinds[hovered.kind]}
+              </span>
+            </span>
+          ) : (
+            <span className="truncate font-sans text-[13px] font-medium tracking-normal text-ink-2">
+              {copy.idle}
+            </span>
+          )}
         </p>
-        <KeyHints labels={copy.keys} />
+        <small className="shrink-0 font-mono text-xs tracking-[0.12em] text-ink-3">
+          {copy.copyright}
+        </small>
       </footer>
     </main>
-  )
-}
-
-function KeyHints({ labels }: { labels: HubCopy['keys'] }) {
-  const key =
-    'inline-flex h-[22px] min-w-[22px] items-center justify-center border border-line-strong px-1.5 font-mono text-[11px] text-ink-2'
-  return (
-    <div
-      aria-hidden="true"
-      className="hidden gap-6 font-mono text-[11.5px] tracking-[0.12em] text-ink-3 lg:[@media(hover:hover)]:flex"
-    >
-      <span className="inline-flex items-center gap-1.5">
-        <kbd className={key}>←</kbd>
-        <kbd className={key}>→</kbd>
-        <kbd className={key}>↑</kbd>
-        <kbd className={key}>↓</kbd>
-        <span className="ml-0.5">{labels.move}</span>
-      </span>
-      <span className="inline-flex items-center gap-2">
-        <kbd className={key}>Enter</kbd>
-        {labels.start}
-      </span>
-    </div>
   )
 }
 
@@ -247,7 +242,7 @@ type GameTileProps = {
   copy: HubCopy
   onNavigate: () => void
   onFocus: () => void
-  onBlur: () => void
+  onHover: (over: boolean) => void
   onKeyDown: (e: KeyboardEvent<HTMLAnchorElement>) => void
 }
 
@@ -268,7 +263,7 @@ function GameTile({
   copy,
   onNavigate,
   onFocus,
-  onBlur,
+  onHover,
   onKeyDown,
 }: GameTileProps) {
   const kind = copy.kinds[game.kind]
@@ -293,9 +288,10 @@ function GameTile({
       tabIndex={tabIndex}
       onNavigate={onNavigate}
       onFocus={onFocus}
-      onBlur={onBlur}
       onKeyDown={onKeyDown}
       onPointerMove={onPointerMove}
+      onPointerEnter={(e) => e.pointerType === 'mouse' && onHover(true)}
+      onPointerLeave={() => onHover(false)}
       style={{ '--motion': game.motion } as CSSProperties}
       className={[
         'group relative flex cursor-pointer flex-col overflow-hidden rounded-tile text-left text-ink',

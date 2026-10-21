@@ -70,10 +70,7 @@
   "hub": {
     "idle": "마음이 가는 게임을 골라보세요.",
     "tileHint": "시작",
-    "keys": {
-      "move": "이동",
-      "start": "시작"
-    }
+    "copyright": "© 2026 운빨데이"
   },
   "nav": {
     "back": "홈",

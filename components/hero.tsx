@@ -13,7 +13,7 @@ export async function Hero() {
   return (
     <section
       aria-labelledby="hero-title"
-      className="relative flex flex-col overflow-hidden rounded-tile border border-line bg-tile column-lines px-6 pt-6 pb-7 sm:px-10 sm:pt-[34px] sm:pb-9 md:col-span-12 xl:col-span-5 fit:pt-[clamp(1.5rem,3.2vh,2.125rem)] fit:pb-[clamp(1.5rem,3.3vh,2.25rem)]"
+      className="relative flex flex-col overflow-hidden rounded-tile border border-line bg-tile px-6 pt-6 pb-7 sm:px-10 sm:pt-[34px] sm:pb-9 md:col-span-12 xl:col-span-5 fit:pt-[clamp(1.5rem,3.2vh,2.125rem)] fit:pb-[clamp(1.5rem,3.3vh,2.25rem)]"
     >
       <header className="flex items-center gap-3 fit:mb-6">
         <ViewTransition name={BRAND_TRANSITION} share="morph" default="none">
