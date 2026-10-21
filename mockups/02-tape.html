@@ -1,0 +1,1232 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+    />
+    <title>02 눈금 · 오늘의 운세 시안</title>
+    <link rel="stylesheet" href="shared/theme.css" />
+    <style>
+      /* ─── Input: one ruler per answer ─────────────────────────────── */
+      .in {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+      }
+
+      /* Accuracy as an error bracket on a 24-hour ruler. The less we know,
+         the wider the slice of the day we're unsure about. */
+      .acc-band {
+        position: sticky;
+        top: var(--vv-top);
+        z-index: 5;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas: 'num ruler err';
+        align-items: center;
+        gap: 12px 28px;
+        padding: 14px 28px 12px;
+        border-bottom: 1px solid var(--line);
+        background: var(--tile);
+      }
+      .acc-num,
+      .acc-err {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .acc-num {
+        grid-area: num;
+      }
+      .acc-err {
+        grid-area: err;
+        justify-content: flex-end;
+      }
+      .acc-band .name {
+        color: var(--ink-2);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .acc-band b {
+        font-family: var(--mono);
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      .acc-band small {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .day-ruler {
+        position: relative;
+        grid-area: ruler;
+        height: 34px;
+      }
+      .day-ruler .ticks {
+        position: absolute;
+        inset: auto 0 0;
+        height: 12px;
+        background:
+          repeating-linear-gradient(
+            to right,
+            var(--line-strong) 0 1px,
+            transparent 1px calc(100% / 24)
+          ),
+          linear-gradient(var(--line-strong), var(--line-strong)) 0 100% / 100%
+            1px no-repeat;
+      }
+      .day-ruler .ticks::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 1px;
+        height: 100%;
+        background: var(--line-strong);
+      }
+      .day-ruler .hours {
+        position: absolute;
+        inset: 0 0 auto;
+        display: flex;
+        justify-content: space-between;
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        line-height: 1;
+      }
+      .bracket {
+        position: absolute;
+        bottom: 0;
+        height: 22px;
+        overflow: hidden;
+        border: 1px solid var(--ink-2);
+        border-top: 0;
+        background: rgb(255 255 255 / 0.05);
+        transition:
+          left 0.45s var(--ease),
+          width 0.45s var(--ease),
+          border-color 0.3s;
+      }
+      .bracket.none {
+        border-color: var(--line-strong);
+        background: transparent;
+      }
+      .bracket .scan {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--ink-2);
+        opacity: 0.55;
+        animation: scan 2.6s ease-in-out infinite alternate;
+      }
+      .bracket.none .scan {
+        display: none;
+      }
+      @keyframes scan {
+        from {
+          left: 0;
+        }
+        to {
+          left: calc(100% - 1px);
+        }
+      }
+      .birth {
+        position: absolute;
+        bottom: 0;
+        width: 2px;
+        height: 22px;
+        margin-left: -1px;
+        background: var(--brand-hi);
+        transition: left 0.45s var(--ease);
+      }
+      @media (max-width: 719px) {
+        .acc-band {
+          grid-template-columns: 1fr auto;
+          grid-template-areas: 'num err' 'ruler ruler';
+          gap: 10px 16px;
+          padding: 12px 20px;
+        }
+      }
+
+      .bands {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+      }
+      .band {
+        display: grid;
+        grid-template-columns: 34px minmax(150px, 190px) minmax(0, 1fr) 120px;
+        align-items: center;
+        gap: 0 20px;
+        flex: 1;
+        min-height: 60px;
+        max-height: 116px;
+        padding: 6px 28px;
+        border-bottom: 1px solid var(--line);
+      }
+      .band .idx {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+      }
+      .band .what {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .band .w {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        transition: color 0.4s;
+      }
+      .band .req {
+        color: var(--ink-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .band.set .w {
+        color: var(--ink-2);
+      }
+      .band.gain .w {
+        color: var(--brand-hi);
+        transition: none;
+      }
+      .readout {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        text-align: right;
+        white-space: nowrap;
+      }
+      .readout.ko {
+        font-family: var(--sans);
+        font-size: 19px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+      }
+      .band.set .readout {
+        color: var(--ink);
+      }
+
+      /* The ruler: ticks slide under a fixed needle. */
+      .tape {
+        position: relative;
+        height: 46px;
+        overflow: clip;
+        cursor: grab;
+        touch-action: pan-y;
+        user-select: none;
+        -webkit-user-select: none;
+        mask-image: linear-gradient(
+          to right,
+          transparent,
+          #000 14%,
+          #000 86%,
+          transparent
+        );
+      }
+      .tape:active {
+        cursor: grabbing;
+      }
+      .tape:focus-visible {
+        outline-offset: 4px;
+      }
+      .track {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        will-change: transform;
+      }
+      .track.snap {
+        transition: transform 0.3s var(--ease);
+      }
+      .track i {
+        position: absolute;
+        bottom: 0;
+        width: 1px;
+        height: 7px;
+        background: var(--line-strong);
+      }
+      .track i.mid {
+        height: 11px;
+        background: rgb(255 255 255 / 0.22);
+      }
+      .track i.major {
+        height: 16px;
+        background: var(--ink-3);
+      }
+      .track b {
+        position: absolute;
+        top: 6px;
+        translate: -50% 0;
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        line-height: 1;
+        white-space: nowrap;
+        transition: color 0.2s;
+      }
+      .track.words b {
+        top: 4px;
+        font-family: var(--sans);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+      .track b.sel {
+        color: var(--ink);
+      }
+      .needle {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 2px;
+        height: 26px;
+        margin-left: -1px;
+        background: var(--ink-3);
+        transition: background-color 0.2s;
+      }
+      .band.set .needle {
+        background: var(--ink);
+      }
+      .tape:focus-visible .needle,
+      .tape.dragging .needle {
+        background: var(--brand-hi);
+      }
+
+      .name-field {
+        width: 100%;
+        height: 40px;
+        border-bottom: 1px dashed rgb(255 255 255 / 0.22);
+        font-size: 19px;
+        font-weight: 700;
+      }
+      .name-field:focus {
+        border-bottom: 1px solid var(--ink);
+      }
+
+      @media (max-width: 719px) {
+        .band {
+          grid-template-columns: auto 1fr auto;
+          grid-template-areas: 'idx what out' 'tape tape tape';
+          gap: 2px 12px;
+          flex: none;
+          max-height: none;
+          padding: 12px 20px 10px;
+        }
+        .band .idx {
+          grid-area: idx;
+        }
+        .band .what {
+          grid-area: what;
+        }
+        .band .readout {
+          grid-area: out;
+          font-size: 19px;
+        }
+        .band .readout.ko {
+          font-size: 17px;
+        }
+        .band .tape,
+        .band .name-field {
+          grid-area: tape;
+        }
+      }
+
+      .in-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 28px;
+      }
+      .hint {
+        color: var(--ink-3);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      @media (max-width: 719px) {
+        .in-foot {
+          padding: 16px 20px;
+        }
+      }
+
+      /* ─── Result: the day as a stepped line you scrub ─────────────── */
+      .out {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 18px;
+        min-height: 0;
+        padding: 24px 28px 22px;
+      }
+      .read {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr) auto;
+        grid-template-areas: 'when score note side';
+        align-items: center;
+        gap: 6px 28px;
+        flex: none;
+      }
+      .when {
+        grid-area: when;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 9.5em;
+      }
+      .when .mono {
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+      .when span:last-child {
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .r-score {
+        grid-area: score;
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+      }
+      .r-score b {
+        min-width: 2ch;
+        font-family: var(--mono);
+        font-size: clamp(40px, 3vw + 18px, 64px);
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+      .r-score small {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .r-note {
+        grid-area: note;
+        max-width: 22em;
+        color: var(--ink-2);
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.45;
+      }
+      .r-note b {
+        display: block;
+        margin-bottom: 2px;
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .side {
+        grid-area: side;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .side .meta {
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.5;
+        text-align: right;
+      }
+      .side .meta span {
+        display: block;
+      }
+      .side .meta .mono {
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+
+      .chart {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        cursor: crosshair;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .chart svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .chart .grid line {
+        stroke: var(--line);
+        stroke-width: 1;
+      }
+      .chart .grid line.dash {
+        stroke-dasharray: 2 4;
+        stroke: var(--line-strong);
+      }
+      .chart text {
+        fill: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.06em;
+      }
+      .chart .line {
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 1.5;
+        stroke-linejoin: miter;
+      }
+      .chart .band-fill {
+        fill: url(#hatch);
+      }
+      .chart .band-edge {
+        fill: none;
+        stroke: var(--line-strong);
+        stroke-width: 1;
+      }
+      .chart .best {
+        stroke: var(--brand-hi);
+        stroke-width: 3;
+      }
+      .chart .best-tag {
+        fill: var(--brand-hi);
+      }
+      .chart .now {
+        stroke: var(--ink-3);
+        stroke-dasharray: 1 3;
+      }
+      .chart .cell {
+        fill: transparent;
+      }
+      .chart .cell.on {
+        fill: rgb(255 255 255 / 0.035);
+      }
+      .cursor {
+        position: absolute;
+        top: 0;
+        bottom: 26px;
+        width: 1px;
+        background: var(--ink-2);
+        pointer-events: none;
+      }
+      .cursor i {
+        position: absolute;
+        left: -5px;
+        width: 11px;
+        height: 11px;
+        margin-top: -5px;
+        border: 2px solid var(--ink);
+        background: var(--tile);
+        transition: top 0.18s var(--ease);
+      }
+      .chart:focus-visible {
+        outline-offset: 6px;
+      }
+      .sweep {
+        position: absolute;
+        top: 0;
+        bottom: 26px;
+        width: 1px;
+        background: linear-gradient(transparent, var(--line-strong), transparent);
+        pointer-events: none;
+        animation: sweep 9s linear infinite;
+      }
+      @keyframes sweep {
+        from {
+          left: 0;
+        }
+        to {
+          left: 100%;
+        }
+      }
+      .chart.scrubbing .sweep {
+        visibility: hidden;
+      }
+
+      .toggles {
+        display: flex;
+        flex: none;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 20px;
+      }
+      .seg {
+        display: flex;
+        border: 1px solid var(--line-strong);
+      }
+      .seg button {
+        height: 36px;
+        padding: 0 14px;
+        color: var(--ink-3);
+        font-size: 14px;
+        font-weight: 700;
+        transition:
+          color 0.2s,
+          transform 0.15s var(--ease);
+      }
+      .seg button + button {
+        box-shadow: inset 1px 0 var(--line);
+      }
+      @media (hover: hover) {
+        .seg button:hover {
+          color: var(--ink);
+        }
+      }
+      .seg button:active {
+        transform: scale(0.95);
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--ink);
+        color: var(--canvas);
+      }
+      .seg button .mono {
+        margin-left: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        opacity: 0.7;
+      }
+      .toggles .hint {
+        font-size: 13px;
+      }
+
+      @media (max-width: 899px) {
+        .read {
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          grid-template-areas: 'when when side' 'score note note';
+          gap: 12px 18px;
+        }
+        .side .meta {
+          display: none;
+        }
+      }
+      @media (max-width: 719px) {
+        .out {
+          gap: 14px;
+          padding: 18px 20px 18px;
+        }
+        .seg {
+          width: 100%;
+        }
+        .seg button {
+          flex: 1;
+          padding: 0;
+          text-align: center;
+        }
+        .seg button .mono {
+          display: none;
+        }
+        .toggles .hint {
+          display: none;
+        }
+        .r-note {
+          font-size: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body data-state="input">
+    <main class="frame">
+      <header data-chrome="top-bar"></header>
+      <section class="stage" aria-labelledby="game-title">
+        <span class="stage-frame" aria-hidden="true"></span>
+        <header data-chrome="stage-head"></header>
+
+        <div class="stage-body">
+          <form id="input" class="in" novalidate autocomplete="off">
+            <div class="acc-band" data-accuracy>
+              <p class="acc-num">
+                <span class="name">정확도</span><b id="acc">00</b><small>%</small>
+              </p>
+              <div class="day-ruler" aria-hidden="true">
+                <span class="hours"
+                  ><span>00</span><span>06</span><span>12</span><span>18</span
+                  ><span>24</span></span
+                >
+                <span class="ticks"></span>
+                <span class="bracket idle none" id="bracket"
+                  ><i class="scan"></i
+                ></span>
+                <span class="birth" id="birth" hidden></span>
+              </div>
+              <p class="acc-err">
+                <span class="name">오차</span><b id="err">±12.0</b><small>h</small>
+              </p>
+            </div>
+
+            <div class="bands" id="bands"></div>
+
+            <div class="in-foot">
+              <p class="hint">
+                눈금을 끌거나 눌러서 맞춰요. 생년월일 세 줄만 필수예요.
+              </p>
+              <button class="btn btn-primary" id="go" type="submit" disabled>
+                흐름 보기 <span class="mono" aria-hidden="true">→</span>
+              </button>
+            </div>
+          </form>
+
+          <div id="result" class="out" hidden>
+            <div class="read">
+              <p class="when">
+                <span class="mono" id="r-when">00:00–02:00</span>
+                <span id="r-label"></span>
+              </p>
+              <p class="r-score">
+                <b id="r-score" data-v="0">00</b><small>/100</small>
+              </p>
+              <p class="r-note" id="r-note" aria-live="polite"></p>
+              <div class="side">
+                <p class="meta">
+                  <span id="r-total"></span>
+                  <span class="mono" id="r-acc"></span>
+                </p>
+                <button class="btn" id="edit" type="button">
+                  <span class="mono" aria-hidden="true">←</span>값 고치기
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="chart"
+              id="chart"
+              tabindex="0"
+              role="slider"
+              aria-label="시간대"
+              aria-valuemin="0"
+              aria-valuemax="11"
+            >
+              <svg id="svg" aria-hidden="true"></svg>
+              <span class="sweep idle" aria-hidden="true"></span>
+              <span class="cursor" id="cursor" aria-hidden="true"><i></i></span>
+            </div>
+
+            <div class="toggles">
+              <div class="seg" id="seg" role="group" aria-label="보는 영역"></div>
+              <p class="hint">그래프를 훑으면 시간대별로 읽어 줘요.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="shared/chrome.js"></script>
+    <script src="shared/kit.js"></script>
+    <script>
+      const $ = (s) => document.querySelector(s)
+      const p = Kit.emptyProfile()
+      const form = $('#input')
+      const result = $('#result')
+      const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i)
+      const hhmm = (i) => `${Kit.pad(Math.floor(i / 2))}:${i % 2 ? '30' : '00'}`
+
+      /* ─── Rulers ─────────────────────────────────────────────────── */
+      const BANDS = [
+        {
+          key: 'year',
+          label: '태어난 해',
+          values: range(1940, Kit.THIS_YEAR),
+          step: 14,
+          start: 1990,
+          major: (v) => v % 10 === 0,
+          mid: (v) => v % 5 === 0,
+          text: String,
+          show: String,
+        },
+        {
+          key: 'month',
+          label: '태어난 달',
+          values: range(1, 12),
+          step: 40,
+          start: 6,
+          major: () => true,
+          text: Kit.pad,
+          show: Kit.pad,
+        },
+        {
+          key: 'day',
+          label: '태어난 날',
+          values: range(1, 31),
+          step: 22,
+          start: 15,
+          major: (v) => v === 1 || v % 5 === 0,
+          text: Kit.pad,
+          show: Kit.pad,
+        },
+        {
+          key: 'time',
+          label: '태어난 시각',
+          values: range(0, 47),
+          step: 13,
+          start: 24,
+          major: (i) => i % 6 === 0,
+          mid: (i) => i % 2 === 0,
+          text: (i) => Kit.pad(i / 2),
+          show: hhmm,
+        },
+        {
+          key: 'calendar',
+          label: '양력·음력',
+          values: ['solar', 'lunar'],
+          names: ['양력', '음력'],
+          step: 96,
+          start: 'solar',
+        },
+        {
+          key: 'gender',
+          label: '성별',
+          values: ['f', 'm'],
+          names: ['여성', '남성'],
+          step: 96,
+          start: 'f',
+        },
+        {
+          key: 'interests',
+          label: '관심 분야',
+          values: Kit.DOMAINS.map((d) => d.key),
+          names: Kit.DOMAINS.map((d) => d.name),
+          step: 76,
+          start: 'money',
+        },
+      ]
+      const REQUIRED = ['year', 'month', 'day']
+      const tapes = {}
+
+      function bandHead(i, key, label) {
+        const req = REQUIRED.includes(key)
+        return `<span class="idx">${Kit.pad(i + 1)}</span>
+          <span class="what">${label}${
+            req
+              ? `<span class="req">필수</span><span class="w">+${Kit.weightOf(key)}</span>`
+              : `<span class="w">+${Kit.weightOf(key)}</span>`
+          }</span>`
+      }
+
+      const bandsEl = $('#bands')
+      BANDS.forEach((b, i) => {
+        const row = document.createElement('div')
+        row.className = 'band'
+        row.dataset.key = b.key
+        row.innerHTML = `${bandHead(i, b.key, b.label)}
+          <div class="tape" tabindex="0" role="slider" aria-label="${b.label}" data-clip-ok>
+            <div class="track${b.names ? ' words' : ''}"></div><span class="needle"></span>
+          </div>
+          <span class="readout${b.names ? ' ko' : ''}">${b.names ? '—' : '-'.repeat(b.key === 'year' ? 4 : b.key === 'time' ? 5 : 2)}</span>`
+        bandsEl.append(row)
+        tapes[b.key] = makeTape(row, b)
+      })
+      const nameRow = document.createElement('div')
+      nameRow.className = 'band'
+      nameRow.dataset.key = 'name'
+      nameRow.innerHTML = `${bandHead(BANDS.length, 'name', '이름')}
+        <input class="name-field" id="f-name" maxlength="8" placeholder="불러 줄 이름" aria-label="이름 (선택)" enterkeyhint="done" />
+        <span class="readout ko" aria-hidden="true">—</span>`
+      bandsEl.append(nameRow)
+      const nameInput = $('#f-name')
+      nameInput.addEventListener('input', () => {
+        p.name = nameInput.value
+        nameRow.querySelector('.readout').textContent = p.name.trim() || '—'
+        update()
+      })
+
+      function makeTape(row, cfg) {
+        const el = row.querySelector('.tape')
+        const track = el.querySelector('.track')
+        const out = row.querySelector('.readout')
+        const n = cfg.values.length
+        const { step } = cfg
+        let html = ''
+        cfg.values.forEach((v, i) => {
+          const x = i * step
+          if (cfg.names) {
+            html += `<i class="major" style="left:${x}px"></i><b style="left:${x}px">${cfg.names[i]}</b>`
+            if (i < n - 1)
+              for (let k = 1; k < 4; k++) html += `<i style="left:${x + (step * k) / 4}px"></i>`
+          } else {
+            const cls = cfg.major(v) ? 'major' : cfg.mid?.(v) ? 'mid' : ''
+            html += `<i class="${cls}" style="left:${x}px"></i>`
+            if (cfg.major(v)) html += `<b style="left:${x}px">${cfg.text(v)}</b>`
+          }
+        })
+        track.innerHTML = html
+        const labels = [...track.querySelectorAll('b')]
+
+        let pos = cfg.values.indexOf(cfg.start)
+        let value = null
+        let max = n - 1
+
+        const render = () => {
+          track.style.transform = `translateX(${el.clientWidth / 2 - pos * step}px)`
+        }
+        const commit = (i, { snap = true, quiet = false } = {}) => {
+          i = Kit.clamp(Math.round(i), 0, max)
+          pos = i
+          if (snap && !Kit.reduced()) {
+            track.classList.add('snap')
+            setTimeout(() => track.classList.remove('snap'), 320)
+          }
+          render()
+          value = i
+          const v = cfg.values[i]
+          out.textContent = cfg.names ? cfg.names[i] : cfg.show(v)
+          labels.forEach((b) => b.classList.remove('sel'))
+          const label = cfg.names ? labels[i] : labels.find((b) => b.textContent === cfg.text(v))
+          label?.classList.add('sel')
+          el.setAttribute('aria-valuetext', out.textContent)
+          if (!quiet) onValue(cfg.key, v)
+        }
+        const live = () => {
+          const i = Kit.clamp(Math.round(pos), 0, max)
+          out.textContent = cfg.names ? cfg.names[i] : cfg.show(cfg.values[i])
+          onValue(cfg.key, cfg.values[i], true)
+        }
+
+        let drag = null
+        el.addEventListener('pointerdown', (e) => {
+          if (e.button) return
+          el.setPointerCapture(e.pointerId)
+          track.classList.remove('snap')
+          drag = { x: e.clientX, from: pos, moved: false, t: e.timeStamp, vx: 0, lx: e.clientX }
+          el.classList.add('dragging')
+        })
+        el.addEventListener('pointermove', (e) => {
+          if (!drag) return
+          const dx = e.clientX - drag.x
+          if (Math.abs(dx) > 4) drag.moved = true
+          if (!drag.moved) return
+          const dt = Math.max(1, e.timeStamp - drag.t)
+          drag.vx = (e.clientX - drag.lx) / dt
+          drag.lx = e.clientX
+          drag.t = e.timeStamp
+          pos = Kit.clamp(drag.from - dx / step, 0, max)
+          render()
+          live()
+        })
+        const end = (e) => {
+          if (!drag) return
+          el.classList.remove('dragging')
+          let target = pos
+          if (!drag.moved) {
+            const r = el.getBoundingClientRect()
+            target = pos + (e.clientX - (r.left + r.width / 2)) / step
+          } else if (e.timeStamp - drag.t < 80) {
+            // Released while still moving: carry on a little (fling).
+            target = pos - (drag.vx * 140) / step
+          }
+          drag = null
+          commit(target)
+        }
+        el.addEventListener('pointerup', end)
+        el.addEventListener('pointercancel', end)
+        el.addEventListener('keydown', (e) => {
+          const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 10, PageDown: -10 }[e.key]
+          if (d) commit((value ?? pos) + d)
+          else if (e.key === 'Home') commit(0)
+          else if (e.key === 'End') commit(max)
+          else return
+          e.preventDefault()
+        })
+        let wheelAt = 0
+        el.addEventListener(
+          'wheel',
+          (e) => {
+            const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : 0
+            if (!d) return
+            e.preventDefault()
+            if (e.timeStamp - wheelAt < 60) return
+            wheelAt = e.timeStamp
+            commit((value ?? pos) + Math.sign(d))
+          },
+          { passive: false }
+        )
+        new ResizeObserver(render).observe(el)
+        render()
+
+        return {
+          set(v) {
+            const i = cfg.values.indexOf(v)
+            if (i > -1) commit(i, { snap: false, quiet: true })
+          },
+          /** Shorten the ruler (days in a month). */
+          limit(count) {
+            max = count - 1
+            if (pos > max) {
+              pos = max
+              if (value !== null) commit(max)
+              else render()
+            }
+          },
+        }
+      }
+
+      /* A ruler moved: write the profile and repaint everything that reads it. */
+      function onValue(key, v, dragging) {
+        if (key === 'year') p.year = String(v)
+        else if (key === 'month') p.month = Kit.pad(v)
+        else if (key === 'day') p.day = Kit.pad(v)
+        else if (key === 'time') p.time = hhmm(v)
+        else if (key === 'interests') p.interests = [v]
+        else p[key] = v
+        if (key === 'month' || key === 'year') {
+          const m = +p.month || 1
+          tapes.day.limit(Kit.daysIn(+p.year || 2000, m))
+        }
+        update(dragging)
+      }
+
+      /* ─── Accuracy ───────────────────────────────────────────────── */
+      const setBefore = new Set()
+      function update() {
+        const acc = Kit.accuracy(p)
+        Kit.tween($('#acc'), acc, { dur: 380 })
+        const known = Kit.dateValid(p)
+        const unc = known ? 12 - (acc / 100) * 11 : 12
+        $('#err').textContent = `±${unc.toFixed(1)}`
+        const hour = Kit.okTime(p) ? +p.time.slice(0, 2) + +p.time.slice(3) / 60 : 12
+        const left = Kit.clamp(hour - unc, 0, 24)
+        const right = Kit.clamp(hour + unc, 0, 24)
+        const bracket = $('#bracket')
+        bracket.style.left = `${(left / 24) * 100}%`
+        bracket.style.width = `${((right - left) / 24) * 100}%`
+        bracket.classList.toggle('none', !known)
+        const birth = $('#birth')
+        birth.hidden = !Kit.okTime(p)
+        birth.style.left = `${(hour / 24) * 100}%`
+
+        document.querySelectorAll('.band').forEach((row) => {
+          const ok = Kit.filled(p, row.dataset.key)
+          row.classList.toggle('set', ok)
+          if (ok && !setBefore.has(row.dataset.key) && !Kit.reduced()) {
+            row.classList.add('gain')
+            setTimeout(() => row.classList.remove('gain'), 700)
+          }
+          ok ? setBefore.add(row.dataset.key) : setBefore.delete(row.dataset.key)
+        })
+        $('#go').disabled = !known
+      }
+
+      /* ─── Result ─────────────────────────────────────────────────── */
+      let f = null
+      let series = 'total'
+      let shown = []
+      let at = 0
+      const chart = $('#chart')
+      const svg = $('#svg')
+      const cursor = $('#cursor')
+      const PAD_T = 22
+      const PAD_B = 26
+
+      const target = () =>
+        series === 'total' ? f.hours : f.domains.find((d) => d.key === series).hours
+
+      /* The y-axis starts just under the lowest value any series reaches, so
+         the line uses the whole height instead of hugging the top. */
+      let floor = 0
+      function geometry() {
+        const w = chart.clientWidth
+        const h = chart.clientHeight
+        const y = (v) =>
+          PAD_T + (1 - (Math.max(v, floor) - floor) / (100 - floor)) * (h - PAD_T - PAD_B)
+        return { w, h, y, cw: w / 12 }
+      }
+
+      function draw() {
+        if (!f || !chart.clientWidth) return
+        const { w, h, y, cw } = geometry()
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`)
+        const vals = shown
+        const err = f.err
+        let line = ''
+        let up = ''
+        let down = ''
+        vals.forEach((v, i) => {
+          const x0 = i * cw
+          const x1 = (i + 1) * cw
+          line += `${i ? 'V' : 'M0 '}${y(v).toFixed(1)} H${x1.toFixed(1)} `
+          up += `${i ? 'L' : 'M'}${x0.toFixed(1)} ${y(Math.min(100, v + err)).toFixed(1)} L${x1.toFixed(1)} ${y(Math.min(100, v + err)).toFixed(1)} `
+          down = `L${x1.toFixed(1)} ${y(Math.max(0, v - err)).toFixed(1)} L${x0.toFixed(1)} ${y(Math.max(0, v - err)).toFixed(1)} ` + down
+        })
+        const band = `${up}${down}Z`
+        const b = vals.indexOf(Math.max(...vals))
+        const now = new Date()
+        const nowX = ((now.getHours() + now.getMinutes() / 60) / 24) * w
+        const levels = []
+        const gap = 100 - floor > 50 ? 20 : 10
+        for (let v = 100 - gap; v > floor; v -= gap) levels.push(v)
+        let grid = ''
+        for (const v of levels) grid += `<line class="dash" x1="0" x2="${w}" y1="${y(v)}" y2="${y(v)}" />`
+        grid += `<line x1="0" x2="${w}" y1="${y(floor)}" y2="${y(floor)}" />`
+        for (let i = 0; i <= 12; i++) grid += `<line x1="${i * cw}" x2="${i * cw}" y1="${y(floor)}" y2="${y(floor) + (i % 3 ? 4 : 8)}" />`
+        let labels = ''
+        for (let i = 0; i <= 12; i += w < 560 ? 3 : 1) {
+          const anchor = i === 0 ? 'start' : i === 12 ? 'end' : 'middle'
+          labels += `<text x="${i * cw}" y="${h - 4}" text-anchor="${anchor}">${Kit.pad(i * 2)}</text>`
+        }
+        for (const v of levels) labels += `<text x="4" y="${y(v) - 5}">${v}</text>`
+        let cells = ''
+        for (let i = 0; i < 12; i++) cells += `<rect class="cell${i === at ? ' on' : ''}" x="${i * cw}" y="${PAD_T}" width="${cw}" height="${h - PAD_T - PAD_B}" />`
+        svg.innerHTML = `
+          <defs><pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 0V4" stroke="rgb(255 255 255 / 0.09)" /></pattern></defs>
+          <g class="grid">${grid}</g>${cells}
+          <path class="band-fill" d="${band}" />
+          <path class="line" d="${line}" />
+          <line class="best" x1="${b * cw}" x2="${(b + 1) * cw}" y1="${y(vals[b])}" y2="${y(vals[b])}" />
+          <text class="best-tag" x="${b * cw + 2}" y="${y(Math.min(100, vals[b] + err)) - 6}">BEST</text>
+          <line class="now" x1="${nowX}" x2="${nowX}" y1="${PAD_T - 8}" y2="${y(floor)}" />
+          <text x="${nowX + 5}" y="${PAD_T - 10}">NOW</text>
+          ${labels}`
+        placeCursor()
+      }
+
+      function placeCursor() {
+        const { y, cw } = geometry()
+        cursor.style.left = `${(at + 0.5) * cw}px`
+        cursor.querySelector('i').style.top = `${y(shown[at])}px`
+      }
+
+      function readAt(i, { quiet = false } = {}) {
+        at = Kit.clamp(i, 0, 11)
+        svg.querySelectorAll('.cell').forEach((c, k) => c.classList.toggle('on', k === at))
+        placeCursor()
+        const vals = target()
+        $('#r-when').textContent = `${Kit.pad(at * 2)}:00–${Kit.pad(at * 2 + 2)}:00`
+        $('#r-label').textContent = Kit.blockLabel(at)
+        Kit.tween($('#r-score'), vals[at], { dur: quiet ? 0 : 260 })
+        const name = series === 'total' ? '총운' : Kit.domainName(series)
+        const note = $('#r-note')
+        const text = f.hourNotes[at]
+        note.innerHTML = `<b>${name} · ${at === vals.indexOf(Math.max(...vals)) ? '가장 좋은 때' : `±${f.err}`}</b><span></span>`
+        quiet ? (note.lastChild.textContent = text) : Kit.scramble(note.lastChild, text, { dur: 240 })
+        chart.setAttribute('aria-valuenow', at)
+        chart.setAttribute('aria-valuetext', `${Kit.blockLabel(at)} ${vals[at]}점`)
+      }
+
+      const blockAt = (clientX) => {
+        const r = chart.getBoundingClientRect()
+        return Kit.clamp(Math.floor(((clientX - r.left) / r.width) * 12), 0, 11)
+      }
+      chart.addEventListener('pointermove', (e) => {
+        if (e.pointerType === 'mouse' || e.buttons) {
+          chart.classList.add('scrubbing')
+          const i = blockAt(e.clientX)
+          if (i !== at) readAt(i)
+        }
+      })
+      chart.addEventListener('pointerdown', (e) => {
+        chart.setPointerCapture(e.pointerId)
+        chart.classList.add('scrubbing')
+        const i = blockAt(e.clientX)
+        if (i !== at) readAt(i)
+      })
+      const rest = () => chart.classList.remove('scrubbing')
+      chart.addEventListener('pointerleave', rest)
+      chart.addEventListener('pointerup', (e) => e.pointerType !== 'mouse' && rest())
+      chart.addEventListener('keydown', (e) => {
+        const d = { ArrowRight: 1, ArrowLeft: -1, ArrowUp: 1, ArrowDown: -1 }[e.key]
+        if (!d) return
+        e.preventDefault()
+        readAt(at + d)
+      })
+
+      /* Switching what's plotted moves the line, nothing else. */
+      function show(key) {
+        series = key
+        document.querySelectorAll('#seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.key === key)))
+        const from = [...shown]
+        const to = target()
+        cancelAnimationFrame(show.raf)
+        if (Kit.reduced() || !from.length) {
+          shown = [...to]
+          draw()
+          readAt(at, { quiet: true })
+          return
+        }
+        Kit.hold(340)
+        const t0 = performance.now()
+        const step = (now) => {
+          const t = Math.min(1, (now - t0) / 320)
+          const e = 1 - Math.pow(1 - t, 3)
+          shown = from.map((v, i) => v + (to[i] - v) * e)
+          draw()
+          if (t < 1) show.raf = requestAnimationFrame(step)
+          else readAt(at)
+        }
+        show.raf = requestAnimationFrame(step)
+      }
+
+      function renderResult() {
+        f = Kit.fortune(p)
+        const seg = $('#seg')
+        seg.innerHTML = [['total', '총운', f.total], ...f.domains.map((d) => [d.key, d.name, d.score])]
+          .map(([k, n, s]) => `<button type="button" data-key="${k}" aria-pressed="false">${n}<span class="mono">${s}</span></button>`)
+          .join('')
+        seg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => show(b.dataset.key)))
+        $('#r-total').textContent = `총운 ${f.total} · ${f.headline}`
+        $('#r-acc').textContent = `정확도 ${f.accuracy}% · ±${f.err}`
+        const lowest = Math.min(...f.hours, ...f.domains.flatMap((d) => d.hours))
+        floor = Math.max(0, Math.floor((lowest - f.err - 6) / 10) * 10)
+        series = 'total'
+        shown = []
+        at = f.best
+        show('total')
+      }
+
+      new ResizeObserver(() => draw()).observe(chart)
+
+      /* ─── Flow ───────────────────────────────────────────────────── */
+      form.addEventListener('submit', (e) => {
+        e.preventDefault()
+        if (!Kit.dateValid(p)) return
+        document.activeElement?.blur()
+        renderResult()
+        $('#r-score').dataset.v = 0
+        Kit.swap(form, result, {
+          state: 'result',
+          after() {
+            draw()
+            readAt(at)
+          },
+        })
+      })
+      $('#edit').addEventListener('click', () => Kit.swap(result, form, { state: 'input' }))
+
+      if (Kit.demo) {
+        Object.assign(p, Kit.SAMPLE, { interests: [...Kit.SAMPLE.interests] })
+        tapes.year.set(+p.year)
+        tapes.month.set(+p.month)
+        tapes.day.set(+p.day)
+        tapes.time.set(+p.time.slice(0, 2) * 2 + (+p.time.slice(3) >= 30 ? 1 : 0))
+        tapes.calendar.set(p.calendar)
+        tapes.interests.set(p.interests[0])
+        nameInput.value = p.name
+        nameRow.querySelector('.readout').textContent = p.name
+        update()
+        form.hidden = true
+        result.hidden = false
+        document.body.dataset.state = 'result'
+        renderResult()
+        draw()
+        readAt(at, { quiet: true })
+      } else {
+        update()
+      }
+    </script>
+  </body>
+</html>

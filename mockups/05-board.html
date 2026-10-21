@@ -1,0 +1,1296 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+    />
+    <title>05 보드 · 오늘의 운세 시안</title>
+    <link rel="stylesheet" href="shared/theme.css" />
+    <style>
+      /* ─── Split-flap tiles ────────────────────────────────────────── */
+      .flap {
+        position: relative;
+        display: inline-grid;
+        flex: none;
+        place-items: center;
+        width: var(--tw, 26px);
+        height: var(--th, 34px);
+        overflow: hidden;
+        border-radius: 2px;
+        background: #1b1b1b;
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: calc(var(--th, 34px) * 0.56);
+        font-weight: 500;
+        line-height: 1;
+      }
+      .flap.ko {
+        font-family: var(--sans);
+        font-size: calc(var(--th, 34px) * 0.5);
+        font-weight: 750;
+      }
+      .flap.dim {
+        color: var(--ink-3);
+      }
+      .flap.hi {
+        color: var(--brand-hi);
+      }
+      /* The hinge line. */
+      .flap::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 0;
+        left: 0;
+        height: 1px;
+        background: rgb(0 0 0 / 0.55);
+      }
+      /* The upper leaf falls away to show the new character. */
+      .flap.flip::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 50%;
+        background: #232323;
+        transform-origin: bottom;
+        animation: fold 0.07s ease-in forwards;
+      }
+      @keyframes fold {
+        from {
+          transform: scaleY(1);
+        }
+        to {
+          transform: scaleY(0);
+        }
+      }
+      .grp {
+        display: flex;
+        flex: none;
+        gap: 2px;
+      }
+
+      /* ─── Input: one line, read as you type ───────────────────────── */
+      .in {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+      }
+      .cmd {
+        position: sticky;
+        top: var(--vv-top);
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px 28px 16px;
+        border-bottom: 1px solid var(--line);
+        background: var(--tile);
+      }
+      .line {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-bottom: 2px solid var(--line-strong);
+        transition: border-color 0.2s;
+      }
+      .line:focus-within {
+        border-bottom-color: var(--ink);
+      }
+      .prompt {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 24px;
+      }
+      .cmd-input {
+        flex: 1;
+        min-width: 0;
+        height: 60px;
+        font-size: clamp(19px, 1.2vw + 12px, 28px);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .cmd-input::placeholder {
+        color: var(--ink-3);
+        font-weight: 600;
+      }
+      .signal {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 12px;
+      }
+      .bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 22px;
+      }
+      .bars i {
+        width: 5px;
+        background: var(--line-strong);
+        transition: background-color 0.35s;
+      }
+      .bars i:nth-child(1) {
+        height: 6px;
+      }
+      .bars i:nth-child(2) {
+        height: 10px;
+      }
+      .bars i:nth-child(3) {
+        height: 14px;
+      }
+      .bars i:nth-child(4) {
+        height: 18px;
+      }
+      .bars i:nth-child(5) {
+        height: 22px;
+      }
+      .bars i.on {
+        background: var(--ink-2);
+      }
+      .bars i.new {
+        background: var(--brand-hi);
+        transition: none;
+      }
+      .signal b {
+        min-width: 3.4ch;
+        font-family: var(--mono);
+        font-size: 20px;
+        font-weight: 500;
+        text-align: right;
+      }
+      .signal b small {
+        color: var(--ink-3);
+        font-size: 12px;
+      }
+      .cmd .help {
+        color: var(--ink-3);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .cmd .help .mono {
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+
+      /* What the line was read as, one flap row per answer. */
+      .slots {
+        --tw: 26px;
+        --th: 34px;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        padding: 24px 28px;
+      }
+      .slot {
+        display: grid;
+        grid-template-columns: 64px 92px minmax(0, 1fr) 44px;
+        align-items: center;
+        gap: 14px;
+        min-height: calc(var(--th) + 10px);
+        padding: 0 4px;
+        cursor: pointer;
+        transition: transform 0.15s var(--ease);
+      }
+      .slot:active {
+        transform: scale(0.99);
+      }
+      .slot .key {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+      }
+      .slot .what {
+        color: var(--ink-2);
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .slot .w {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 12px;
+        text-align: right;
+        transition: color 0.4s;
+      }
+      .slot.ok .key,
+      .slot.ok .w {
+        color: var(--ink-2);
+      }
+      .slot.gain .w {
+        color: var(--brand-hi);
+        transition: none;
+      }
+      @media (min-width: 720px) {
+        .slots {
+          --tw: 34px;
+          --th: 44px;
+        }
+      }
+      /* Tall tablets: rows spread out so the board fills the sheet. */
+      @media (min-width: 720px) and (min-height: 1000px) {
+        .slots {
+          --tw: 44px;
+          --th: 57px;
+          gap: 22px;
+        }
+      }
+
+      .examples {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 0 28px 24px;
+      }
+      .examples .t {
+        margin-right: 6px;
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .examples button {
+        height: 32px;
+        padding: 0 11px;
+        border: 1px solid var(--line-strong);
+        color: var(--ink-2);
+        font-size: 14px;
+        font-weight: 700;
+        transition:
+          color 0.2s,
+          border-color 0.2s,
+          transform 0.15s var(--ease);
+      }
+      .examples button.mono {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      @media (hover: hover) {
+        .examples button:hover {
+          border-color: var(--ink-3);
+          color: var(--ink);
+        }
+      }
+      .examples button:active {
+        transform: scale(0.95);
+      }
+      .examples button.used {
+        border-style: dashed;
+        color: var(--ink-3);
+      }
+
+      .in-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 28px;
+        border-top: 1px solid var(--line);
+      }
+      .hint {
+        color: var(--ink-3);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      @media (max-width: 719px) {
+        .cmd {
+          padding: 12px 20px 12px;
+          gap: 8px;
+        }
+        .cmd-input {
+          height: 48px;
+        }
+        .prompt {
+          font-size: 20px;
+        }
+        .signal b {
+          font-size: 17px;
+        }
+        .cmd .help {
+          display: none;
+        }
+        .slots {
+          --tw: 22px;
+          --th: 30px;
+          gap: 10px;
+          padding: 18px 20px;
+        }
+        .slot {
+          grid-template-columns: 52px minmax(0, 1fr) 30px;
+          grid-template-areas: 'key flaps w';
+          gap: 10px;
+          padding: 0;
+        }
+        .slot .key {
+          grid-area: key;
+          font-size: 11px;
+          letter-spacing: 0.08em;
+        }
+        .slot .what {
+          display: none;
+        }
+        .slot .grp {
+          grid-area: flaps;
+        }
+        .slot .w {
+          grid-area: w;
+          font-size: 11px;
+        }
+        .examples {
+          padding: 0 20px 20px;
+        }
+        .in-foot {
+          padding: 16px 20px;
+        }
+      }
+
+      /* ─── Result: the departure board ─────────────────────────────── */
+      .out {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 16px;
+        min-height: 0;
+        padding: 22px 28px 20px;
+      }
+      .out-head {
+        display: flex;
+        flex: none;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 20px;
+      }
+      .today {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+      }
+      .today .mono {
+        color: var(--ink-2);
+        font-size: 14px;
+        letter-spacing: 0.08em;
+      }
+      .seg {
+        display: flex;
+        border: 1px solid var(--line-strong);
+      }
+      .seg button {
+        height: 34px;
+        padding: 0 16px;
+        color: var(--ink-3);
+        font-size: 14px;
+        font-weight: 700;
+        transition:
+          color 0.2s,
+          transform 0.15s var(--ease);
+      }
+      .seg button + button {
+        box-shadow: inset 1px 0 var(--line);
+      }
+      @media (hover: hover) {
+        .seg button:hover {
+          color: var(--ink);
+        }
+      }
+      .seg button:active {
+        transform: scale(0.95);
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--ink);
+        color: var(--canvas);
+      }
+      .seg button .now {
+        margin-left: 6px;
+        color: var(--brand-hi);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+      }
+      .seg button[aria-pressed='true'] .now {
+        color: var(--brand);
+      }
+      .clock {
+        --tw: 20px;
+        --th: 28px;
+        display: flex;
+        gap: 2px;
+        margin-left: auto;
+      }
+      .clock .colon {
+        width: 8px;
+        color: var(--ink-3);
+        font-family: var(--mono);
+        line-height: 28px;
+        text-align: center;
+      }
+
+      .wrap {
+        position: relative;
+        display: grid;
+        flex: 1;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 14px;
+        min-height: 0;
+      }
+      .wrap[data-wide] {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+        gap: 32px;
+      }
+      .board {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: var(--rg, 6px);
+        min-height: 0;
+      }
+      .cols {
+        display: flex;
+        align-items: center;
+        gap: var(--cg);
+        height: 16px;
+        padding: 0 8px;
+        color: var(--ink-3);
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .cols span {
+        flex: none;
+        white-space: nowrap;
+      }
+      .row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: var(--cg);
+        padding: 4px 8px;
+        border-radius: 3px;
+        transition:
+          background-color 0.2s,
+          transform 0.15s var(--ease);
+      }
+      @media (hover: hover) {
+        .row:hover {
+          background: rgb(255 255 255 / 0.03);
+        }
+      }
+      .row:active {
+        transform: scale(0.99);
+      }
+      .row[aria-expanded='true'] {
+        background: var(--tile-lit);
+        box-shadow: inset 2px 0 var(--brand-hi);
+      }
+
+      .detail {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+        min-height: 0;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+      }
+      .detail .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .detail h3 {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        font-size: 20px;
+        font-weight: 750;
+        letter-spacing: -0.03em;
+      }
+      .detail h3 b {
+        font-family: var(--mono);
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+      .detail .say {
+        color: var(--ink-2);
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.5;
+      }
+      .detail dl,
+      .detail .segs {
+        display: none;
+      }
+      /* Narrow: a fixed-height band, so picking a row never moves the board. */
+      .wrap:not([data-wide]) .detail {
+        gap: 6px;
+        min-height: 104px;
+      }
+      .wrap:not([data-wide]):not([data-roomy]) .detail .top {
+        display: none;
+      }
+      .wrap[data-roomy] .detail {
+        gap: 14px;
+        min-height: 318px;
+        padding: 20px 22px;
+      }
+      .wrap[data-roomy] .detail h3 {
+        font-size: 26px;
+      }
+      .wrap[data-roomy] .detail dl {
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid var(--line);
+      }
+      .wrap[data-roomy] .detail .segs {
+        display: flex;
+        gap: 10px;
+      }
+      .wrap[data-wide] .detail {
+        justify-content: center;
+        gap: clamp(14px, 2.4vh, 24px);
+        padding: clamp(20px, 3vh, 36px) clamp(20px, 2.4vw, 40px);
+      }
+      .wrap[data-wide] .detail h3 {
+        font-size: clamp(28px, 2.2vw + 6px, 44px);
+      }
+      .wrap[data-wide] .detail h3 b {
+        font-size: 1.5em;
+      }
+      .wrap[data-wide] .detail .say {
+        font-size: clamp(17px, 0.6vw + 10px, 21px);
+      }
+      .wrap[data-wide] .detail dl {
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid var(--line);
+      }
+      .detail dl div {
+        display: grid;
+        grid-template-columns: 5em 1fr;
+        gap: 12px;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .detail dt {
+        color: var(--ink-3);
+        font-weight: 700;
+      }
+      .detail dd {
+        font-weight: 600;
+      }
+      .wrap[data-wide] .detail .segs {
+        display: flex;
+        gap: 10px;
+      }
+      .segs button {
+        --tw: 20px;
+        --th: 28px;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 700;
+        transition:
+          border-color 0.2s,
+          transform 0.15s var(--ease);
+      }
+      @media (hover: hover) {
+        .segs button:hover {
+          border-color: var(--ink-3);
+        }
+      }
+      .segs button:active {
+        transform: scale(0.97);
+      }
+      .segs button[aria-pressed='true'] {
+        border-color: var(--ink-2);
+        color: var(--ink);
+      }
+
+      .out-foot {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 16px;
+      }
+      .out-foot .hint {
+        margin-right: auto;
+        font-size: 13px;
+      }
+      .out-foot .signal b {
+        font-size: 15px;
+      }
+      @media (max-width: 719px) {
+        .out {
+          gap: 12px;
+          padding: 16px 16px 16px;
+        }
+        .out-head {
+          gap: 10px;
+        }
+        .today {
+          display: none;
+        }
+        .seg {
+          flex: 1;
+        }
+        .seg button {
+          flex: 1;
+          padding: 0 8px;
+          text-align: center;
+        }
+        .clock {
+          --tw: 16px;
+          --th: 24px;
+        }
+        .clock .colon {
+          line-height: 24px;
+        }
+        .out-foot .hint {
+          display: none;
+        }
+        .out-foot .signal {
+          margin-right: auto;
+        }
+      }
+    </style>
+  </head>
+  <body data-state="input">
+    <main class="frame">
+      <header data-chrome="top-bar"></header>
+      <section class="stage" aria-labelledby="game-title">
+        <span class="stage-frame" aria-hidden="true"></span>
+        <header data-chrome="stage-head"></header>
+
+        <div class="stage-body">
+          <form id="input" class="in" novalidate autocomplete="off">
+            <div class="cmd" data-accuracy>
+              <label class="line">
+                <span class="prompt" aria-hidden="true">›</span>
+                <input
+                  class="cmd-input"
+                  id="cmd"
+                  placeholder="1994.03.12 오후 2시 음력 김하늘"
+                  aria-label="나에 대해 한 줄로 적어 주세요. 생년월일은 꼭 넣어 주세요."
+                  enterkeyhint="go"
+                  spellcheck="false"
+                />
+                <span class="signal" aria-label="정확도">
+                  <span class="bars" id="bars" aria-hidden="true"
+                    ><i></i><i></i><i></i><i></i><i></i
+                  ></span>
+                  <b><span id="acc">00</span><small>%</small></b>
+                </span>
+              </label>
+              <p class="help">
+                순서는 상관없어요. 생년월일, 태어난 시각, 양력·음력, 성별, 이름,
+                관심 분야를 띄어서 적으면 아래 보드가 알아서 읽어요.
+              </p>
+            </div>
+
+            <div class="slots" id="slots" aria-live="polite"></div>
+
+            <div class="examples" id="examples">
+              <span class="t">눌러서 넣기</span>
+            </div>
+
+            <div class="in-foot">
+              <p class="hint">생년월일만 읽히면 보드를 뒤집을 수 있어요.</p>
+              <button class="btn btn-primary" id="go" type="submit" disabled>
+                보드 뒤집기 <span class="mono" aria-hidden="true">→</span>
+              </button>
+            </div>
+          </form>
+
+          <div id="result" class="out" hidden>
+            <div class="out-head">
+              <p class="today">
+                <span class="label">TODAY</span><span class="mono" id="r-date"></span>
+              </p>
+              <div class="seg" id="seg" role="group" aria-label="시간대"></div>
+              <span class="clock" id="clock" aria-hidden="true"></span>
+            </div>
+            <div class="wrap" id="wrap">
+              <div class="board" id="board" role="list" aria-label="오늘의 운세 보드"></div>
+              <div class="detail" id="detail" aria-live="polite"></div>
+            </div>
+            <div class="out-foot">
+              <p class="hint">줄을 누르면 자세히 보여요. 시간대를 바꾸면 보드가 다시 뒤집혀요.</p>
+              <span class="signal" aria-label="정확도">
+                <span class="bars" id="r-bars" aria-hidden="true"
+                  ><i></i><i></i><i></i><i></i><i></i
+                ></span>
+                <b><span id="r-acc">00</span><small>%</small></b>
+              </span>
+              <button class="btn" id="edit" type="button">
+                <span class="mono" aria-hidden="true">←</span>다시 적기
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="shared/chrome.js"></script>
+    <script src="shared/kit.js"></script>
+    <script>
+      const $ = (s) => document.querySelector(s)
+      const p = Kit.emptyProfile()
+      const form = $('#input')
+      const result = $('#result')
+      const cmd = $('#cmd')
+
+      /* ─── Flaps ──────────────────────────────────────────────────── */
+      const POOLS = {
+        digit: '0123456789',
+        latin: 'ABCDEFGHJKLMNPRSTUVWXYZ',
+        hangul: '가나다라마바사아자차카타파하운빨금애건일관',
+      }
+      const poolFor = (ch) => (/\d/.test(ch) ? POOLS.digit : Kit.isHangul(ch) ? POOLS.hangul : POOLS.latin)
+      const tiles = (n) => '<span class="flap"></span>'.repeat(n)
+
+      /** Flip a tile through a few characters and land on `ch`. */
+      function flipTo(tile, ch, delay = 0) {
+        ch = ch || ' '
+        if (tile.dataset.ch === ch) return
+        tile.dataset.ch = ch
+        clearTimeout(tile._t)
+        const land = () => {
+          tile.textContent = ch.trim() ? ch : ''
+          tile.classList.toggle('ko', Kit.isHangul(ch))
+        }
+        if (Kit.reduced()) return land()
+        const pool = poolFor(ch.trim() ? ch : tile.textContent || '0')
+        let n = ch.trim() ? 2 + Math.floor(Math.random() * 2) : 1
+        const step = () => {
+          tile.classList.remove('flip')
+          void tile.offsetWidth
+          tile.classList.add('flip')
+          if (n-- > 0) {
+            tile.textContent = pool[Math.floor(Math.random() * pool.length)]
+            tile.classList.toggle('ko', pool === POOLS.hangul)
+            tile._t = setTimeout(step, 60)
+          } else land()
+        }
+        tile._t = setTimeout(step, delay)
+      }
+      /** Write a string across a group of tiles, left to right. */
+      function flipGroup(group, text, { delay = 0, stagger = 22 } = {}) {
+        const chars = [...text]
+        ;[...group.children].forEach((t, i) => flipTo(t, chars[i] || ' ', delay + i * stagger))
+      }
+
+      /* ─── Reading the line ───────────────────────────────────────── */
+      const TOPICS = {
+        love: ['애정', '연애', '사랑'],
+        money: ['금전', '돈', '재물', '재정'],
+        health: ['건강', '몸'],
+        work: ['일', '직장', '학업', '공부', '일운'],
+        people: ['관계', '친구', '대인'],
+      }
+      const GENDER = { f: ['여', '여자', '여성'], m: ['남', '남자', '남성'] }
+      const STOP = ['이름', '이름은', '생일', '태어남', '출생']
+
+      function parse(text) {
+        const out = { year: '', month: '', day: '', time: '', calendar: '', gender: '', name: '', interests: [] }
+        let s = ` ${text} `
+        const cut = (m) => {
+          s = s.replace(m[0], ' ')
+        }
+        let m
+        // Full dates: 1994.03.12, 1994-3-12, 1994년 3월 12일, 19940312, 940312
+        if ((m = /(\d{4})\s*[.\-/년]\s*(\d{1,2})\s*[.\-/월]\s*(\d{1,2})\s*일?/.exec(s))) {
+          ;[out.year, out.month, out.day] = [m[1], Kit.pad(+m[2]), Kit.pad(+m[3])]
+          cut(m)
+        } else if ((m = /(?<!\d)(19\d{2}|20[0-2]\d)(\d{2})(\d{2})(?!\d)/.exec(s))) {
+          ;[out.year, out.month, out.day] = [m[1], m[2], m[3]]
+          cut(m)
+        } else if ((m = /(?<![\d:])(\d{2})(\d{2})(\d{2})(?![\d:])/.exec(s))) {
+          const y = +m[1]
+          out.year = String(y > Kit.THIS_YEAR % 100 ? 1900 + y : 2000 + y)
+          ;[out.month, out.day] = [m[2], m[3]]
+          cut(m)
+        } else {
+          if ((m = /(?<!\d)(19\d{2}|20[0-2]\d)\s*년?(?![\d:])/.exec(s))) {
+            out.year = m[1]
+            cut(m)
+          }
+          if ((m = /(\d{1,2})\s*월\s*(?:(\d{1,2})\s*일)?/.exec(s))) {
+            out.month = Kit.pad(+m[1])
+            if (m[2]) out.day = Kit.pad(+m[2])
+            cut(m)
+          }
+        }
+        // Times: 14:30, 오후 2시 30분, 2시 반, 새벽 4시
+        if ((m = /(?<!\d)(\d{1,2}):(\d{2})(?!\d)/.exec(s))) {
+          out.time = `${Kit.pad(+m[1])}:${m[2]}`
+          cut(m)
+        } else if ((m = /(오전|오후|아침|낮|저녁|밤|새벽)?\s*(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분|(반))?/.exec(s))) {
+          let h = +m[2]
+          if (/오후|저녁|밤/.test(m[1] || '') && h < 12) h += 12
+          if (/낮/.test(m[1] || '') && h < 7) h += 12
+          if (/오전|아침|새벽/.test(m[1] || '') && h === 12) h = 0
+          const min = m[4] ? 30 : +(m[3] || 0)
+          out.time = `${Kit.pad(h)}:${Kit.pad(min)}`
+          cut(m)
+        }
+        for (const word of s.split(/[\s,·/]+/).filter(Boolean)) {
+          const w = word.replace(/(은|는|이고|이에요|예요|입니다|생)$/, '')
+          if (w === '양력' || w === '음력') out.calendar = w === '양력' ? 'solar' : 'lunar'
+          else if (GENDER.f.includes(w)) out.gender = 'f'
+          else if (GENDER.m.includes(w)) out.gender = 'm'
+          else {
+            const topic = Object.keys(TOPICS).find((k) => TOPICS[k].includes(w))
+            if (topic) {
+              if (!out.interests.includes(topic)) out.interests.push(topic)
+            } else if (/^[가-힣]{2,4}$/.test(w) && !STOP.includes(w) && !out.name) out.name = w
+          }
+        }
+        return out
+      }
+
+      /* ─── Slots: the line, as the board reads it ─────────────────── */
+      const CAL = { solar: '양력', lunar: '음력' }
+      const SEX = { f: '여성', m: '남성' }
+      const SLOTS = [
+        { key: 'date', code: 'DATE', label: '생년월일', n: 10, weight: 40, show: (p) => (p.year ? `${p.year}.${p.month || '--'}.${p.day || '--'}` : '') },
+        { key: 'time', code: 'TIME', label: '태어난 시각', n: 5, weight: 22, show: (p) => p.time },
+        { key: 'calendar', code: 'CAL', label: '양력·음력', n: 2, weight: 8, show: (p) => CAL[p.calendar] || '' },
+        { key: 'gender', code: 'SEX', label: '성별', n: 2, weight: 10, show: (p) => SEX[p.gender] || '' },
+        { key: 'name', code: 'NAME', label: '이름', n: 4, weight: 12, show: (p) => p.name },
+        { key: 'interests', code: 'TOPIC', label: '관심 분야', n: 5, weight: 8, show: (p) => p.interests.map(Kit.domainName).join('·').slice(0, 5) },
+      ]
+      const slotOk = (key) => (key === 'date' ? Kit.dateValid(p) : Kit.filled(p, key))
+      $('#slots').innerHTML = SLOTS.map(
+        (s) => `<div class="slot" data-key="${s.key}" title="${s.label}">
+          <span class="key">${s.code}</span><span class="what">${s.label}</span>
+          <span class="grp" aria-hidden="true">${tiles(s.n)}</span><span class="w">+${s.weight}</span>
+        </div>`
+      ).join('')
+      // Tapping a slot puts the cursor back in the line.
+      document.querySelectorAll('.slot').forEach((el) => el.addEventListener('click', () => cmd.focus()))
+
+      const EXAMPLES = [
+        ['1994.03.12', true],
+        ['오후 2시 30분', false],
+        ['음력', false],
+        ['여', false],
+        ['김하늘', false],
+        ['금전', false],
+      ]
+      $('#examples').insertAdjacentHTML(
+        'beforeend',
+        EXAMPLES.map(([t, mono]) => `<button type="button" class="${mono ? 'mono' : ''}" data-t="${t}">${t}</button>`).join('')
+      )
+      $('#examples').addEventListener('click', (e) => {
+        const b = e.target.closest('button')
+        if (!b) return
+        cmd.value = `${cmd.value.trim()} ${b.dataset.t}`.trim()
+        read()
+      })
+
+      let litBars = 0
+      function paintBars(el, acc) {
+        const n = Math.round(acc / 20)
+        ;[...el.children].forEach((b, i) => {
+          b.classList.toggle('on', i < n)
+          if (i < n && i >= litBars && el.id === 'bars' && !Kit.reduced()) {
+            b.classList.add('new')
+            setTimeout(() => b.classList.remove('new'), 500)
+          }
+        })
+        if (el.id === 'bars') litBars = n
+      }
+
+      const okBefore = new Set()
+      function read() {
+        Object.assign(p, parse(cmd.value))
+        const acc = Kit.accuracy(p)
+        Kit.tween($('#acc'), acc, { dur: 380 })
+        paintBars($('#bars'), acc)
+        SLOTS.forEach((s, i) => {
+          const row = document.querySelector(`.slot[data-key="${s.key}"]`)
+          const ok = slotOk(s.key)
+          row.classList.toggle('ok', ok)
+          if (ok && !okBefore.has(s.key) && !Kit.reduced()) {
+            row.classList.add('gain')
+            setTimeout(() => row.classList.remove('gain'), 700)
+          }
+          ok ? okBefore.add(s.key) : okBefore.delete(s.key)
+          const group = row.querySelector('.grp')
+          flipGroup(group, s.show(p))
+          // A date that reads but doesn't exist stays dim.
+          ;[...group.children].forEach((t) => t.classList.toggle('dim', s.key === 'date' && !ok))
+        })
+        document.querySelectorAll('#examples button').forEach((b) => {
+          const got = parse(b.dataset.t)
+          const used = Object.entries(got).some(([k, v]) => (Array.isArray(v) ? v.some((x) => p[k].includes(x)) : v && p[k] === v))
+          b.classList.toggle('used', used)
+        })
+        $('#go').disabled = !Kit.dateValid(p)
+      }
+      cmd.addEventListener('input', read)
+
+      /* ─── Result: the board ──────────────────────────────────────── */
+      let f = null
+      let seg = 0
+      let open = 'total'
+      /* Three times of day, plus a fourth page for the lucky things. */
+      const SEGS = [
+        { name: '오전', code: 'MORNING', blocks: [3, 4, 5] },
+        { name: '오후', code: 'AFTERNOON', blocks: [6, 7, 8] },
+        { name: '밤', code: 'NIGHT', blocks: [9, 10, 11] },
+        { name: '행운', code: 'LUCKY' },
+      ]
+      const LUCKY = 3
+      const nowSeg = () => {
+        const h = new Date().getHours()
+        return h < 12 ? 0 : h < 18 ? 1 : 2
+      }
+      const avg = (hours, s) => Math.round(SEGS[s].blocks.reduce((a, b) => a + hours[b], 0) / 3)
+      const BAND = (v) => (v >= 82 ? 0 : v >= 68 ? 1 : 2)
+      const WORDS_TOTAL = ['술술풀림', '한걸음씩', '쉬어가기']
+      const WORDS = {
+        love: ['표현하기', '천천히', '들어주기'],
+        money: ['작은수입', '지출지키기', '결제미루기'],
+        health: ['가벼운몸', '스트레칭', '잠먼저'],
+        work: ['마무리', '오후집중', '재확인'],
+        people: ['반가운연락', '무난함', '말아끼기'],
+      }
+
+      /** Every row's text for a page: a time of day, or the lucky page. */
+      function rowsFor(s) {
+        if (s === LUCKY) return luckyRows()
+        const rows = []
+        const trend = (hours) => {
+          if (s === 0) return '·'
+          const d = avg(hours, s) - avg(hours, s - 1)
+          return d >= 5 ? '↑' : d <= -5 ? '↓' : '→'
+        }
+        const tv = avg(f.hours, s)
+        rows.push({
+          key: 'total',
+          label: '총운',
+          score: Kit.pad(tv),
+          trend: trend(f.hours),
+          word: WORDS_TOTAL[BAND(tv)],
+          line: f.headline,
+          title: ['총운', tv],
+          say: f.summary,
+          dl: [
+            ['가장 좋은 때', f.lucky.time.label],
+            ['한마디', f.headline],
+          ],
+          segs: SEGS.slice(0, 3).map((_, k) => avg(f.hours, k)),
+        })
+        for (const d of f.domains) {
+          const v = avg(d.hours, s)
+          rows.push({
+            key: d.key,
+            label: d.name,
+            score: Kit.pad(v),
+            trend: trend(d.hours),
+            word: WORDS[d.key][BAND(v)],
+            line: d.line,
+            title: [d.name, v],
+            say: d.line,
+            dl: [
+              ['할 것', d.advice[0]],
+              ['피할 것', d.advice[1]],
+            ],
+            segs: SEGS.slice(0, 3).map((_, k) => avg(d.hours, k)),
+          })
+        }
+        return rows
+      }
+
+      function luckyRows() {
+        const c = f.lucky.color
+        const dir = f.lucky.direction
+        const b = f.best
+        const half = (h) => (h < 12 ? '오전' : '오후')
+        const h12 = (h) => (h % 12 === 0 ? 12 : h % 12)
+        const when = `${half(b * 2)}${h12(b * 2)}–${h12(b * 2 + 2)}시`
+        return [
+          {
+            key: 'time',
+            label: '시간',
+            score: Kit.pad(b * 2),
+            word: when,
+            line: `${when.replace(/^(오전|오후)/, '$1 ')}가 가장 좋아요`,
+            title: ['행운의 시간', null],
+            say: f.hourNotes[b],
+            dl: [['언제', Kit.blockLabel(b)]],
+          },
+          {
+            key: 'color',
+            label: '색',
+            score: '--',
+            word: c.name.replace(/\s/g, ''),
+            line: `${c.name} 하나면 충분해요`,
+            title: ['행운의 색', null],
+            say: `${c.name} 소품 하나면 충분해요.`,
+            dl: [['어디에', '손에 닿는 작은 물건']],
+          },
+          {
+            key: 'number',
+            label: '숫자',
+            score: Kit.pad(f.lucky.number),
+            word: '오늘의숫자',
+            line: '로또 번호 뽑기에 넣어 보세요',
+            title: ['행운의 숫자', f.lucky.number],
+            say: '로또 번호 뽑기에 넣어 보세요.',
+            dl: [['함께', '처음 눈에 들어온 숫자']],
+          },
+          {
+            key: 'dir',
+            label: '방향',
+            score: dir.code.padEnd(2, ' '),
+            word: `${dir.name}쪽으로`,
+            line: `${dir.name}쪽 자리에서 약속을 잡아요`,
+            title: ['행운의 방향', null],
+            say: `중요한 약속은 ${dir.name}쪽 자리에서 잡아 보세요.`,
+            dl: [['방향', `${dir.name}쪽 · ${dir.code}`]],
+          },
+          {
+            key: 'zodiac',
+            label: '띠',
+            score: '--',
+            word: `${Kit.zodiac(p.year)}띠`,
+            line: `${p.year}년생 ${Kit.zodiac(p.year)}띠`,
+            title: ['띠', null],
+            say: `${p.year}년생 ${Kit.zodiac(p.year)}띠예요.`,
+            dl: [['태어난 해', `${p.year}년`]],
+          },
+          {
+            key: 'star',
+            label: '별',
+            score: '--',
+            word: Kit.star(+p.month, +p.day),
+            line: `${+p.month}월 ${+p.day}일 ${Kit.star(+p.month, +p.day)}`,
+            title: ['별자리', null],
+            say: `${+p.month}월 ${+p.day}일생, ${Kit.star(+p.month, +p.day)}예요.`,
+            dl: [['생일', `${+p.month}월 ${+p.day}일`]],
+          },
+        ].map((r) => ({ ...r, trend: '·' }))
+      }
+
+      let rows = []
+      let msgN = 6
+      const board = $('#board')
+      const wrap = $('#wrap')
+
+      function buildBoard() {
+        rows = rowsFor(seg)
+        board.innerHTML =
+          `<p class="cols" aria-hidden="true"><span style="width:calc(var(--tw) * 2 + 2px)">항목</span><span style="width:calc(var(--tw) * 2 + 2px)">점수</span><span style="width:var(--tw)">흐름</span><span>한마디</span></p>` +
+          rows
+            .map(
+              (r) => `<button type="button" class="row" role="listitem" data-r="${r.key}" aria-expanded="false">
+                <span class="grp g-label" aria-hidden="true">${tiles(2)}</span>
+                <span class="grp g-score" aria-hidden="true">${tiles(2)}</span>
+                <span class="grp g-trend" aria-hidden="true">${tiles(1)}</span>
+                <span class="grp g-msg" aria-hidden="true">${tiles(msgN)}</span>
+                <span class="sr-only"></span>
+              </button>`
+            )
+            .join('')
+        board.querySelectorAll('.row').forEach((el) => {
+          el.addEventListener('click', () => select(el.dataset.r))
+        })
+      }
+
+      /* Fill the board: label, score, trend and message for each row. A page
+         change re-keys the same six rows and flips them over in a wave. */
+      function paintBoard({ wave = true } = {}) {
+        rows = rowsFor(seg)
+        if (!rows.some((r) => r.key === open)) open = rows[0].key
+        // The wave takes about a second; the idle flutter waits it out.
+        if (wave) Kit.hold(1200)
+        const els = [...board.querySelectorAll('.row')]
+        rows.forEach((r, i) => {
+          const el = els[i]
+          el.dataset.r = r.key
+          el.setAttribute('aria-expanded', String(r.key === open))
+          const msg = msgN >= 14 ? r.line : r.word
+          const d = wave ? i * 70 : 0
+          flipGroup(el.querySelector('.g-label'), r.label, { delay: d })
+          flipGroup(el.querySelector('.g-score'), r.score, { delay: d + 60 })
+          flipGroup(el.querySelector('.g-trend'), r.trend, { delay: d + 100 })
+          flipGroup(el.querySelector('.g-msg'), msg, { delay: d + 130, stagger: 18 })
+          const trendTile = el.querySelector('.g-trend .flap')
+          trendTile.classList.toggle('hi', r.trend === '↑')
+          const score = /^\d+$/.test(r.score) ? `${r.score}점` : r.key === 'dir' ? r.score.trim() : ''
+          el.querySelector('.sr-only').textContent = `${r.label} ${score} ${msg}`
+        })
+        $('#seg')
+          .querySelectorAll('button')
+          .forEach((b, k) => b.setAttribute('aria-pressed', String(k === seg)))
+        paintDetail()
+      }
+
+      function select(key) {
+        open = key
+        board.querySelectorAll('.row').forEach((el) => el.setAttribute('aria-expanded', String(el.dataset.r === key)))
+        paintDetail()
+      }
+
+      function paintDetail() {
+        const r = rows.find((x) => x.key === open)
+        const [name, value] = r.title
+        $('#detail').innerHTML = `
+          <p class="top"><span class="label">${SEGS[seg].code}</span><span class="label">ROW ${Kit.pad(rows.indexOf(r) + 1)}</span></p>
+          <h3>${name}${value == null ? '' : ` <b>${Kit.pad(value)}</b>`}</h3>
+          <p class="say">${r.say}</p>
+          <dl>${r.dl.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+          ${
+            r.segs
+              ? `<div class="segs" role="group" aria-label="시간대별">${r.segs
+                  .map(
+                    (v, k) =>
+                      `<button type="button" data-s="${k}" aria-pressed="${k === seg}"><span>${SEGS[k].name}</span><span class="grp" aria-hidden="true">${tiles(2)}</span></button>`
+                  )
+                  .join('')}</div>`
+              : ''
+          }`
+        $('#detail')
+          .querySelectorAll('.segs button')
+          .forEach((b) => {
+            const k = +b.dataset.s
+            flipGroup(b.querySelector('.grp'), Kit.pad(r.segs[k]), { delay: 0 })
+            b.addEventListener('click', () => setSeg(k))
+          })
+      }
+
+      function setSeg(s) {
+        if (s === seg) return
+        seg = s
+        paintBoard()
+      }
+
+      /* Tile size: as large as the room allows, in both directions. On a
+         tall narrow screen the spare height goes to the detail band, which
+         then also shows the advice and the times of day. */
+      function fit() {
+        const W = wrap.clientWidth
+        const H = wrap.clientHeight
+        if (!W || !H) return
+        const wide = W >= 980 && W / H >= 1.5
+        wrap.toggleAttribute('data-wide', wide)
+        const n = 6
+        const rg = 6
+        const head = 16 + rg
+        const N = wide ? 16 : 6
+        const room = wide ? W * 0.64 : W
+        let tw = Math.min((room - 16 - 3 * 12 - (5 + N) * 2) / (5 + N), 58)
+        wrap.toggleAttribute('data-roomy', !wide && H - (head + n * (tw * 1.3 + 8 + rg)) > 290)
+        const detailH = wide ? 0 : $('#detail').offsetHeight + 14
+        tw = Math.min(tw, (H - head - detailH - n * (8 + rg) - 2) / n / 1.3)
+        const th = tw * 1.3
+        const nextN = wide ? 16 : 6
+        if (nextN !== msgN) {
+          msgN = nextN
+          buildBoard()
+          select(open)
+          paintBoard({ wave: false })
+        }
+        wrap.style.setProperty('--tw', `${Math.floor(tw)}px`)
+        wrap.style.setProperty('--th', `${Math.floor(th)}px`)
+        wrap.style.setProperty('--cg', `${Math.round(Math.max(10, tw * 0.45))}px`)
+        wrap.style.setProperty('--rg', `${rg}px`)
+      }
+      new ResizeObserver(fit).observe(wrap)
+
+      /* Clock: the minute flips over when it changes. */
+      const clock = $('#clock')
+      clock.innerHTML = `${tiles(2)}<span class="colon">:</span>${tiles(2)}`
+      function tick() {
+        const d = new Date()
+        const t = [...clock.querySelectorAll('.flap')]
+        const s = `${Kit.pad(d.getHours())}${Kit.pad(d.getMinutes())}`
+        t.forEach((tile, i) => flipTo(tile, s[i], i * 40))
+      }
+
+      /* Idle: now and then a single tile flutters and settles back. */
+      Kit.idle(() => {
+        if (result.hidden || board.matches(':hover')) return
+        const all = [...board.querySelectorAll('.g-msg .flap')].filter((t) => t.textContent)
+        const t = all[Math.floor(Math.random() * all.length)]
+        if (!t) return
+        const ch = t.dataset.ch
+        t.dataset.ch = ''
+        flipTo(t, ch)
+      }, 2800)
+      Kit.idle(tick, 15000)
+
+      function renderResult() {
+        f = Kit.fortune(p)
+        seg = nowSeg()
+        open = 'total'
+        $('#seg').innerHTML = SEGS.map(
+          (s, k) => `<button type="button" aria-pressed="false">${s.name}${k === nowSeg() ? '<span class="now">NOW</span>' : ''}</button>`
+        ).join('')
+        $('#seg')
+          .querySelectorAll('button')
+          .forEach((b, k) => b.addEventListener('click', () => setSeg(k)))
+        const d = new Date()
+        $('#r-date').textContent = `${Kit.pad(d.getMonth() + 1)}.${Kit.pad(d.getDate())} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}`
+        $('#r-acc').textContent = Kit.pad(f.accuracy)
+        paintBars($('#r-bars'), f.accuracy)
+        rows = rowsFor(seg)
+        buildBoard()
+        select('total')
+      }
+
+      /* ─── Flow ───────────────────────────────────────────────────── */
+      form.addEventListener('submit', (e) => {
+        e.preventDefault()
+        if (!Kit.dateValid(p)) return
+        cmd.blur()
+        renderResult()
+        Kit.swap(form, result, {
+          state: 'result',
+          after() {
+            fit()
+            paintBoard()
+            tick()
+          },
+        })
+      })
+      $('#edit').addEventListener('click', () => Kit.swap(result, form, { state: 'input' }))
+
+      if (Kit.demo) {
+        // Land every flap at once: the demo opens on a settled board.
+        const reduce = Kit.reduced
+        Kit.reduced = () => true
+        cmd.value = '1994.03.12 14:30 양력 김하늘 금전'
+        read()
+        form.hidden = true
+        result.hidden = false
+        document.body.dataset.state = 'result'
+        renderResult()
+        fit()
+        paintBoard({ wave: false })
+        tick()
+        Kit.reduced = reduce
+      } else {
+        read()
+      }
+    </script>
+  </body>
+</html>

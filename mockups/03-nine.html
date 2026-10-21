@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+    />
+    <title>03 구궁 · 오늘의 운세 시안</title>
+    <link rel="stylesheet" href="shared/theme.css" />
+    <style>
+      /* ─── Input: a keypad on the left, the nine squares on the right ─ */
+      .in {
+        display: grid;
+        flex: 1;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        grid-template-areas: 'pad side';
+      }
+      .pad-col {
+        grid-area: pad;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 28px;
+        border-right: 1px solid var(--line);
+      }
+      .side-col {
+        grid-area: side;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        padding: 28px;
+      }
+
+      .slots {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px 18px 14px;
+        border: 1px solid var(--line);
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          transform 0.15s var(--ease);
+      }
+      .slots:active {
+        transform: scale(0.99);
+      }
+      .slots[aria-pressed='true'] {
+        border-color: var(--ink-3);
+      }
+      .slots .head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink-2);
+      }
+      .slots .head .w {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .slots .head .msg {
+        margin-left: auto;
+        color: var(--ink-3);
+        font-size: 13px;
+      }
+      .slots .head .msg.warn {
+        color: var(--ink);
+      }
+      .digits {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        font-family: var(--mono);
+        font-size: clamp(26px, 1.5vw + 14px, 40px);
+        font-weight: 500;
+        line-height: 1.15;
+      }
+      .digits .d {
+        position: relative;
+        width: 1.05ch;
+        border-bottom: 2px solid var(--line-strong);
+        color: var(--ink);
+        text-align: center;
+      }
+      .digits .d:empty::before {
+        content: '0';
+        visibility: hidden;
+      }
+      .digits .d.fresh {
+        animation: roll-in 0.18s var(--ease);
+      }
+      @keyframes roll-in {
+        from {
+          opacity: 0;
+          translate: 0 35%;
+        }
+      }
+      .slots[aria-pressed='true'] .d.caret {
+        border-bottom-color: var(--ink);
+      }
+      .slots[aria-pressed='true'] .d.caret::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: 0.12em;
+        width: 2px;
+        height: 0.9em;
+        margin-left: -1px;
+        background: var(--ink);
+        animation: caret 1.1s steps(1) infinite;
+      }
+      @keyframes caret {
+        50% {
+          opacity: 0;
+        }
+      }
+      .digits .sep {
+        color: var(--ink-3);
+      }
+      .slots.bad .d {
+        border-bottom-color: var(--ink-3);
+        color: var(--ink-3);
+      }
+
+      .keypad {
+        display: grid;
+        flex: 1;
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: minmax(52px, 1fr);
+        gap: 1px;
+        max-height: 360px;
+        border: 1px solid var(--line);
+        background: var(--line);
+      }
+      .key {
+        display: grid;
+        place-items: center;
+        background: var(--tile);
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 26px;
+        font-weight: 400;
+        text-align: center;
+        transition: transform 0.12s var(--ease);
+        touch-action: manipulation;
+      }
+      @media (hover: hover) {
+        .key:hover {
+          background: var(--tile-lit);
+        }
+      }
+      .key:active,
+      .key.press {
+        transform: scale(0.94);
+      }
+      .key.fn {
+        color: var(--ink-2);
+        font-family: var(--sans);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      /* Accuracy: nine palaces light up as the answers come in. */
+      /* Desktop: the preview grows into whatever height the column has. */
+      .acc {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        gap: 28px;
+        min-height: 0;
+        background: var(--tile);
+        container-type: size;
+      }
+      .mini {
+        display: grid;
+        flex: none;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        width: min(100cqh, 60cqw, 300px);
+        aspect-ratio: 1;
+      }
+      .mini i {
+        position: relative;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line-strong);
+        background: repeating-linear-gradient(
+          135deg,
+          rgb(255 255 255 / 0.07) 0 1px,
+          transparent 1px 6px
+        );
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 13px;
+        font-style: normal;
+        transition:
+          background-color 0.4s,
+          border-color 0.4s,
+          color 0.4s;
+      }
+      .mini i.on {
+        border-color: var(--ink-3);
+        background: rgb(255 255 255 / 0.06);
+        color: var(--ink);
+      }
+      .mini i.gain {
+        border-color: var(--brand-hi);
+        transition: none;
+      }
+      .mini i.next {
+        animation: breathe 1.8s ease-in-out infinite alternate;
+      }
+      @keyframes breathe {
+        to {
+          border-color: var(--ink-3);
+        }
+      }
+      .mini i.want::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 5px;
+        height: 5px;
+        background: var(--brand-hi);
+      }
+      .acc-text {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .acc-text .name {
+        color: var(--ink-2);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .acc-text b {
+        font-family: var(--mono);
+        font-size: 44px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      .acc-text b small {
+        margin-left: 2px;
+        color: var(--ink-3);
+        font-size: 14px;
+        letter-spacing: 0;
+      }
+      .acc-text .count {
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .opts {
+        display: flex;
+        flex-direction: column;
+      }
+      .opt {
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        min-height: 60px;
+        border-top: 1px solid var(--line);
+      }
+      .opt:last-child {
+        border-bottom: 1px solid var(--line);
+      }
+      .opt .what {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .opt .w {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .opt.set .w {
+        color: var(--ink-2);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chips button {
+        height: 34px;
+        padding: 0 12px;
+        border: 1px solid var(--line-strong);
+        color: var(--ink-3);
+        font-size: 14px;
+        font-weight: 700;
+        transition:
+          color 0.2s,
+          border-color 0.2s,
+          transform 0.15s var(--ease);
+      }
+      @media (hover: hover) {
+        .chips button:hover {
+          color: var(--ink);
+        }
+      }
+      .chips button:active {
+        transform: scale(0.95);
+      }
+      .chips button[aria-pressed='true'] {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: var(--canvas);
+      }
+      .name-field {
+        height: 38px;
+        border-bottom: 1px dashed rgb(255 255 255 / 0.22);
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .name-field:focus {
+        border-bottom: 1px solid var(--ink);
+      }
+      .side-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: auto;
+      }
+      .hint {
+        color: var(--ink-3);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 899px) {
+        .in {
+          display: flex;
+          flex-direction: column;
+        }
+        .pad-col {
+          border-right: 0;
+          padding: 0 20px 20px;
+        }
+        .side-col {
+          display: contents;
+        }
+        .acc {
+          position: sticky;
+          top: var(--vv-top);
+          z-index: 5;
+          order: -1;
+          flex: none;
+          container-type: normal;
+          gap: 14px;
+          padding: 12px 20px;
+          border-bottom: 1px solid var(--line);
+        }
+        .mini {
+          width: 40px;
+          height: 40px;
+          gap: 2px;
+        }
+        .mini i {
+          font-size: 0;
+        }
+        .mini i.want::after {
+          top: 1px;
+          right: 1px;
+          width: 3px;
+          height: 3px;
+        }
+        .acc-text {
+          flex-direction: row;
+          align-items: baseline;
+          gap: 10px;
+          width: 100%;
+        }
+        .acc-text b {
+          font-size: 24px;
+        }
+        .acc-text .count {
+          margin-left: auto;
+        }
+        .pad-col {
+          padding-top: 20px;
+        }
+        .keypad {
+          flex: none;
+          grid-auto-rows: 56px;
+        }
+        .opts {
+          padding: 0 20px;
+        }
+        .opt {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 14px 0;
+        }
+        .side-foot {
+          padding: 20px;
+        }
+      }
+
+      /* ─── Result: the nine palaces ───────────────────────────────── */
+      .out {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+        padding: 24px 28px 20px;
+      }
+      .board {
+        display: grid;
+        flex: 1;
+        min-height: 0;
+        border: 1px solid var(--line-strong);
+        container-type: size;
+        transition:
+          grid-template-columns 0.38s var(--ease),
+          grid-template-rows 0.38s var(--ease);
+      }
+      .palace {
+        position: relative;
+        display: flex;
+        min-width: 0;
+        min-height: 0;
+        flex-direction: column;
+        gap: 4px;
+        overflow: clip;
+        padding: clamp(8px, 3cqmin, 18px);
+        box-shadow:
+          inset -1px 0 var(--line-strong),
+          inset 0 -1px var(--line-strong);
+        container-type: size;
+        text-align: left;
+        transition: background-color 0.2s;
+      }
+      .palace:nth-child(3n) {
+        box-shadow: inset 0 -1px var(--line-strong);
+      }
+      .palace:nth-child(n + 7) {
+        box-shadow: inset -1px 0 var(--line-strong);
+      }
+      .palace:nth-child(9) {
+        box-shadow: none;
+      }
+      .palace.hot-row,
+      .palace.hot-col {
+        background: rgb(255 255 255 / 0.018);
+      }
+      .palace.hot {
+        background: var(--tile-lit);
+      }
+      .palace:focus-visible {
+        outline-offset: -3px;
+      }
+      .palace .top {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        line-height: 1;
+      }
+      .palace .top .n {
+        transition: color 0.4s;
+      }
+      .palace .top .n.lit {
+        color: var(--ink);
+      }
+      .palace .top .tag {
+        margin-left: auto;
+        padding: 3px 5px;
+        border: 1px solid var(--brand-hi);
+        color: var(--brand-hi);
+        font-family: var(--sans);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+      .palace .top .tag.want {
+        border-color: var(--line-strong);
+        color: var(--ink-2);
+      }
+      .palace .top .tag + .tag {
+        margin-left: 0;
+      }
+      .palace.lucky {
+        box-shadow: inset 0 0 0 1px var(--brand-hi);
+      }
+      .palace .title {
+        flex: none;
+        margin-top: auto;
+        color: var(--ink-2);
+        font-family: var(--sans);
+        font-size: clamp(12px, 7cqmin, 17px);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .palace .value {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: clamp(18px, min(34cqh, 22cqw), 104px);
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: -0.04em;
+      }
+      .palace .value .sw {
+        width: 0.7em;
+        height: 0.7em;
+        border: 1px solid var(--line-strong);
+      }
+      .palace .value .word {
+        font-family: var(--sans);
+        font-size: 0.42em;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+      }
+      .palace .line,
+      .palace .more,
+      .palace .viz {
+        display: none;
+      }
+      .palace .line {
+        color: var(--ink-2);
+        font-family: var(--sans);
+        font-size: clamp(13px, 5.2cqmin, 17px);
+        font-weight: 600;
+        line-height: 1.4;
+      }
+      .palace .more {
+        color: var(--ink-3);
+        font-family: var(--sans);
+        font-size: clamp(12px, 4.6cqmin, 15px);
+        font-weight: 600;
+        line-height: 1.5;
+      }
+      .palace .more b {
+        color: var(--ink-2);
+        font-weight: 700;
+      }
+      .palace .viz {
+        height: clamp(22px, 12cqh, 46px);
+        margin-top: 4px;
+      }
+      .palace .viz path {
+        fill: none;
+        stroke: var(--ink-3);
+        stroke-width: 1.25;
+        vector-effect: non-scaling-stroke;
+      }
+      .palace .viz path.hl {
+        stroke: var(--brand-hi);
+        stroke-width: 2.5;
+      }
+      .palace.center .value {
+        font-size: clamp(24px, min(30cqh, 22cqw), 128px);
+      }
+      @container (min-width: 120px) and (min-height: 96px) {
+        .palace .line {
+          display: block;
+        }
+      }
+      @container (min-width: 130px) and (min-height: 200px) {
+        .palace .more {
+          display: block;
+        }
+        .palace .viz {
+          display: block;
+        }
+      }
+      @container (max-width: 110px) {
+        .palace .top .d,
+        .palace .top .tag,
+        .palace .title .long {
+          display: none;
+        }
+        .palace .value .word {
+          display: none;
+        }
+      }
+
+      .out-foot {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 16px;
+      }
+      .out-foot .hint {
+        font-size: 13px;
+      }
+      .out-foot .meta {
+        margin-left: auto;
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      @media (max-width: 719px) {
+        .out {
+          gap: 12px;
+          padding: 16px 16px 16px;
+        }
+        .out-foot .hint {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body data-state="input">
+    <main class="frame">
+      <header data-chrome="top-bar"></header>
+      <section class="stage" aria-labelledby="game-title">
+        <span class="stage-frame" aria-hidden="true"></span>
+        <header data-chrome="stage-head"></header>
+
+        <div class="stage-body">
+          <form id="input" class="in" novalidate autocomplete="off">
+            <div class="pad-col">
+              <div
+                class="slots"
+                id="slot-date"
+                data-target="date"
+                role="button"
+                tabindex="0"
+                aria-pressed="true"
+                aria-label="생년월일 입력칸 (필수)"
+              >
+                <span class="head"
+                  >생년월일<span class="w">필수 +40</span
+                  ><span class="msg" id="msg-date">숫자판으로 8자리</span></span
+                >
+                <span class="digits idle" id="d-date"></span>
+              </div>
+              <div
+                class="slots"
+                id="slot-time"
+                data-target="time"
+                role="button"
+                tabindex="0"
+                aria-pressed="false"
+                aria-label="태어난 시각 입력칸 (선택)"
+              >
+                <span class="head"
+                  >태어난 시각<span class="w">+22</span
+                  ><span class="msg" id="msg-time">모르면 비워 둬요</span></span
+                >
+                <span class="digits idle" id="d-time"></span>
+              </div>
+              <div class="keypad" id="keypad" aria-label="숫자판"></div>
+            </div>
+
+            <div class="side-col">
+              <div class="opts">
+                <div class="opt" data-key="calendar">
+                  <span class="what">양력·음력<span class="w">+8</span></span>
+                  <span class="chips" role="group" aria-label="양력 또는 음력">
+                    <button type="button" data-v="solar" aria-pressed="false">양력</button>
+                    <button type="button" data-v="lunar" aria-pressed="false">음력</button>
+                  </span>
+                </div>
+                <div class="opt" data-key="gender">
+                  <span class="what">성별<span class="w">+10</span></span>
+                  <span class="chips" role="group" aria-label="성별">
+                    <button type="button" data-v="f" aria-pressed="false">여성</button>
+                    <button type="button" data-v="m" aria-pressed="false">남성</button>
+                  </span>
+                </div>
+                <div class="opt" data-key="name">
+                  <label class="what" for="f-name">이름<span class="w">+12</span></label>
+                  <input
+                    class="name-field"
+                    id="f-name"
+                    maxlength="8"
+                    placeholder="불러 줄 이름"
+                    enterkeyhint="done"
+                  />
+                </div>
+                <div class="opt" data-key="interests">
+                  <span class="what">관심 분야<span class="w">+8</span></span>
+                  <span class="chips" id="interests" role="group" aria-label="관심 분야, 여러 개 고를 수 있어요"></span>
+                </div>
+              </div>
+
+              <div class="acc" data-accuracy>
+                <span class="mini idle" id="mini" aria-hidden="true"></span>
+                <p class="acc-text">
+                  <span class="name">정확도</span>
+                  <b><span id="acc">00</span><small>%</small></b>
+                  <span class="count" id="count">밝혀진 칸 0 / 9</span>
+                </p>
+              </div>
+
+              <div class="side-foot">
+                <p class="hint">칸이 다 밝혀지지 않아도 볼 수 있어요.</p>
+                <button class="btn btn-primary" id="go" type="submit" disabled>
+                  아홉 칸 열기 <span class="mono" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div id="result" class="out" hidden>
+            <div class="board" id="board" role="group" aria-label="아홉 칸 운세판"></div>
+            <div class="out-foot">
+              <p class="hint">칸을 누르면 펼쳐져요. 방향키로도 옮길 수 있어요.</p>
+              <span class="meta" id="r-meta"></span>
+              <button class="btn" id="edit" type="button">
+                <span class="mono" aria-hidden="true">←</span>입력 고치기
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="shared/chrome.js"></script>
+    <script src="shared/kit.js"></script>
+    <script>
+      const $ = (s) => document.querySelector(s)
+      const p = Kit.emptyProfile()
+      const form = $('#input')
+      const result = $('#result')
+
+      /* Lo Shu square with north up: every row, column and diagonal is 15. */
+      const PALACES = [
+        { pos: 'NW', n: 6, kind: 'domain', key: 'people', ok: (p) => !!p.gender },
+        { pos: 'N', n: 1, kind: 'domain', key: 'work', ok: Kit.okTime },
+        { pos: 'NE', n: 8, kind: 'number', ok: (p) => Kit.filled(p, 'name') },
+        { pos: 'W', n: 7, kind: 'domain', key: 'health', ok: Kit.okYear },
+        { pos: 'C', n: 5, kind: 'total', ok: Kit.okYear },
+        { pos: 'E', n: 3, kind: 'domain', key: 'money', ok: (p) => Kit.okYear(p) && Kit.okMonth(p) },
+        { pos: 'SW', n: 2, kind: 'time', ok: Kit.okTime },
+        { pos: 'S', n: 9, kind: 'domain', key: 'love', ok: Kit.dateValid },
+        { pos: 'SE', n: 4, kind: 'color', ok: (p) => !!p.calendar },
+      ]
+
+      /* ─── Keypad ─────────────────────────────────────────────────── */
+      const digits = { date: '', time: '' }
+      const LIMIT = { date: 8, time: 4 }
+      let target = 'date'
+
+      const keypad = $('#keypad')
+      keypad.innerHTML =
+        [1, 2, 3, 4, 5, 6, 7, 8, 9]
+          .map((d) => `<button type="button" class="key" data-d="${d}">${d}</button>`)
+          .join('') +
+        `<button type="button" class="key fn" data-fn="back" aria-label="한 자리 지우기">지움</button>` +
+        `<button type="button" class="key" data-d="0">0</button>` +
+        `<button type="button" class="key fn" data-fn="next" id="k-next">시각 →</button>`
+
+      function press(key) {
+        const btn =
+          key === 'back'
+            ? keypad.querySelector('[data-fn="back"]')
+            : key === 'next'
+              ? keypad.querySelector('[data-fn="next"]')
+              : keypad.querySelector(`[data-d="${key}"]`)
+        if (btn && !Kit.reduced()) {
+          btn.classList.add('press')
+          setTimeout(() => btn.classList.remove('press'), 110)
+        }
+        if (key === 'back') {
+          if (!digits[target] && target === 'time') setTarget('date')
+          digits[target] = digits[target].slice(0, -1)
+        } else if (key === 'next') {
+          setTarget(target === 'date' ? 'time' : 'date')
+        } else if (digits[target].length < LIMIT[target]) {
+          digits[target] += key
+          if (digits[target].length === LIMIT[target] && target === 'date' && !digits.time)
+            setTimeout(() => setTarget('time'), 160)
+        }
+        paintDigits(key !== 'back' && key !== 'next')
+        sync()
+      }
+      keypad.addEventListener('click', (e) => {
+        const b = e.target.closest('.key')
+        if (b) press(b.dataset.d ?? b.dataset.fn)
+      })
+      document.addEventListener('keydown', (e) => {
+        if (form.hidden || e.target.matches('input') || e.metaKey || e.ctrlKey) return
+        if (/^[0-9]$/.test(e.key)) press(e.key)
+        else if (e.key === 'Backspace') press('back')
+        else return
+        e.preventDefault()
+      })
+
+      function setTarget(t) {
+        target = t
+        $('#slot-date').setAttribute('aria-pressed', String(t === 'date'))
+        $('#slot-time').setAttribute('aria-pressed', String(t === 'time'))
+        $('#k-next').textContent = t === 'date' ? '시각 →' : '← 날짜'
+        paintDigits(false)
+      }
+      for (const el of [$('#slot-date'), $('#slot-time')]) {
+        el.addEventListener('click', () => setTarget(el.dataset.target))
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setTarget(el.dataset.target)
+          }
+        })
+      }
+
+      const SHAPE = { date: [4, '.', 2, '.', 2], time: [2, ':', 2] }
+      let lastLen = { date: 0, time: 0 }
+      function paintDigits(animate) {
+        for (const t of ['date', 'time']) {
+          const s = digits[t]
+          let html = ''
+          let k = 0
+          for (const part of SHAPE[t]) {
+            if (typeof part === 'string') {
+              html += `<span class="sep">${part}</span>`
+              continue
+            }
+            for (let j = 0; j < part; j++, k++) {
+              const cls = ['d']
+              if (k === s.length) cls.push('caret')
+              if (animate && t === target && k === s.length - 1 && s.length > lastLen[t] && !Kit.reduced())
+                cls.push('fresh')
+              html += `<span class="${cls.join(' ')}">${s[k] ?? ''}</span>`
+            }
+          }
+          $(`#d-${t}`).innerHTML = html
+          lastLen[t] = s.length
+        }
+      }
+
+      function sync() {
+        const d = digits.date
+        p.year = d.length >= 4 ? d.slice(0, 4) : ''
+        p.month = d.length >= 6 ? d.slice(4, 6) : ''
+        p.day = d.length >= 8 ? d.slice(6, 8) : ''
+        const t = digits.time
+        p.time = t.length === 4 ? `${t.slice(0, 2)}:${t.slice(2)}` : ''
+        update()
+      }
+
+      /* ─── Options ────────────────────────────────────────────────── */
+      $('#interests').innerHTML = Kit.DOMAINS.map(
+        (d) => `<button type="button" data-v="${d.key}" aria-pressed="false">${d.name}</button>`
+      ).join('')
+      document.querySelectorAll('.opt .chips').forEach((group) => {
+        const key = group.closest('.opt').dataset.key
+        group.addEventListener('click', (e) => {
+          const b = e.target.closest('button')
+          if (!b) return
+          const v = b.dataset.v
+          if (key === 'interests') {
+            p.interests = p.interests.includes(v) ? p.interests.filter((x) => x !== v) : [...p.interests, v]
+          } else {
+            p[key] = p[key] === v ? '' : v
+          }
+          paintOptions()
+          update()
+        })
+      })
+      function paintOptions() {
+        document.querySelectorAll('.opt .chips').forEach((group) => {
+          const key = group.closest('.opt').dataset.key
+          group.querySelectorAll('button').forEach((b) => {
+            const on = key === 'interests' ? p.interests.includes(b.dataset.v) : p[key] === b.dataset.v
+            b.setAttribute('aria-pressed', String(on))
+          })
+        })
+      }
+      const nameInput = $('#f-name')
+      nameInput.addEventListener('input', () => {
+        p.name = nameInput.value
+        update()
+      })
+
+      /* ─── Accuracy: the nine squares ─────────────────────────────── */
+      const mini = $('#mini')
+      mini.innerHTML = PALACES.map((x) => `<i data-pos="${x.pos}">${x.n}</i>`).join('')
+      const lit = new Set()
+      function update() {
+        const acc = Kit.accuracy(p)
+        Kit.tween($('#acc'), acc, { dur: 400 })
+        let count = 0
+        let next = null
+        PALACES.forEach((x, i) => {
+          const cell = mini.children[i]
+          const on = x.ok(p)
+          if (on) count++
+          cell.classList.toggle('on', on)
+          cell.classList.toggle('want', x.kind === 'domain' && p.interests.includes(x.key))
+          if (on && !lit.has(x.pos) && !Kit.reduced()) {
+            cell.classList.add('gain')
+            setTimeout(() => cell.classList.remove('gain'), 650)
+          }
+          on ? lit.add(x.pos) : lit.delete(x.pos)
+          cell.classList.remove('next')
+          if (!on && next === null) next = cell
+        })
+        next?.classList.add('next')
+        $('#count').textContent = `밝혀진 칸 ${count} / 9`
+
+        document.querySelectorAll('.opt').forEach((o) => o.classList.toggle('set', Kit.filled(p, o.dataset.key)))
+
+        const msgDate = $('#msg-date')
+        const badDate = digits.date.length === 8 && !Kit.dateValid(p)
+        $('#slot-date').classList.toggle('bad', badDate)
+        msgDate.classList.toggle('warn', badDate)
+        msgDate.textContent = badDate
+          ? '없는 날짜예요'
+          : digits.date.length === 8
+            ? `${Kit.zodiac(p.year)}띠 · ${Kit.star(+p.month, +p.day)}`
+            : digits.date.length >= 4 && Kit.okYear(p)
+              ? `${Kit.zodiac(p.year)}띠`
+              : '숫자판으로 8자리'
+        const msgTime = $('#msg-time')
+        const badTime = digits.time.length === 4 && !Kit.okTime(p)
+        $('#slot-time').classList.toggle('bad', badTime)
+        msgTime.classList.toggle('warn', badTime)
+        msgTime.textContent = badTime
+          ? '없는 시각이에요'
+          : Kit.okTime(p)
+            ? Kit.sijin(+p.time.slice(0, 2))
+            : '모르면 비워 둬요'
+        $('#go').disabled = !Kit.dateValid(p)
+      }
+
+      /* ─── Result: the board ──────────────────────────────────────── */
+      let f = null
+      let open = 4
+      const board = $('#board')
+      const DIR_NAMES = Object.fromEntries(Kit.DIRECTIONS.map((d) => [d.code, d.name]))
+
+      function strip(values, hl) {
+        const y = (v) => 36 - (v / 100) * 32
+        let d = `M0 ${y(values[0])}`
+        values.forEach((v, i) => (d += ` V${y(v)} H${(i + 1) * 10}`))
+        const h = hl == null ? '' : `<path class="hl" d="M${hl * 10} ${y(values[hl])} H${hl * 10 + 10}" />`
+        return `<svg class="viz" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" />${h}</svg>`
+      }
+
+      function palaceHTML(x) {
+        let label = ''
+        let value = ''
+        let line = ''
+        let more = ''
+        let viz = ''
+        if (x.kind === 'total') {
+          label = '총운'
+          value = `<span data-count="${f.total}">00</span>`
+          line = f.headline
+          more = f.summary
+          viz = strip(f.hours, f.best)
+        } else if (x.kind === 'domain') {
+          const d = f.domains.find((d) => d.key === x.key)
+          label = d.name
+          value = `<span data-count="${d.score}">00</span>`
+          line = d.line
+          more = `<b>할 것</b> ${d.advice[0]}<br /><b>피할 것</b> ${d.advice[1]}`
+          viz = strip(d.hours)
+        } else if (x.kind === 'number') {
+          label = '<span class="long">행운의 </span>숫자'
+          value = `<span data-count="${f.lucky.number}">00</span>`
+          line = '로또 번호 뽑기에 넣어 보세요'
+          more = '오늘 처음 눈에 들어온 숫자와 같다면 더 좋아요.'
+        } else if (x.kind === 'time') {
+          label = '<span class="long">행운의 </span>시간'
+          value = `<span>${Kit.pad(f.best * 2)}</span>`
+          line = f.lucky.time.label
+          more = f.hourNotes[f.best]
+          viz = strip(f.hours, f.best)
+        } else if (x.kind === 'color') {
+          label = '<span class="long">행운의 </span>색'
+          value = `<i class="sw" style="background:${f.lucky.color.hex}"></i><span class="word">${f.lucky.color.name}</span>`
+          line = `${f.lucky.color.name} 소품 하나면 충분해요`
+          more = '옷보다 손에 닿는 작은 물건이 좋아요.'
+        }
+        const lucky = x.pos === f.lucky.direction.code
+        const want = x.kind === 'domain' && p.interests.includes(x.key)
+        const tags = `${lucky ? '<span class="tag">행운의 방향</span>' : ''}${want ? '<span class="tag want">관심</span>' : ''}`
+        const dir = x.pos === 'C' ? 'CENTER' : `${x.pos} · ${DIR_NAMES[x.pos]}`
+        return `<span class="top"><span class="n">${x.n}</span><span class="d">${x.pos === 'C' ? dir : x.pos}</span>${tags}</span>
+          <span class="title">${label}</span>
+          <span class="value">${value}</span>
+          <span class="line">${line}</span>
+          <span class="more">${more}</span>${viz}`
+      }
+
+      function renderResult() {
+        f = Kit.fortune(p)
+        board.innerHTML = PALACES.map(
+          (x, i) =>
+            `<button type="button" class="palace${x.pos === 'C' ? ' center' : ''}${x.pos === f.lucky.direction.code ? ' lucky' : ''}" data-i="${i}" tabindex="${i === 4 ? 0 : -1}" aria-expanded="false">${palaceHTML(x)}</button>`
+        ).join('')
+        $('#r-meta').textContent = `ACC ${f.accuracy}% · ±${f.err}`
+        open = 4
+        layout(false)
+      }
+
+      /* The opened palace's row and column take the room. */
+      function layout(animate = true) {
+        const row = Math.floor(open / 3)
+        const col = open % 3
+        // Grow more along the board's long side. Read from the viewport: the
+        // board may still be hidden when this first runs.
+        const tall = innerHeight > innerWidth * 1.1
+        const colF = innerWidth < 600 ? 2.3 : tall ? 1.7 : 2.1
+        const rowF = tall ? 2.1 : 1.7
+        const cols = [0, 1, 2].map((c) => `${c === col ? colF : 1}fr`).join(' ')
+        const rows = [0, 1, 2].map((r) => `${r === row ? rowF : 1}fr`).join(' ')
+        if (animate) Kit.hold(400)
+        board.style.gridTemplateColumns = cols
+        board.style.gridTemplateRows = rows
+        board.querySelectorAll('.palace').forEach((el, i) => el.setAttribute('aria-expanded', String(i === open)))
+      }
+      window.addEventListener('resize', () => !result.hidden && layout(false))
+
+      board.addEventListener('click', (e) => {
+        const el = e.target.closest('.palace')
+        if (!el) return
+        const i = +el.dataset.i
+        open = open === i && i !== 4 ? 4 : i
+        layout()
+      })
+      board.addEventListener('keydown', (e) => {
+        const el = e.target.closest('.palace')
+        if (!el) return
+        const i = +el.dataset.i
+        const move = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 3, ArrowUp: -3 }[e.key]
+        if (move) {
+          const j = i + move
+          if (j < 0 || j > 8 || (Math.abs(move) === 1 && Math.floor(j / 3) !== Math.floor(i / 3))) return
+          e.preventDefault()
+          el.tabIndex = -1
+          const to = board.children[j]
+          to.tabIndex = 0
+          to.focus()
+        } else if (e.key === 'Escape') {
+          open = 4
+          layout()
+        }
+      })
+      /* Crosshair: the row and column under the pointer light up. */
+      board.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return
+        const el = e.target.closest('.palace')
+        if (!el) return
+        const i = +el.dataset.i
+        board.querySelectorAll('.palace').forEach((c, k) => {
+          c.classList.toggle('hot', k === i)
+          c.classList.toggle('hot-row', Math.floor(k / 3) === Math.floor(i / 3))
+          c.classList.toggle('hot-col', k % 3 === i % 3)
+        })
+      })
+      board.addEventListener('pointerleave', () =>
+        board.querySelectorAll('.palace').forEach((c) => c.classList.remove('hot', 'hot-row', 'hot-col'))
+      )
+
+      function countUp(dur) {
+        board.querySelectorAll('[data-count]').forEach((el) => Kit.tween(el, +el.dataset.count, { dur }))
+      }
+
+      /* Idle: the Lo Shu order walks 1 → 9, one number at a time. */
+      let walk = 0
+      Kit.idle(() => {
+        if (result.hidden) return
+        walk = (walk % 9) + 1
+        board.querySelectorAll('.top .n').forEach((n) => n.classList.toggle('lit', +n.textContent === walk))
+      }, 900)
+
+      /* ─── Flow ───────────────────────────────────────────────────── */
+      form.addEventListener('submit', (e) => {
+        e.preventDefault()
+        if (!Kit.dateValid(p)) return
+        document.activeElement?.blur()
+        renderResult()
+        Kit.swap(form, result, { state: 'result', after: () => countUp(700) })
+      })
+      $('#edit').addEventListener('click', () => Kit.swap(result, form, { state: 'input' }))
+
+      paintDigits(false)
+      if (Kit.demo) {
+        Object.assign(p, Kit.SAMPLE, { interests: [...Kit.SAMPLE.interests] })
+        digits.date = `${p.year}${p.month}${p.day}`
+        digits.time = p.time.replace(':', '')
+        nameInput.value = p.name
+        setTarget('time')
+        paintOptions()
+        update()
+        form.hidden = true
+        result.hidden = false
+        document.body.dataset.state = 'result'
+        renderResult()
+        countUp(0)
+      } else {
+        update()
+      }
+    </script>
+  </body>
+</html>

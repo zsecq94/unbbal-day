@@ -1,0 +1,1387 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+    />
+    <title>04 카드 · 오늘의 운세 시안</title>
+    <link rel="stylesheet" href="shared/theme.css" />
+    <style>
+      /* ─── Input: one question per card ────────────────────────────── */
+      .in {
+        display: grid;
+        flex: 1;
+        grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.6fr);
+        grid-template-areas: 'emblem ask';
+      }
+
+      /* The card you're drawing. It sharpens as you answer. */
+      .draw {
+        grid-area: emblem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 22px;
+        padding: 32px 28px;
+        border-right: 1px solid var(--line);
+      }
+      .draw-card {
+        position: relative;
+        width: min(100%, 340px);
+        margin: 0 auto;
+        aspect-ratio: 5 / 7;
+        border: 1px solid var(--line-strong);
+        background: var(--canvas);
+      }
+      .draw-card canvas {
+        position: absolute;
+        inset: 14%;
+        width: 72%;
+        height: 72%;
+        image-rendering: pixelated;
+      }
+      .draw-card .scan {
+        position: absolute;
+        left: 14%;
+        right: 14%;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          transparent,
+          rgb(255 255 255 / 0.3),
+          transparent
+        );
+        animation: scan-in 6s linear infinite;
+      }
+      @keyframes scan-in {
+        from {
+          top: 14%;
+        }
+        to {
+          top: 86%;
+        }
+      }
+      .draw-card .corner {
+        position: absolute;
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+      }
+      .draw-card .tl {
+        top: 12px;
+        left: 14px;
+      }
+      .draw-card .br {
+        right: 14px;
+        bottom: 12px;
+      }
+      .draw-meta {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        width: min(100%, 340px);
+        margin: 0 auto;
+      }
+      .draw-meta .name {
+        color: var(--ink-2);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .draw-meta b {
+        display: block;
+        margin-top: 4px;
+        font-family: var(--mono);
+        font-size: 40px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      .draw-meta b small {
+        margin-left: 2px;
+        color: var(--ink-3);
+        font-size: 13px;
+        letter-spacing: 0;
+      }
+      .draw-meta .res {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-align: right;
+      }
+      .draw-meta .res span {
+        display: block;
+        margin-top: 4px;
+        color: var(--ink-2);
+        font-size: 15px;
+      }
+
+      .ask {
+        grid-area: ask;
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+      }
+      .steps {
+        display: flex;
+        gap: 6px;
+        padding: 24px 32px 0;
+      }
+      .steps button {
+        flex: 1;
+        height: 22px;
+        padding-top: 14px;
+        background: none;
+      }
+      .steps button::before {
+        content: '';
+        display: block;
+        height: 3px;
+        background: var(--line-strong);
+        transition: background-color 0.3s;
+      }
+      .steps button.done::before {
+        background: var(--ink-2);
+      }
+      .steps button.skip::before {
+        background: repeating-linear-gradient(
+          to right,
+          var(--line-strong) 0 4px,
+          transparent 4px 7px
+        );
+      }
+      .steps button[aria-current='step']::before {
+        background: var(--ink);
+      }
+
+      .q-view {
+        position: relative;
+        flex: 1;
+        overflow: clip;
+        touch-action: pan-y;
+      }
+      .q-track {
+        display: flex;
+        height: 100%;
+        transition: transform 0.38s var(--ease);
+      }
+      .q-track.dragging {
+        transition: none;
+      }
+      .q {
+        display: flex;
+        flex: none;
+        width: 100%;
+        flex-direction: column;
+        justify-content: center;
+        gap: 28px;
+        padding: 32px;
+      }
+      .q[aria-hidden='true'] {
+        visibility: hidden;
+      }
+      .q .no {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .q .tag {
+        padding: 3px 7px;
+        border: 1px solid var(--line-strong);
+        color: var(--ink-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .q .tag.need {
+        border-color: var(--ink-2);
+        color: var(--ink);
+      }
+      .q h2 {
+        font-size: clamp(28px, 2vw + 16px, 48px);
+        font-weight: 750;
+        line-height: 1.25;
+        letter-spacing: -0.045em;
+      }
+      .q .sub {
+        margin-top: -14px;
+        color: var(--ink-3);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      .date-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
+      }
+      .date-row label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .big-input {
+        width: 100%;
+        height: 64px;
+        border-bottom: 2px solid var(--line-strong);
+        font-family: var(--mono);
+        font-size: clamp(32px, 2vw + 18px, 48px);
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        transition: border-color 0.2s;
+      }
+      .big-input:focus {
+        border-bottom-color: var(--ink);
+      }
+      .big-input.text {
+        font-family: var(--sans);
+        font-weight: 750;
+        letter-spacing: -0.03em;
+      }
+      .w4 {
+        width: 4.2ch;
+      }
+      .w2 {
+        width: 2.4ch;
+      }
+
+      .choices {
+        display: grid;
+        grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+        gap: 8px;
+        max-width: 560px;
+      }
+      .choice {
+        display: flex;
+        min-height: 64px;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2px;
+        padding: 10px 16px;
+        border: 1px solid var(--line-strong);
+        color: var(--ink-2);
+        font-size: 18px;
+        font-weight: 750;
+        transition:
+          border-color 0.2s,
+          color 0.2s,
+          transform 0.15s var(--ease);
+      }
+      .choice small {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+      }
+      @media (hover: hover) {
+        .choice:hover {
+          border-color: var(--ink-3);
+          color: var(--ink);
+        }
+      }
+      .choice:active {
+        transform: scale(0.97);
+      }
+      .choice[aria-pressed='true'] {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: var(--canvas);
+      }
+      .choice[aria-pressed='true'] small {
+        color: var(--canvas);
+        opacity: 0.6;
+      }
+      .choices.hours {
+        --cols: 4;
+        max-width: 640px;
+      }
+      .choices.hours .choice {
+        min-height: 52px;
+        font-size: 15px;
+      }
+
+      .q-nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 18px 32px 24px;
+        border-top: 1px solid var(--line);
+      }
+      .q-nav .hint {
+        margin-right: auto;
+        color: var(--ink-3);
+        font-size: 14px;
+      }
+
+      @media (max-width: 899px) {
+        .in {
+          display: flex;
+          flex-direction: column;
+        }
+        .draw {
+          position: sticky;
+          top: var(--vv-top);
+          z-index: 5;
+          flex-direction: row;
+          align-items: center;
+          gap: 14px;
+          padding: 12px 20px;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+          background: var(--tile);
+        }
+        .draw-card {
+          width: 40px;
+          margin: 0;
+          flex: none;
+        }
+        .draw-card .corner,
+        .draw-card .scan {
+          display: none;
+        }
+        .draw-card canvas {
+          inset: 10%;
+          width: 80%;
+          height: 80%;
+        }
+        .draw-meta {
+          width: auto;
+          flex: 1;
+          margin: 0;
+          align-items: center;
+        }
+        .draw-meta .name {
+          display: none;
+        }
+        .draw-meta b {
+          margin: 0;
+          font-size: 26px;
+        }
+        .draw-meta .res span {
+          display: inline;
+          margin-left: 6px;
+          font-size: 13px;
+        }
+        .ask {
+          flex: 1;
+        }
+        .steps {
+          padding: 16px 20px 0;
+        }
+        .q {
+          justify-content: flex-start;
+          gap: 22px;
+          padding: 24px 20px 28px;
+        }
+        .q-nav {
+          padding: 16px 20px;
+        }
+        .q-nav .hint {
+          display: none;
+        }
+        .choices.hours {
+          --cols: 3;
+        }
+      }
+      /* Tablet: room for a bigger card in the bar and a centred question. */
+      @media (min-width: 600px) and (max-width: 899px) {
+        .draw {
+          gap: 24px;
+          padding: 16px 32px;
+        }
+        .draw-card {
+          width: 96px;
+        }
+        .draw-meta b {
+          font-size: 40px;
+        }
+        .steps {
+          padding: 24px 32px 0;
+        }
+        .q {
+          justify-content: center;
+          gap: 30px;
+          padding: 32px;
+        }
+        .q-nav {
+          padding: 18px 32px 24px;
+        }
+      }
+
+      /* ─── Result: a deck you swipe and flip ───────────────────────── */
+      .out {
+        display: grid;
+        flex: 1;
+        grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+        grid-template-areas: 'index table' 'foot foot';
+        gap: 16px 32px;
+        min-height: 0;
+        padding: 24px 28px 20px;
+      }
+      .index {
+        grid-area: index;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .index button {
+        display: grid;
+        grid-template-columns: 28px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        height: 46px;
+        padding: 0 12px;
+        border-top: 1px solid var(--line);
+        color: var(--ink-3);
+        font-size: 15px;
+        font-weight: 700;
+        transition:
+          color 0.2s,
+          background-color 0.2s;
+      }
+      .index button:last-child {
+        border-bottom: 1px solid var(--line);
+      }
+      .index button .mono {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+      }
+      .index button b {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 500;
+      }
+      @media (hover: hover) {
+        .index button:hover {
+          color: var(--ink);
+        }
+      }
+      .index button[aria-current='true'] {
+        background: var(--tile-lit);
+        box-shadow: inset 2px 0 var(--brand-hi);
+        color: var(--ink);
+      }
+
+      .table {
+        grid-area: table;
+        position: relative;
+        min-height: 0;
+        container-type: size;
+      }
+      .card {
+        --x: 0px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: var(--cw);
+        height: var(--ch);
+        perspective: 1400px;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        transition:
+          transform 0.38s var(--ease),
+          opacity 0.38s var(--ease);
+      }
+      .card.dragging {
+        cursor: grabbing;
+        transition: none;
+      }
+      .card:focus-visible {
+        outline-offset: 6px;
+      }
+      .card-in {
+        position: absolute;
+        inset: 0;
+        transform-style: preserve-3d;
+        transition: transform 0.42s var(--ease);
+      }
+      .card.flipped .card-in {
+        transform: rotateY(180deg);
+      }
+      .face {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: clip;
+        padding: clamp(14px, 3.4cqmin, 26px);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-tile);
+        background: var(--tile-lit);
+        backface-visibility: hidden;
+      }
+      .face.back {
+        transform: rotateY(180deg);
+        gap: clamp(8px, 1.8cqh, 16px);
+      }
+      /* Queued cards show only their index row, like the edge of a deck. */
+      .card:not(.top) .face > :not(.row) {
+        visibility: hidden;
+      }
+      .face .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+      }
+      .face .art {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        margin: clamp(10px, 2.4cqh, 22px) 0;
+      }
+      .face .art canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        image-rendering: pixelated;
+      }
+      .face .art .scan {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          transparent,
+          rgb(255 255 255 / 0.35),
+          transparent
+        );
+        animation: scan 5.5s linear infinite;
+      }
+      @keyframes scan {
+        from {
+          top: 0;
+        }
+        to {
+          top: 100%;
+        }
+      }
+      .face .cat {
+        color: var(--ink-2);
+        font-size: clamp(15px, 2.4cqh, 20px);
+        font-weight: 750;
+      }
+      .face .score {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      .face .score b {
+        font-family: var(--mono);
+        font-size: clamp(40px, 11cqh, 104px);
+        font-weight: 500;
+        line-height: 1.25;
+        letter-spacing: -0.05em;
+      }
+      .face .score small {
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .face .say {
+        margin-top: 4px;
+        color: var(--ink);
+        font-size: clamp(15px, 2.6cqh, 21px);
+        font-weight: 700;
+        line-height: 1.4;
+        letter-spacing: -0.02em;
+      }
+      .face .hint {
+        margin-top: clamp(8px, 1.6cqh, 14px);
+        color: var(--ink-3);
+        font-size: 13px;
+      }
+      .back h3 {
+        margin-top: 4px;
+        font-size: clamp(20px, 3.6cqh, 30px);
+        font-weight: 750;
+        line-height: 1.3;
+        letter-spacing: -0.035em;
+      }
+      .back dl {
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid var(--line);
+      }
+      .back dl div {
+        display: grid;
+        grid-template-columns: 4.5em 1fr;
+        gap: 12px;
+        padding: clamp(8px, 1.6cqh, 13px) 0;
+        border-bottom: 1px solid var(--line);
+        font-size: clamp(14px, 2.2cqh, 17px);
+        line-height: 1.45;
+      }
+      .back dt {
+        color: var(--ink-3);
+        font-weight: 700;
+      }
+      .back dd {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      /* The day on the back: hairline-capped columns you can run a finger
+         across. */
+      .back .hours {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 72px;
+        margin-top: clamp(4px, 1.2cqh, 12px);
+        cursor: crosshair;
+      }
+      .back .cap {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        color: var(--ink-3);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .back .cap b {
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 15px;
+        font-weight: 500;
+      }
+      .back .bars {
+        display: flex;
+        flex: 1;
+        align-items: flex-end;
+        gap: 4px;
+        min-height: 0;
+        border-bottom: 1px solid var(--line-strong);
+      }
+      .back .bars i {
+        flex: 1;
+        height: calc(var(--v) * 1%);
+        border-top: 2px solid var(--ink-3);
+        background: rgb(255 255 255 / 0.02);
+        transition:
+          background-color 0.15s,
+          border-color 0.15s;
+      }
+      .back .bars i.hl {
+        border-top-color: var(--brand-hi);
+        background: rgb(79 134 255 / 0.12);
+      }
+      .back .bars i.on {
+        border-top-color: var(--ink);
+        background: rgb(255 255 255 / 0.09);
+      }
+      .back .axis {
+        display: flex;
+        justify-content: space-between;
+        color: var(--ink-3);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.06em;
+      }
+
+      .out-foot {
+        grid-area: foot;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .out-foot .hint {
+        margin-right: auto;
+        color: var(--ink-3);
+        font-size: 13px;
+      }
+      .out-foot .pos {
+        min-width: 4.5em;
+        color: var(--ink-2);
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        text-align: center;
+      }
+      @media (max-width: 899px) {
+        .out {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-areas: 'table' 'foot';
+          gap: 14px;
+          padding: 18px 20px 18px;
+        }
+        .index {
+          display: none;
+        }
+        .out-foot .hint {
+          display: none;
+        }
+        .out-foot .pos {
+          margin-right: auto;
+          text-align: left;
+        }
+      }
+    </style>
+  </head>
+  <body data-state="input">
+    <main class="frame">
+      <header data-chrome="top-bar"></header>
+      <section class="stage" aria-labelledby="game-title">
+        <span class="stage-frame" aria-hidden="true"></span>
+        <header data-chrome="stage-head"></header>
+
+        <div class="stage-body">
+          <form id="input" class="in" novalidate autocomplete="off">
+            <div class="draw" data-accuracy>
+              <div class="draw-card" aria-hidden="true">
+                <span class="corner tl">FORTUNE</span>
+                <canvas id="emblem" width="32" height="32"></canvas>
+                <span class="scan idle"></span>
+                <span class="corner br" id="res-corner">04×04</span>
+              </div>
+              <div class="draw-meta">
+                <p>
+                  <span class="name">정확도</span>
+                  <b><span id="acc">00</span><small>%</small></b>
+                </p>
+                <p class="res">
+                  RESOLUTION<span id="res">4×4</span>
+                </p>
+              </div>
+            </div>
+
+            <div class="ask">
+              <div class="steps" id="steps" role="tablist" aria-label="질문"></div>
+              <div class="q-view" id="q-view">
+                <div class="q-track" id="q-track"></div>
+              </div>
+              <div class="q-nav">
+                <p class="hint">답할수록 카드가 선명해져요. 옆으로 밀어 넘겨도 돼요.</p>
+                <button class="btn" id="prev" type="button">
+                  <span class="mono" aria-hidden="true">←</span>이전
+                </button>
+                <button class="btn" id="skip" type="button">건너뛰기</button>
+                <button class="btn btn-primary" id="next" type="button">
+                  다음 <span class="mono" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div id="result" class="out" hidden>
+            <nav class="index" id="index" aria-label="카드 목록"></nav>
+            <div class="table" id="table"></div>
+            <div class="out-foot">
+              <p class="hint">카드를 옆으로 밀어 넘기고, 누르면 뒤집혀요.</p>
+              <button class="btn" id="c-prev" type="button" aria-label="이전 카드">
+                <span class="mono">←</span>
+              </button>
+              <span class="pos" id="pos">01 / 06</span>
+              <button class="btn" id="c-next" type="button" aria-label="다음 카드">
+                <span class="mono">→</span>
+              </button>
+              <button class="btn" id="edit" type="button">
+                <span class="mono" aria-hidden="true">↺</span>다시 답하기
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="shared/chrome.js"></script>
+    <script src="shared/kit.js"></script>
+    <script>
+      const $ = (s) => document.querySelector(s)
+      const p = Kit.emptyProfile()
+      const form = $('#input')
+      const result = $('#result')
+
+      /* ─── Emblem: a mirrored pixel pattern, sharper as you answer ─── */
+      const RES = [4, 6, 8, 10, 12, 16, 20, 24, 32]
+      const resFor = (acc) => RES[Math.min(RES.length - 1, Math.floor(acc / 12))]
+      function paintEmblem(canvas, seed, n, { dim = false } = {}) {
+        const ctx = canvas.getContext('2d')
+        const S = 96
+        canvas.width = S
+        canvas.height = S
+        ctx.clearRect(0, 0, S, S)
+        const r = Kit.rng(seed)
+        const cell = S / n
+        const field = []
+        for (let y = 0; y < n; y++) {
+          for (let x = 0; x < Math.ceil(n / 2); x++) {
+            const cx = x / n - 0.5
+            const cy = y / n - 0.5
+            const d = Math.hypot(cx, cy)
+            const v = r() * (1.25 - d * 1.8)
+            field.push([x, y, v])
+          }
+        }
+        // A faint dot on every cell shows the grid; lit cells are squares
+        // with air around them, so even 4×4 reads as a matrix, not slabs.
+        const gap = Math.max(1, Math.round(cell * 0.3))
+        const dot = Math.max(1, Math.round(cell * 0.12))
+        ctx.fillStyle = 'rgba(243,243,239,0.12)'
+        for (let y = 0; y < n; y++)
+          for (let x = 0; x < n; x++)
+            ctx.fillRect(x * cell + (cell - dot) / 2, y * cell + (cell - dot) / 2, dot, dot)
+        for (const [x, y, v] of field) {
+          if (v < 0.42) continue
+          const blue = v > 0.86
+          ctx.fillStyle = blue
+            ? dim
+              ? 'rgba(79,134,255,0.55)'
+              : '#4f86ff'
+            : `rgba(243,243,239,${(dim ? 0.16 : 0.2) + (v - 0.42) * (dim ? 0.45 : 0.95)})`
+          for (const xx of [x, n - 1 - x])
+            ctx.fillRect(xx * cell + gap / 2, y * cell + gap / 2, cell - gap, cell - gap)
+        }
+      }
+      const seedOf = (p) => Kit.hash([p.year, p.month, p.day, p.time, p.calendar, p.gender, p.name, p.interests.join()].join('|'))
+
+      /* ─── Questions ──────────────────────────────────────────────── */
+      const BLOCKS = Array.from({ length: 12 }, (_, i) => i)
+      const QUESTIONS = [
+        {
+          key: 'date',
+          need: true,
+          title: '언제 태어났나요?',
+          sub: '이것만 있으면 카드를 뽑을 수 있어요.',
+          body: `<div class="date-row">
+            <label>년<input class="big-input w4" id="f-year" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="태어난 해" /></label>
+            <label>월<input class="big-input w2" id="f-month" inputmode="numeric" maxlength="2" placeholder="00" aria-label="태어난 달" /></label>
+            <label>일<input class="big-input w2" id="f-day" inputmode="numeric" maxlength="2" placeholder="00" aria-label="태어난 날" /></label>
+          </div>`,
+        },
+        {
+          key: 'calendar',
+          title: '양력인가요, 음력인가요?',
+          sub: '모르면 건너뛰어도 돼요.',
+          body: `<div class="choices" data-key="calendar">
+            <button type="button" class="choice" data-v="solar">양력<small>SOLAR</small></button>
+            <button type="button" class="choice" data-v="lunar">음력<small>LUNAR</small></button>
+          </div>`,
+        },
+        {
+          key: 'time',
+          title: '몇 시쯤 태어났나요?',
+          sub: '두 시간 단위면 충분해요. 가장 큰 차이를 만들어요.',
+          body: `<div class="choices hours" data-key="time">${BLOCKS.map(
+            (i) => `<button type="button" class="choice" data-v="${i}">${Kit.sijin(i * 2)}<small>${Kit.pad((i * 2 + 23) % 24)}–${Kit.pad((i * 2 + 1) % 24)}</small></button>`
+          ).join('')}</div>`,
+        },
+        {
+          key: 'gender',
+          title: '성별을 알려 주세요.',
+          sub: '대인운과 애정운을 읽는 데 써요.',
+          body: `<div class="choices" data-key="gender">
+            <button type="button" class="choice" data-v="f">여성<small>F</small></button>
+            <button type="button" class="choice" data-v="m">남성<small>M</small></button>
+          </div>`,
+        },
+        {
+          key: 'name',
+          title: '뭐라고 불러 드릴까요?',
+          sub: '카드에 이름이 새겨져요.',
+          body: `<input class="big-input text" id="f-name" maxlength="8" placeholder="이름" aria-label="이름" enterkeyhint="next" />`,
+        },
+        {
+          key: 'interests',
+          title: '요즘 어떤 쪽이 궁금해요?',
+          sub: '여러 개 골라도 돼요. 고른 카드가 앞으로 와요.',
+          body: `<div class="choices" data-key="interests" data-multi style="--cols:3">${Kit.DOMAINS.map(
+            (d) => `<button type="button" class="choice" data-v="${d.key}">${d.name}<small>${d.code}</small></button>`
+          ).join('')}</div>`,
+        },
+      ]
+      const KEY_OF = { date: ['year', 'month', 'day'] }
+      const answered = (q) =>
+        q.key === 'date' ? Kit.dateValid(p) : Kit.filled(p, q.key)
+
+      $('#q-track').innerHTML = QUESTIONS.map(
+        (q, i) => `<section class="q" id="q-${i}" role="tabpanel" aria-labelledby="qt-${i}">
+          <p class="no"><span class="label">${Kit.pad(i + 1)} / ${Kit.pad(QUESTIONS.length)}</span><span class="tag${q.need ? ' need' : ''}">${q.need ? '필수' : `선택 +${q.key === 'date' ? 40 : Kit.weightOf(q.key)}`}</span></p>
+          <h2 id="qt-${i}">${q.title}</h2>
+          <p class="sub">${q.sub}</p>
+          ${q.body}
+        </section>`
+      ).join('')
+      $('#steps').innerHTML = QUESTIONS.map(
+        (q, i) => `<button type="button" role="tab" aria-controls="q-${i}" aria-label="${i + 1}번 질문"></button>`
+      ).join('')
+
+      let step = 0
+      const visited = new Set([0])
+      function go(i, { focus = true } = {}) {
+        step = Kit.clamp(i, 0, QUESTIONS.length - 1)
+        visited.add(step)
+        $('#q-track').style.transform = `translateX(${-step * 100}%)`
+        document.querySelectorAll('.q').forEach((q, k) => q.setAttribute('aria-hidden', String(k !== step)))
+        paintNav()
+        if (focus && !Kit.reduced()) {
+          const el = document.querySelector(`#q-${step} input, #q-${step} .choice`)
+          setTimeout(() => el?.focus({ preventScroll: true }), 380)
+        } else if (focus) {
+          document.querySelector(`#q-${step} input, #q-${step} .choice`)?.focus({ preventScroll: true })
+        }
+      }
+      function paintNav() {
+        const last = step === QUESTIONS.length - 1
+        const q = QUESTIONS[step]
+        $('#prev').disabled = step === 0
+        $('#prev').style.visibility = step === 0 ? 'hidden' : 'visible'
+        $('#skip').hidden = q.need || last
+        const next = $('#next')
+        next.innerHTML = last
+          ? `카드 뽑기 <span class="mono" aria-hidden="true">→</span>`
+          : `다음 <span class="mono" aria-hidden="true">→</span>`
+        next.disabled = (q.need && !answered(q)) || (last && !Kit.dateValid(p))
+        document.querySelectorAll('#steps button').forEach((b, k) => {
+          b.classList.toggle('done', answered(QUESTIONS[k]))
+          b.classList.toggle('skip', !answered(QUESTIONS[k]) && visited.has(k) && k !== step)
+          b.toggleAttribute('aria-current', false)
+          if (k === step) b.setAttribute('aria-current', 'step')
+          b.setAttribute('aria-selected', String(k === step))
+        })
+      }
+      $('#steps').addEventListener('click', (e) => {
+        const b = e.target.closest('button')
+        if (!b) return
+        const i = [...b.parentNode.children].indexOf(b)
+        if (i > 0 && !Kit.dateValid(p)) return
+        go(i)
+      })
+      $('#prev').addEventListener('click', () => go(step - 1))
+      $('#skip').addEventListener('click', () => go(step + 1))
+      $('#next').addEventListener('click', () => {
+        if (step === QUESTIONS.length - 1) draw()
+        else go(step + 1)
+      })
+
+      /* Swipe between questions. */
+      const view = $('#q-view')
+      const track = $('#q-track')
+      let swipe = null
+      view.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('input, button')) return
+        swipe = { x: e.clientX, y: e.clientY, id: e.pointerId, on: false }
+      })
+      view.addEventListener('pointermove', (e) => {
+        if (!swipe) return
+        const dx = e.clientX - swipe.x
+        if (!swipe.on && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(e.clientY - swipe.y)) {
+          swipe.on = true
+          view.setPointerCapture(swipe.id)
+          track.classList.add('dragging')
+        }
+        if (swipe.on) track.style.transform = `translateX(calc(${-step * 100}% + ${dx}px))`
+      })
+      const endSwipe = (e) => {
+        if (!swipe) return
+        const dx = e.clientX - swipe.x
+        const was = swipe.on
+        swipe = null
+        track.classList.remove('dragging')
+        if (!was) return
+        const blocked = dx < 0 && QUESTIONS[step].need && !answered(QUESTIONS[step])
+        if (Math.abs(dx) > view.clientWidth * 0.18 && !blocked) go(step + (dx < 0 ? 1 : -1))
+        else go(step, { focus: false })
+      }
+      view.addEventListener('pointerup', endSwipe)
+      view.addEventListener('pointercancel', endSwipe)
+
+      /* Inputs */
+      const year = () => $('#f-year')
+      const digits = (v, n) => v.replace(/\D/g, '').slice(0, n)
+      year().addEventListener('input', (e) => {
+        e.target.value = p.year = digits(e.target.value, 4)
+        if (p.year.length === 4) $('#f-month').focus()
+        update()
+      })
+      $('#f-month').addEventListener('input', (e) => {
+        e.target.value = p.month = digits(e.target.value, 2)
+        if (p.month.length === 2 || +p.month > 1) $('#f-day').focus()
+        update()
+      })
+      $('#f-day').addEventListener('input', (e) => {
+        e.target.value = p.day = digits(e.target.value, 2)
+        update()
+      })
+      for (const id of ['#f-month', '#f-day']) {
+        $(id).addEventListener('blur', (e) => {
+          if (/^[1-9]$/.test(e.target.value)) {
+            e.target.value = `0${e.target.value}`
+            p[id === '#f-month' ? 'month' : 'day'] = e.target.value
+            update()
+          }
+        })
+      }
+      $('#f-name').addEventListener('input', (e) => {
+        p.name = e.target.value
+        update()
+      })
+      form.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.matches('input')) {
+          e.preventDefault()
+          if (!$('#next').disabled) $('#next').click()
+        }
+      })
+      document.querySelectorAll('.choices').forEach((group) => {
+        const key = group.dataset.key
+        group.addEventListener('click', (e) => {
+          const b = e.target.closest('.choice')
+          if (!b) return
+          const v = b.dataset.v
+          if (key === 'interests') {
+            p.interests = p.interests.includes(v) ? p.interests.filter((x) => x !== v) : [...p.interests, v]
+          } else if (key === 'time') {
+            const t = `${Kit.pad((+v * 2 + 23) % 24)}:30`
+            p.time = p.time === t ? '' : t
+          } else {
+            p[key] = p[key] === v ? '' : v
+          }
+          paintChoices()
+          update()
+          // A single answer moves you on, after a beat to see it land.
+          if (key !== 'interests' && Kit.filled(p, key)) setTimeout(() => step === QUESTIONS.findIndex((q) => q.key === key) && go(step + 1), 280)
+        })
+      })
+      function paintChoices() {
+        document.querySelectorAll('.choices').forEach((group) => {
+          const key = group.dataset.key
+          group.querySelectorAll('.choice').forEach((b) => {
+            const v = b.dataset.v
+            const on =
+              key === 'interests'
+                ? p.interests.includes(v)
+                : key === 'time'
+                  ? p.time === `${Kit.pad((+v * 2 + 23) % 24)}:30`
+                  : p[key] === v
+            b.setAttribute('aria-pressed', String(on))
+          })
+        })
+      }
+
+      let lastRes = 0
+      function update() {
+        const acc = Kit.accuracy(p)
+        Kit.tween($('#acc'), acc, { dur: 400 })
+        const n = resFor(acc)
+        $('#res').textContent = `${n}×${n}`
+        $('#res-corner').textContent = `${Kit.pad(n)}×${Kit.pad(n)}`
+        paintEmblem($('#emblem'), seedOf(p), n, { dim: !Kit.dateValid(p) })
+        if (n !== lastRes && lastRes && !Kit.reduced()) {
+          $('#emblem').animate([{ opacity: 0.35 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' })
+        }
+        lastRes = n
+        paintNav()
+      }
+
+      /* ─── Result: the deck ───────────────────────────────────────── */
+      let f = null
+      let deck = []
+      let order = []
+      const table = $('#table')
+
+      function cardsFor(f) {
+        const total = {
+          key: 'total',
+          code: 'TOTAL',
+          name: '총운',
+          score: f.total,
+          say: f.headline,
+          title: f.summary,
+          rows: [
+            ['행운의 시간', f.lucky.time.label],
+            ['행운의 색', f.lucky.color.name],
+            ['방향', `${f.lucky.direction.name}쪽`],
+          ],
+          bars: f.hours,
+          hl: f.best,
+        }
+        const doms = f.domains.map((d) => ({
+          key: d.key,
+          code: d.code,
+          name: d.name,
+          score: d.score,
+          say: d.line,
+          title: `${d.name}운, ${d.score >= 80 ? '밀어붙여도 좋아요' : d.score >= 65 ? '흐름에 맡겨요' : '한 박자 쉬어요'}`,
+          rows: [
+            ['할 것', d.advice[0]],
+            ['피할 것', d.advice[1]],
+            ['좋은 때', Kit.blockLabel(d.hours.indexOf(Math.max(...d.hours)))],
+          ],
+          bars: d.hours,
+          hl: d.hours.indexOf(Math.max(...d.hours)),
+        }))
+        // Interests come right after the total card.
+        doms.sort((a, b) => p.interests.includes(b.key) - p.interests.includes(a.key))
+        return [total, ...doms]
+      }
+
+      function renderResult() {
+        f = Kit.fortune(p)
+        deck = cardsFor(f)
+        order = deck.map((_, i) => i)
+        const n = resFor(f.accuracy)
+        const owner = f.who ? `${f.who}의 카드 · ` : ''
+        table.innerHTML = deck
+          .map(
+            (c, i) => `<div class="card" data-i="${i}" tabindex="-1" role="group" aria-roledescription="카드" aria-label="${c.name} ${c.score}점">
+            <div class="card-in">
+              <div class="face front">
+                <p class="row"><span>${Kit.pad(i + 1)} / ${Kit.pad(deck.length)}</span><span>${c.code}</span></p>
+                <div class="art"><canvas width="96" height="96"></canvas><span class="scan idle"></span></div>
+                <p class="cat">${c.name}</p>
+                <p class="score"><b data-count="${c.score}">00</b><small>/100</small></p>
+                <p class="say">${c.say}</p>
+                <p class="hint">${owner}누르면 뒤집혀요</p>
+              </div>
+              <div class="face back">
+                <p class="row"><span>${Kit.pad(i + 1)} / ${Kit.pad(deck.length)}</span><span>RES ${n}×${n}</span></p>
+                <h3>${c.title}</h3>
+                <dl>${c.rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+                <div class="hours" aria-hidden="true">
+                  <p class="cap"><span class="when">${Kit.blockLabel(c.hl)}</span><b>${c.bars[c.hl]}</b></p>
+                  <div class="bars">${c.bars.map((v, k) => `<i class="${k === c.hl ? 'hl' : ''}" data-k="${k}" style="--v:${Math.max(8, ((v - 25) / 75) * 100).toFixed(1)}"></i>`).join('')}</div>
+                  <p class="axis"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></p>
+                </div>
+              </div>
+            </div>
+          </div>`
+          )
+          .join('')
+        table.querySelectorAll('.card').forEach((el, i) => {
+          paintEmblem(el.querySelector('canvas'), seedOf(p) + i * 7919, n)
+          wireCard(el)
+        })
+        $('#index').innerHTML = deck
+          .map((c, i) => `<button type="button" data-i="${i}"><span class="mono">${Kit.pad(i + 1)}</span><span>${c.name}</span><b>${c.score}</b></button>`)
+          .join('')
+        $('#index').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => bring(+b.dataset.i)))
+        size()
+        place()
+      }
+
+      /* Wide, short tables fan the deck out in a row; anything else stacks. */
+      const fanned = () => table.clientWidth > 640 && table.clientWidth > table.clientHeight * 1.05
+
+      /* Card size follows the table: as large as fits at 5:7. */
+      function size() {
+        const w = table.clientWidth
+        const h = table.clientHeight
+        if (!w || !h) return
+        const fan = fanned()
+        const ch = Math.min(h - (fan ? 8 : 30), ((fan ? w * 0.52 : w - 8) * 7) / 5)
+        table.style.setProperty('--ch', `${ch}px`)
+        table.style.setProperty('--cw', `${(ch * 5) / 7}px`)
+      }
+      new ResizeObserver(() => {
+        size()
+        place()
+      }).observe(table)
+
+      /* Stack on narrow screens; a fanned row on wide ones. */
+      function place() {
+        const wide = fanned()
+        const cw = parseFloat(getComputedStyle(table).getPropertyValue('--cw')) || 0
+        const ch = parseFloat(getComputedStyle(table).getPropertyValue('--ch')) || 0
+        order.forEach((ci, pos) => {
+          const el = table.children[ci]
+          el.classList.toggle('top', pos === 0)
+          el.tabIndex = pos === 0 ? 0 : -1
+          el.setAttribute('aria-hidden', String(pos !== 0))
+          let t
+          let o = 1
+          if (wide) {
+            // The fourth card's right edge meets the table's right edge.
+            const W = table.clientWidth
+            const offset = Math.min(cw * 0.62, (W - cw * 0.91 - 8) / 3)
+            const startX = -(W - cw) / 2 + 4
+            t = `translate(calc(-50% + ${startX + pos * offset}px), -50%) scale(${1 - pos * 0.06})`
+            o = pos > 3 ? 0 : 1 - pos * 0.16
+          } else {
+            // Each card behind peeks out 8px below the one in front.
+            t = `translate(-50%, calc(-50% + ${-12 + pos * (ch * 0.015 + 8)}px)) scale(${1 - pos * 0.03})`
+            o = pos > 2 ? 0 : 1
+          }
+          el.style.transform = `${t} translateX(var(--x))`
+          el.style.opacity = o
+          el.style.zIndex = String(deck.length - pos)
+          el.style.pointerEvents = pos === 0 || (wide && pos <= 3) ? 'auto' : 'none'
+        })
+        const top = order[0]
+        $('#pos').textContent = `${Kit.pad(top + 1)} / ${Kit.pad(deck.length)}`
+        $('#index').querySelectorAll('button').forEach((b) => b.setAttribute('aria-current', String(+b.dataset.i === top)))
+      }
+
+      function bring(ci) {
+        const pos = order.indexOf(ci)
+        if (pos <= 0) return
+        Kit.hold(420)
+        table.children[order[0]].classList.remove('flipped')
+        order = [...order.slice(pos), ...order.slice(0, pos)]
+        place()
+        countTop()
+      }
+      const nextCard = () => bring(order[1])
+      const prevCard = () => {
+        Kit.hold(420)
+        table.children[order[0]].classList.remove('flipped')
+        order = [order[order.length - 1], ...order.slice(0, -1)]
+        place()
+        countTop()
+      }
+      $('#c-next').addEventListener('click', nextCard)
+      $('#c-prev').addEventListener('click', prevCard)
+      function countTop() {
+        const b = table.children[order[0]].querySelector('[data-count]')
+        b.dataset.v = 0
+        Kit.tween(b, +b.dataset.count, { dur: 520 })
+      }
+
+      function wireCard(el) {
+        // Back face: running a pointer over the day reads each block.
+        const hours = el.querySelector('.hours')
+        const bars = [...hours.querySelectorAll('.bars i')]
+        const c = deck[+el.dataset.i]
+        const read = (k) => {
+          bars.forEach((b, j) => b.classList.toggle('on', j === k))
+          hours.querySelector('.when').textContent = Kit.blockLabel(k)
+          hours.querySelector('b').textContent = c.bars[k]
+        }
+        const barAt = (x) => {
+          const r = hours.querySelector('.bars').getBoundingClientRect()
+          return Kit.clamp(Math.floor(((x - r.left) / r.width) * 12), 0, 11)
+        }
+        hours.addEventListener('pointerdown', (e) => {
+          e.stopPropagation()
+          hours.setPointerCapture(e.pointerId)
+          read(barAt(e.clientX))
+        })
+        hours.addEventListener('pointermove', (e) => {
+          if (e.pointerType === 'mouse' || e.buttons) read(barAt(e.clientX))
+        })
+        hours.addEventListener('pointerleave', () => {
+          bars.forEach((b) => b.classList.remove('on'))
+          hours.querySelector('.when').textContent = Kit.blockLabel(c.hl)
+          hours.querySelector('b').textContent = c.bars[c.hl]
+        })
+        hours.addEventListener('click', (e) => e.stopPropagation())
+
+        let drag = null
+        el.addEventListener('pointerdown', (e) => {
+          if (!el.classList.contains('top')) return
+          el.setPointerCapture(e.pointerId)
+          drag = { x: e.clientX, moved: false }
+        })
+        el.addEventListener('pointermove', (e) => {
+          if (!drag) return
+          const dx = e.clientX - drag.x
+          if (Math.abs(dx) > 6) {
+            drag.moved = true
+            el.classList.add('dragging')
+          }
+          if (drag.moved) el.style.setProperty('--x', `${dx}px`)
+        })
+        const end = (e) => {
+          if (!drag) return
+          const dx = e.clientX - drag.x
+          const moved = drag.moved
+          drag = null
+          el.classList.remove('dragging')
+          el.style.setProperty('--x', '0px')
+          // The click that follows a drag must not count as a tap.
+          el._dragged = moved
+          if (moved && Math.abs(dx) > 70) (dx < 0 ? nextCard : prevCard)()
+          else if (!moved) {
+            Kit.hold(450)
+            el.classList.toggle('flipped')
+          }
+        }
+        el.addEventListener('pointerup', end)
+        el.addEventListener('pointercancel', end)
+        el.addEventListener('click', () => {
+          if (el._dragged) {
+            el._dragged = false
+            return
+          }
+          // Clicking a queued card in the fanned row brings it forward.
+          if (!el.classList.contains('top')) bring(+el.dataset.i)
+        })
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            el.classList.toggle('flipped')
+          }
+        })
+      }
+      result.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') nextCard()
+        else if (e.key === 'ArrowLeft') prevCard()
+        else return
+        e.preventDefault()
+        table.children[order[0]].focus()
+      })
+
+      /* ─── Flow ───────────────────────────────────────────────────── */
+      function draw() {
+        if (!Kit.dateValid(p)) return
+        document.activeElement?.blur()
+        renderResult()
+        Kit.swap(form, result, {
+          state: 'result',
+          after() {
+            size()
+            place()
+            countTop()
+          },
+        })
+      }
+      $('#edit').addEventListener('click', () =>
+        Kit.swap(result, form, {
+          state: 'input',
+          after: () => go(0, { focus: false }),
+        })
+      )
+
+      paintChoices()
+      go(0, { focus: false })
+      if (Kit.demo) {
+        Object.assign(p, Kit.SAMPLE, { interests: [...Kit.SAMPLE.interests] })
+        $('#f-year').value = p.year
+        $('#f-month').value = p.month
+        $('#f-day').value = p.day
+        $('#f-name').value = p.name
+        // The sample time lands in its two-hour block.
+        const h = +p.time.slice(0, 2)
+        p.time = `${Kit.pad(h % 2 ? h : (h + 23) % 24)}:30`
+        QUESTIONS.forEach((_, i) => visited.add(i))
+        paintChoices()
+        update()
+        form.hidden = true
+        result.hidden = false
+        document.body.dataset.state = 'result'
+        renderResult()
+        table.querySelectorAll('[data-count]').forEach((b) => Kit.tween(b, +b.dataset.count, { dur: 0 }))
+      } else {
+        update()
+      }
+    </script>
+  </body>
+</html>

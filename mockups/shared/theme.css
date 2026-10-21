@@ -1,0 +1,417 @@
+/* Shared tokens and chrome for the fortune mockups. Mirrors app/globals.css
+   and the stage/top bar components so every sample sits in the real frame. */
+
+/* ─── Fonts: local package first, CDN when node_modules can't be read ──── */
+@font-face {
+  font-family: 'Wanted Sans Variable';
+  font-style: normal;
+  font-weight: 400 1000;
+  font-display: swap;
+  src:
+    url('../../node_modules/wanted-sans/fonts/webfonts/variable/complete/woff2/WantedSansVariable.woff2')
+      format('woff2'),
+    url('https://cdn.jsdelivr.net/npm/wanted-sans@1.0.3/fonts/webfonts/variable/complete/woff2/WantedSansVariable.woff2')
+      format('woff2');
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src:
+    url('../../node_modules/next/dist/next-devtools/server/font/geist-mono-latin.woff2')
+      format('woff2'),
+    url('https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/GeistMono-Variable.woff2')
+      format('woff2');
+}
+
+/* ─── Tokens ───────────────────────────────────────────────────────────── */
+:root {
+  --canvas: #0a0a0a;
+  --tile: #121212;
+  --tile-lit: #161616;
+  --ink: #f3f3ef;
+  --ink-2: #aaaaa4;
+  --ink-3: #85857f;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.14);
+  --brand: #1f5bff;
+  --brand-hi: #4f86ff;
+
+  --sans:
+    'Wanted Sans Variable', 'Wanted Sans', -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-tile: 8px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Visual viewport offset (iOS pans it when the keyboard opens). */
+  --vv-top: 0px;
+}
+
+/* ─── Base ─────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  color-scheme: dark;
+  background: var(--canvas);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-tap-highlight-color: transparent;
+}
+::selection {
+  background: var(--brand);
+  color: #fff;
+}
+button,
+input {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: inherit;
+}
+input {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  outline: none;
+}
+input::placeholder {
+  color: var(--ink-3);
+  opacity: 1;
+}
+[hidden] {
+  display: none !important;
+}
+p,
+h1,
+h2,
+h3,
+ol,
+ul,
+dl,
+dd {
+  margin: 0;
+  padding: 0;
+}
+li {
+  list-style: none;
+}
+
+.mono {
+  font-family: var(--mono);
+}
+/* The mono index/label voice: "01", "TODAY". Latin and digits only. */
+.label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+.nowrap {
+  white-space: nowrap;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Focus ring: outline-2 outline-offset outline-ink */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+/* Text fields show focus with their own underline instead of a box. */
+input:focus-visible {
+  outline: none;
+}
+
+/* ─── Square controls ──────────────────────────────────────────────────── */
+/* Press feedback is motion only: controls dip, colors don't flash. */
+.btn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background-color 0.2s,
+    opacity 0.2s,
+    transform 0.15s var(--ease);
+}
+.btn .mono {
+  font-size: 14px;
+  font-weight: 400;
+}
+@media (hover: hover) {
+  .btn:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  height: 44px;
+  padding: 0 18px;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--canvas);
+  font-size: 15px;
+}
+@media (hover: hover) {
+  .btn-primary:hover {
+    color: var(--canvas);
+  }
+}
+.btn-primary:disabled {
+  border-color: var(--line-strong);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+.btn-primary:disabled:active {
+  transform: none;
+}
+
+/* ─── Page frame (components/page-frame.tsx) ──────────────────────────── */
+.frame {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 1920px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 16px;
+}
+@media (min-width: 640px) {
+  .frame {
+    padding: 24px;
+  }
+}
+@media (min-width: 1280px) {
+  .frame {
+    padding: 40px;
+  }
+}
+/* A result never scrolls the page: the stage takes exactly what's left. */
+body[data-state='result'] .frame {
+  height: 100dvh;
+  min-height: 0;
+}
+
+/* ─── Top bar (components/top-bar.tsx) ────────────────────────────────── */
+.top-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+  height: 40px;
+}
+@media (min-width: 640px) {
+  .top-bar {
+    gap: 20px;
+  }
+}
+.back {
+  text-decoration: none;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.logo svg {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  color: var(--ink);
+  filter: drop-shadow(0 0 14px rgb(31 91 255 / 0.35));
+}
+.logo span {
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}
+.locale {
+  display: flex;
+  margin-left: auto;
+  border: 1px solid var(--line-strong);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.locale a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  min-width: 32px;
+  padding: 0 8px;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+.locale a[aria-current] {
+  background: var(--ink);
+  color: var(--canvas);
+}
+
+/* ─── Stage (components/game-stage.tsx) ───────────────────────────────── */
+/* overflow: clip, not hidden, so sticky children still stick to the page. */
+.stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: clip;
+  border-radius: var(--radius-tile);
+}
+.stage-frame {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-tile);
+  background: var(--tile);
+  pointer-events: none;
+}
+.stage-head {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line);
+}
+@media (min-width: 640px) {
+  .stage-head {
+    gap: 20px;
+    padding: 16px 28px;
+  }
+}
+.stage-head .who {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  color: var(--brand-hi);
+}
+.stage-head svg {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: square;
+}
+.stage-head svg * {
+  vector-effect: non-scaling-stroke;
+}
+.stage-head h1 {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 640px) {
+  .stage-head h1 {
+    font-size: 18px;
+  }
+}
+.stage-head .kind {
+  flex: none;
+  margin-left: auto;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 700;
+}
+.stage-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ─── Idle effects ─────────────────────────────────────────────────────── */
+/* Anything that moves on its own carries .idle. It holds still while a big
+   transition runs (one thing moves at a time) and is off for reduced motion. */
+body.is-moving .idle,
+body.is-moving .idle::before,
+body.is-moving .idle::after,
+body.is-moving .idle *,
+body.is-moving .idle *::before,
+body.is-moving .idle *::after {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idle,
+  .idle::before,
+  .idle::after,
+  .idle *,
+  .idle *::before,
+  .idle *::after {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
