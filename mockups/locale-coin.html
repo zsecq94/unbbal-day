@@ -1,0 +1,161 @@
+<!doctype html>
+<!-- 언어 전환 · 동전 토스(확정, 앱에 반영): 지금 언어 칩이 동전처럼 튀어 올라 뒤집히며
+     갈 언어 칸에 내려앉는다(앞면 KO, 뒷면 EN). 몇 번 뒤집힐지는 운이다. 페이지는
+     틀·심볼·숫자를 제자리에 둔 채 바뀌는 글자 덩어리만 빠졌다(120ms) 들어온다(220ms).
+     앱의 짝: CSS는 app/globals.css "언어 전환", 동전은 components/locale-switch.tsx의
+     toss, 글자 덩어리는 components/locale-text.tsx(이름은 shared/locale-units.js와 같다).
+     ?lang=en 영어로 시작, ?seed= 운 고정, ?slow=4 네 배 느리게. -->
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" href="data:," />
+    <title>운빨데이 · 언어 전환 · 동전 토스</title>
+    <link rel="stylesheet" href="./shared/theme.css" />
+    <link rel="stylesheet" href="./shared/hub.css" />
+    <style>
+      /* 누른 즉시: 칩이 살짝 눌린다(전환이 준비되기 전의 피드백) */
+      .hero-locale button {
+        transition: transform 150ms var(--ease);
+      }
+      .hero-locale button:active {
+        transform: scale(0.92);
+      }
+      ::view-transition {
+        pointer-events: none;
+      }
+      /* 글자 덩어리: 자리를 옮기지 않는다(그룹 애니메이션 없음). 이전 글자가
+         빠르게 빠지고, 다 빠진 뒤 새 글자가 갈 언어 쪽에서 살짝 들어온다 */
+      ::view-transition-group(.words) {
+        animation: none;
+      }
+      ::view-transition-old(.words),
+      ::view-transition-new(.words) {
+        inline-size: auto;
+        block-size: auto;
+      }
+      ::view-transition-old(.words) {
+        animation: 120ms ease-in both coin-out;
+      }
+      ::view-transition-new(.words) {
+        animation: 220ms ease-out 120ms both coin-in;
+      }
+      :root:active-view-transition-type(to-ko)::view-transition-old(.words) {
+        animation-name: coin-out-ko;
+      }
+      :root:active-view-transition-type(to-ko)::view-transition-new(.words) {
+        animation-name: coin-in-ko;
+      }
+      @keyframes coin-out {
+        to {
+          opacity: 0;
+          translate: -6px 0;
+        }
+      }
+      @keyframes coin-in {
+        from {
+          opacity: 0;
+          translate: 6px 0;
+        }
+      }
+      @keyframes coin-out-ko {
+        to {
+          opacity: 0;
+          translate: 6px 0;
+        }
+      }
+      @keyframes coin-in-ko {
+        from {
+          opacity: 0;
+          translate: -6px 0;
+        }
+      }
+      /* 동전: 그룹은 옆 칸으로 곧게 가고, 튀어 오름·뒤집힘은 JS가 건다 */
+      ::view-transition-group(.coin) {
+        z-index: 2;
+        animation-timing-function: linear;
+      }
+      ::view-transition-old(.coin),
+      ::view-transition-new(.coin) {
+        animation: none;
+        backface-visibility: hidden;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .hero-locale button:active {
+          transform: none;
+        }
+        ::view-transition-group(*),
+        ::view-transition-old(*),
+        ::view-transition-new(*) {
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="hub"></main>
+    <script src="./shared/hub.js"></script>
+    <script src="./shared/locale-units.js"></script>
+    <script src="./shared/locale-vt.js"></script>
+    <script>
+      ;(function () {
+        const { run, name, luck, stripSize, vtAnimations } = LocaleVT
+        const { units } = LocaleUnits
+        const html = document.documentElement
+        const slow = Number(new URLSearchParams(location.search).get('slow')) || 1
+
+        function nameAll() {
+          for (const [key, el] of units()) name(el, 'text-' + key, 'words')
+          name(document.querySelector('.hero-locale [aria-current]'), 'locale-coin', 'coin')
+        }
+
+        /* 운: 반 바퀴(낮게) 또는 한 바퀴 반(높게) */
+        function toss(to) {
+          const high = luck() < 0.5
+          const half = high ? 3 : 1
+          const ms = high ? 460 : 360
+          const lift = high ? -22 : -10
+          const spin = 180 * half * (to === 'en' ? 1 : -1)
+          const timing = (extra) => ({ duration: ms, fill: 'both', ...extra })
+          html.animate(
+            [
+              { transform: 'translateY(0)', easing: 'cubic-bezier(0.3, 0.7, 0.6, 1)' },
+              { transform: `translateY(${lift}px) scale(1.12)`, offset: 0.5, easing: 'cubic-bezier(0.5, 0, 0.75, 0.3)' },
+              { transform: 'translateY(0)' },
+            ],
+            timing({ pseudoElement: '::view-transition-image-pair(locale-coin)' })
+          )
+          const flip = { easing: 'cubic-bezier(0.3, 0.1, 0.4, 1)' }
+          html.animate(
+            [{ transform: 'perspective(240px) rotateX(0deg)' }, { transform: `perspective(240px) rotateX(${spin}deg)` }],
+            timing({ ...flip, pseudoElement: '::view-transition-old(locale-coin)' })
+          )
+          html.animate(
+            [{ transform: `perspective(240px) rotateX(${-spin}deg)` }, { transform: 'perspective(240px) rotateX(0deg)' }],
+            timing({ ...flip, pseudoElement: '::view-transition-new(locale-coin)' })
+          )
+          for (const a of vtAnimations())
+            if (a.effect.pseudoElement === '::view-transition-group(locale-coin)') a.effect.updateTiming({ duration: ms })
+        }
+
+        MockHub.onSwitch = ({ to, event, apply }) => {
+          run({
+            event,
+            types: ['nav-locale', 'to-' + to],
+            before: nameAll,
+            update() {
+              apply()
+              nameAll()
+            },
+            ready() {
+              stripSize((n) => n === 'locale-coin')
+              toss(to)
+              if (slow !== 1) for (const a of vtAnimations()) a.playbackRate = 1 / slow
+            },
+          })
+        }
+      })()
+    </script>
+  </body>
+</html>

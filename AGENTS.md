@@ -37,11 +37,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## 페이지 전환
 
 - React `ViewTransition`을 쓴다. 어휘(전환 타입, 공유 요소 이름)는 `lib/transitions.ts`에, 모션 CSS는 `app/globals.css`의 "View transitions"에 둔다.
-- 페이지의 루트 요소는 `components/page-transition.tsx`의 `PageTransition`으로 감싼다. 링크는 `transitionTypes`로 방향을 붙인다(허브→게임 `NAV_FORWARD`, 게임→허브 `NAV_BACK`). 타입 없는 이동(브라우저 뒤로가기 등)은 즉시 교체되고 공유 요소만 모프한다.
+- 페이지의 루트 요소는 `components/page-transition.tsx`의 `PageTransition`으로 감싼다. 링크는 `transitionTypes`로 방향을 붙인다(허브→게임 `NAV_FORWARD`, 게임→허브 `NAV_BACK`, 언어 칩 `NAV_LOCALE`). 타입 없는 이동(브라우저 뒤로가기 등)은 즉시 교체되고 공유 요소만 모프한다.
 - 눌림 피드백은 색이 아니라 모션으로만 준다. 타일은 `active:`에서 살짝 눌리고, 바로 프레임이 스테이지로 자라난다. 순서는 "이전 페이지 퇴장(120ms) → 프레임 이동(380ms) → 새 페이지 내용 등장(220ms부터)"이며 한 번에 한 가지만 움직인다.
-- 공유 요소: 타일 프레임 ↔ 스테이지 프레임(`tileTransition`, `share="grow"`), 타일 심볼 ↔ 스테이지 헤더 심볼(`symbolTransition`, `share="morph"`), 로고(`BRAND_TRANSITION`, `share="morph"`). 프레임은 내용 없는 `absolute inset-0` span만 이름 붙인다. 스냅샷은 박스 밖 내용을 잘라내지 않아서 내용이 든 요소를 이름 붙이면 크기가 바뀔 때 새어 나온다. 이름 있는 `ViewTransition`에는 항상 `default="none"`을 함께 둔다.
+- 공유 요소: 타일 프레임 ↔ 스테이지 프레임(`tileTransition`, `share={SHARE_GROW}`), 타일 심볼 ↔ 스테이지 헤더 심볼(`symbolTransition`, `share={SHARE_MORPH}`), 로고(`BRAND_TRANSITION`, `share={SHARE_MORPH}`). 두 클래스는 언어 전환에서 이름을 끈다(같은 자리라 모프할 것이 없고, 크기가 조금만 달라도 레이아웃 애니메이션이 된다). 프레임은 내용 없는 `absolute inset-0` span만 이름 붙인다. 스냅샷은 박스 밖 내용을 잘라내지 않아서 내용이 든 요소를 이름 붙이면 크기가 바뀔 때 새어 나온다. 예외는 `LocaleText`로, 그룹 애니메이션 없이 이미지를 제 크기로 그려서 새지 않는다. 이름 있는 `ViewTransition`에는 항상 `default="none"`을 함께 둔다.
+- 언어 전환(`components/locale-switch.tsx`)은 같은 경로의 다른 로케일로 클라이언트 이동하며 스크롤을 그대로 둔다. 페이지는 움직이지 않고, 언어에 따라 바뀌는 글자 덩어리만 갈아 끼운다(이전 글자 퇴장 120ms → 새 글자 등장 220ms, 갈 언어 쪽에서 들어온다). 지금 언어 칩은 `LOCALE_COIN_TRANSITION`으로 짝지어 동전처럼 뒤집히며 갈 언어 칸에 내려앉는다(회전 수는 매번 무작위). 칩의 모션은 `onShare`에서 JS로 걸므로 동작 줄이기를 직접 확인한다. 언어 전환은 한 번에 하나만 돈다. 도는 중에 누른 칩은 마지막 것만 기억했다가 새 언어 페이지가 자리 잡으면 이어서 바꾼다. 이동을 겹쳐 시작하면 뒤 이동의 커밋이 앞 전환 뒤로 밀리면서 전환 타입이 사라질 수 있다(프리페치 전, 개발 서버).
+- 사용자에게 보이는 글자를 화면에 새로 넣으면 `components/locale-text.tsx`의 `LocaleText`로 감싼다. 자식은 박스 하나인 요소 하나이고, 이름은 한 페이지 안에서 겹치지 않게 짓는다. 다른 언어의 같은 페이지에서 같은 이름끼리 짝이 된다. 이름은 많을수록 전환 시작 비용(스타일 재계산)이 늘어나므로 문단·타일 글자처럼 덩어리로 묶는다. 게임 화면은 스테이지 본문이 통째로 한 덩어리다.
 - 자동 페어가 되려면 목적지 페이지가 프리페치돼 같은 커밋에 렌더돼야 한다. 게임 페이지에 요청 시점 값을 넣을 때는 Suspense 경계 안에 두어 정적 셸을 유지한다.
-- `cacheComponents`에서는 이전 페이지가 언마운트되지 않고 `Activity`로 숨겨진다. 허브는 일시적 상태 초기화를 `useLayoutEffect` 클린업에서 하고, 누른 시점의 스크롤 위치·타일을 저장했다가 다시 보일 때 복원한다(`components/game-hub.tsx`). 허브로 돌아가는 링크는 `scroll={false}`를 붙여 Next의 스크롤 처리가 복원을 덮지 않게 한다.
+- `cacheComponents`에서는 이전 페이지가 언마운트되지 않고 `Activity`로 숨겨진다. 허브는 일시적 상태 초기화를 `useLayoutEffect` 클린업에서 하고, 누른 시점의 스크롤 위치·타일을 저장했다가 다시 보일 때 한 번 복원한다(`components/game-hub.tsx`). 언어를 바꿨다 돌아와 다시 보일 때는 복원하지 않는다. 허브로 돌아가는 링크는 `scroll={false}`를 붙여 Next의 스크롤 처리가 복원을 덮지 않게 한다.
 
 ## 다국어
 

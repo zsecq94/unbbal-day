@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { ViewTransition } from 'react'
 import { getDictionary, getLocale } from '@/app/[lang]/dictionaries'
 import { LocaleSwitch } from '@/components/locale-switch'
+import { LocaleText } from '@/components/locale-text'
 import { Logo } from '@/components/logo'
 import { hubPath } from '@/lib/routes'
-import { BRAND_TRANSITION, NAV_BACK } from '@/lib/transitions'
+import { BRAND_TRANSITION, NAV_BACK, SHARE_MORPH } from '@/lib/transitions'
 
 /**
  * 허브 밖 모든 페이지 위에 놓이는 상단바: 돌아가는 길, 브랜드, 언어.
@@ -27,10 +28,16 @@ export async function TopBar() {
         <span aria-hidden="true" className="font-mono text-sm">
           ←
         </span>
-        <span className="text-[13px] font-bold">{dict.nav.back}</span>
+        <LocaleText name="back">
+          <span className="text-[13px] font-bold">{dict.nav.back}</span>
+        </LocaleText>
       </Link>
 
-      <ViewTransition name={BRAND_TRANSITION} share="morph" default="none">
+      <ViewTransition
+        name={BRAND_TRANSITION}
+        share={SHARE_MORPH}
+        default="none"
+      >
         <Logo name={dict.brand.name} />
       </ViewTransition>
 

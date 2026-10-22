@@ -1,7 +1,13 @@
 import { ViewTransition, type ReactNode } from 'react'
 import { GameSymbol } from '@/components/game-symbol'
+import { LocaleText } from '@/components/locale-text'
 import { pad2, type Game } from '@/lib/games'
-import { symbolTransition, tileTransition } from '@/lib/transitions'
+import {
+  SHARE_GROW,
+  SHARE_MORPH,
+  symbolTransition,
+  tileTransition,
+} from '@/lib/transitions'
 
 const FRAME = 'absolute inset-0 rounded-tile border border-line bg-tile'
 const SECTION =
@@ -10,7 +16,8 @@ const SECTION =
 /**
  * 게임이 펼쳐지는 스테이지. 허브 타일을 크게 키운 모양(번호, 심볼, 이름,
  * 종류)이다. 프레임은 누른 타일의 프레임이 자라나 닿는 공유 요소이고,
- * 심볼은 타일에서 날아온 그 심볼이다.
+ * 심볼은 타일에서 날아온 그 심볼이다. 언어를 바꾸면 프레임·번호·심볼은 그대로
+ * 두고 이름, 종류, 게임 내용을 각각 한 덩어리로 갈아 끼운다.
  */
 export function GameStage({
   game,
@@ -27,7 +34,7 @@ export function GameStage({
     <section aria-labelledby="game-title" className={SECTION}>
       <ViewTransition
         name={tileTransition(game.key)}
-        share="grow"
+        share={SHARE_GROW}
         default="none"
       >
         <span aria-hidden="true" className={FRAME} />
@@ -43,7 +50,7 @@ export function GameStage({
         <span className="flex min-w-0 items-center gap-3 text-brand-hi">
           <ViewTransition
             name={symbolTransition(game.key)}
-            share="morph"
+            share={SHARE_MORPH}
             default="none"
           >
             <GameSymbol
@@ -51,19 +58,25 @@ export function GameStage({
               className="size-7 shrink-0 stroke-[2.4]"
             />
           </ViewTransition>
-          <h1
-            id="game-title"
-            className="truncate text-[17px] leading-none font-[750] tracking-[-0.03em] text-ink sm:text-lg"
-          >
-            {game.name}
-          </h1>
+          <LocaleText name="stage-title">
+            <h1
+              id="game-title"
+              className="truncate text-[17px] leading-none font-[750] tracking-[-0.03em] text-ink sm:text-lg"
+            >
+              {game.name}
+            </h1>
+          </LocaleText>
         </span>
-        <span className="ml-auto shrink-0 text-[13px] font-bold text-ink-2">
-          {kind}
-        </span>
+        <LocaleText name="stage-kind">
+          <span className="ml-auto shrink-0 text-[13px] font-bold text-ink-2">
+            {kind}
+          </span>
+        </LocaleText>
       </header>
 
-      <div className="relative flex min-h-0 flex-1 flex-col">{children}</div>
+      <LocaleText name="stage-body">
+        <div className="relative flex min-h-0 flex-1 flex-col">{children}</div>
+      </LocaleText>
     </section>
   )
 }

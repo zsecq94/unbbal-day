@@ -13,11 +13,14 @@ import {
   type ReactNode,
 } from 'react'
 import { GameSymbol } from '@/components/game-symbol'
+import { LocaleText } from '@/components/locale-text'
 import { pad2, type Game, type GameKind } from '@/lib/games'
 import type { Locale } from '@/lib/i18n'
 import { gamePath } from '@/lib/routes'
 import {
   NAV_FORWARD,
+  SHARE_GROW,
+  SHARE_MORPH,
   symbolTransition,
   tileTransition,
 } from '@/lib/transitions'
@@ -40,14 +43,15 @@ const TILE_SIZE: Record<string, TileSize> = {
 
 /*
  * 화면 폭별 그리드 배치. 위 줄은 소개와 혼자 하는 게임, 아래 줄은 함께하는 게임이다.
- * 위 줄: 데스크톱은 24칸 중 소개 10 · 운세 7 · 로또/궁합 7(위아래로 쌓음)이라 운세와
- * 쌓인 열이 같은 폭이고, 태블릿은 소개가 한 줄을 다 쓰고 그 아래 운세 6 · 로또/궁합 6이다.
+ * 위 줄: 데스크톱은 48칸 중 소개 18 · 운세 15 · 로또/궁합 15(위아래로 쌓음)라 운세와
+ * 쌓인 열이 같은 폭이다. 소개를 이만큼 좁혀야 영어 운세 이름이 1280px부터 한 줄에
+ * 들어간다. 태블릿은 소개가 한 줄을 다 쓰고 그 아래 운세 6 · 로또/궁합 6이다.
  * 아래 줄: 모바일 2열, 태블릿 3+2, 데스크톱 5칸.
  */
 const PLACEMENT: Record<string, string> = {
-  fortune: 'md:col-span-6 md:row-span-2 xl:col-span-7',
-  lotto: 'md:col-span-6 xl:col-span-7',
-  match: 'md:col-span-6 xl:col-span-7',
+  fortune: 'md:col-span-6 md:row-span-2 xl:col-span-15',
+  lotto: 'md:col-span-6 xl:col-span-15',
+  match: 'md:col-span-6 xl:col-span-15',
   pinball: 'md:col-span-2 xl:col-span-1',
   ladder: 'md:col-span-2 xl:col-span-1',
   wheel: 'md:col-span-2 xl:col-span-1',
@@ -56,7 +60,7 @@ const PLACEMENT: Record<string, string> = {
 }
 
 const NAME_SIZE: Record<TileSize, string> = {
-  lg: 'text-[clamp(2.5rem,3.55vw,4.25rem)] tracking-[-0.05em]',
+  lg: 'text-[clamp(2.5rem,3.2vw,4.25rem)] tracking-[-0.05em]',
   half: 'text-[clamp(1.875rem,2.2vw,2.75rem)] tracking-[-0.045em]',
   sm: 'text-[clamp(1.625rem,1.8vw,2.125rem)] tracking-[-0.035em]',
 }
@@ -129,11 +133,14 @@ export function GameHub({
   // 게임이 열려 있는 동안 Next는 허브를 언마운트하지 않고 숨겨 둔다. 나갈 때는
   // 호버 상태를 비우고, 돌아올 때는 누른 시점에 저장한 스크롤 위치와 초점을
   // 되살려(`launch` 참고) 스테이지가 실제로 화면에 보이는 타일로 줄어들게 한다.
+  // 한 번만 되살린다. 언어를 바꿨다 돌아올 때(이 허브도 숨었다 다시 보인다)는
+  // 지금 스크롤을 그대로 둔다.
   const saved = useRef<{ scrollY: number; index: number } | null>(null)
   useLayoutEffect(() => {
     if (saved.current) {
       window.scrollTo(0, saved.current.scrollY)
       tileRefs.current[saved.current.index]?.focus({ preventScroll: true })
+      saved.current = null
     }
     return () => setHoverKey(null)
   }, [])
@@ -198,7 +205,7 @@ export function GameHub({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[1920px] flex-col gap-3 px-4 py-4 sm:px-6 sm:py-6 xl:px-10 xl:py-10 fit:h-dvh fit:py-[clamp(1.25rem,3.7vh,2.5rem)]">
       {/* 쌓인 두 칸(로또·궁합)은 운세 높이를 반씩 나눠 갖는다 */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:grid-rows-[auto_1fr_1fr] xl:grid-cols-24 xl:grid-rows-[1fr_1fr] fit:min-h-0 fit:flex-1">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:grid-rows-[auto_1fr_1fr] xl:grid-cols-48 xl:grid-rows-[1fr_1fr] fit:min-h-0 fit:flex-1">
         {hero}
         {games
           .filter((g) => g.kind === 'solo')
@@ -234,14 +241,18 @@ export function GameHub({
               </span>
             </span>
           ) : (
-            <span className="truncate font-sans text-[13px] font-medium tracking-normal text-ink-2">
-              {copy.idle}
-            </span>
+            <LocaleText name="status">
+              <span className="truncate font-sans text-[13px] font-medium tracking-normal text-ink-2">
+                {copy.idle}
+              </span>
+            </LocaleText>
           )}
         </p>
-        <small className="shrink-0 font-mono text-xs tracking-[0.12em] text-ink-3">
-          {copy.copyright}
-        </small>
+        <LocaleText name="copyright">
+          <small className="shrink-0 font-mono text-xs tracking-[0.12em] text-ink-3">
+            {copy.copyright}
+          </small>
+        </LocaleText>
       </footer>
     </main>
   )
@@ -328,7 +339,7 @@ function GameTile({
           그 위의 글자는 페이지와 함께 흐려진다. */}
       <ViewTransition
         name={tileTransition(game.key)}
-        share="grow"
+        share={SHARE_GROW}
         default="none"
       >
         <span
@@ -346,9 +357,11 @@ function GameTile({
         className="relative flex items-center justify-between font-mono text-xs font-medium tracking-[0.12em] text-ink-3"
       >
         <span>{pad2(index + 1)}</span>
-        <span className="inline-flex items-center gap-2 font-sans text-[13px] font-bold tracking-normal text-ink-2 group-lit:hidden">
-          {kind}
-        </span>
+        <LocaleText name={`kind-${game.key}`}>
+          <span className="inline-flex items-center gap-2 font-sans text-[13px] font-bold tracking-normal text-ink-2 group-lit:hidden">
+            {kind}
+          </span>
+        </LocaleText>
         <span className="hidden items-center gap-2 text-brand-hi group-lit:inline-flex">
           {copy.tileHint} <span aria-hidden="true">↵</span>
         </span>
@@ -366,7 +379,7 @@ function GameTile({
       >
         <ViewTransition
           name={symbolTransition(game.key)}
-          share="morph"
+          share={SHARE_MORPH}
           default="none"
         >
           <GameSymbol
@@ -381,26 +394,31 @@ function GameTile({
         </ViewTransition>
       </span>
 
-      <span
-        id={nameId}
-        className={`relative block leading-[1.12] font-[750] break-keep ${NAME_SIZE[size]} ${
-          big
-            ? ''
-            : 'max-md:[&:lang(en)]:flex max-md:[&:lang(en)]:min-h-[2.24em] max-md:[&:lang(en)]:items-end xl:max-[1340px]:[&:lang(en)]:flex xl:max-[1340px]:[&:lang(en)]:min-h-[2.24em] xl:max-[1340px]:[&:lang(en)]:items-end'
-        }`}
-      >
-        {game.name}
-      </span>
-      <span
-        id={descId}
-        className={`relative mt-2.5 block tracking-[-0.015em] break-keep text-ink-2 ${
-          big
-            ? 'text-[clamp(1rem,1vw,1.125rem)] sm:mt-3.5'
-            : 'min-h-[3.1em] text-[15.5px] leading-[1.55] xl:max-[1340px]:min-h-[4.65em] max-md:[&:lang(en)]:min-h-[6.2em]'
-        }`}
-      >
-        {game.description}
-      </span>
+      {/* 이름과 설명은 언어를 바꿀 때 한 덩어리로 갈아 끼운다 */}
+      <LocaleText name={`tile-${game.key}`}>
+        <span className="relative block">
+          <span
+            id={nameId}
+            className={`relative block leading-[1.12] font-[750] break-keep ${NAME_SIZE[size]} ${
+              big
+                ? ''
+                : 'max-md:[&:lang(en)]:flex max-md:[&:lang(en)]:min-h-[2.24em] max-md:[&:lang(en)]:items-end xl:max-[1340px]:[&:lang(en)]:flex xl:max-[1340px]:[&:lang(en)]:min-h-[2.24em] xl:max-[1340px]:[&:lang(en)]:items-end'
+            }`}
+          >
+            {game.name}
+          </span>
+          <span
+            id={descId}
+            className={`relative mt-2.5 block tracking-[-0.015em] break-keep text-ink-2 ${
+              big
+                ? 'text-[clamp(1rem,1vw,1.125rem)] sm:mt-3.5'
+                : 'min-h-[3.1em] text-[15.5px] leading-[1.55] xl:max-[1340px]:min-h-[4.65em] max-md:[&:lang(en)]:min-h-[6.2em]'
+            }`}
+          >
+            {game.description}
+          </span>
+        </span>
+      </LocaleText>
     </Link>
   )
 }

@@ -129,6 +129,25 @@
     display: inline;
   }
 }
+/* 데스크톱은 소개가 좁아서 머리줄에 로고·날짜·언어가 다 들어가지 않는다(영어 423px).
+   날짜를 로고 아래 줄로 내리고 언어 버튼은 첫 줄 오른쪽에 둔다 */
+@media (min-width: 1280px) {
+  .hero-head {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .hero-meta {
+    display: contents;
+  }
+  .hero-locale {
+    order: 2;
+    margin-left: auto;
+  }
+  .hero-date {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
 .hero-locale {
   display: flex;
   border: 1px solid var(--line-strong);
@@ -339,6 +358,11 @@
     transform: var(--motion);
   }
 }
+/* 이름과 설명: 언어를 바꿀 때 한 덩어리로 갈아 끼운다 */
+.tile-text {
+  position: relative;
+  display: block;
+}
 .tile-name {
   position: relative;
   display: block;
@@ -361,7 +385,7 @@
   min-height: 18rem;
 }
 .t-lg .tile-name {
-  font-size: clamp(2.5rem, 3.55vw, 4.25rem);
+  font-size: clamp(2.5rem, 3.2vw, 4.25rem);
   letter-spacing: -0.05em;
 }
 .t-md .tile-name {
@@ -500,7 +524,8 @@
 }
 
 /* ─── 위 줄 배치 ───
-   데스크톱: 24칸 중 소개 10 · 운세 7 · 로또/궁합 7(위아래로 쌓음). 운세와 쌓인 열이 같은 폭이다.
+   데스크톱: 48칸 중 소개 18 · 운세 15 · 로또/궁합 15(위아래로 쌓음). 운세와 쌓인 열이 같은 폭이다.
+   (소개를 줄여 영어 운세 이름 "Today's Fortune"이 1280px부터 한 줄에 들어가게 했다)
    태블릿: 소개가 한 줄을 다 쓰고, 그 아래 운세 6 · 로또/궁합 6(위아래로 쌓음).
    쌓인 두 칸은 운세 높이를 반씩 나눠 갖는다. */
 @media (min-width: 768px) {
@@ -521,17 +546,17 @@
 }
 @media (min-width: 1280px) {
   .hub-top {
-    grid-template-columns: repeat(24, 1fr);
+    grid-template-columns: repeat(48, 1fr);
     grid-template-rows: 1fr 1fr;
   }
   .hero {
-    grid-column: span 10;
+    grid-column: span 18;
     grid-row: span 2;
   }
   .g-fortune,
   .g-lotto,
   .g-match {
-    grid-column: span 7;
+    grid-column: span 15;
   }
 }
 

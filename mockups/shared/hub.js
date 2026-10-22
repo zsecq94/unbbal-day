@@ -116,8 +116,10 @@
         <span class="tile-art" aria-hidden="true">
           <svg viewBox="0 0 48 48">${SYMBOLS[game.key]}</svg>
         </span>
-        <span class="tile-name">${name}</span>
-        <span class="tile-desc">${desc}</span>
+        <span class="tile-text">
+          <span class="tile-name">${name}</span>
+          <span class="tile-desc">${desc}</span>
+        </span>
       </a>`
   }
 
@@ -169,14 +171,20 @@
         <small>${c.copyright}</small>
       </footer>`
 
-    /* 언어 전환 */
+    /* 언어 전환. 시안이 MockHub.onSwitch를 두면 바꾸는 순간의 연출을 그쪽에 맡긴다 */
     document.querySelectorAll('[data-lang]').forEach((b) =>
-      b.addEventListener('click', () => {
-        lang = b.dataset.lang
-        const url = new URL(location.href)
-        url.searchParams.set('lang', lang)
-        history.replaceState(null, '', url)
-        render()
+      b.addEventListener('click', (event) => {
+        const to = b.dataset.lang
+        const apply = () => {
+          lang = to
+          const url = new URL(location.href)
+          url.searchParams.set('lang', lang)
+          history.replaceState(null, '', url)
+          render()
+        }
+        if (MockHub.onSwitch && to !== lang)
+          MockHub.onSwitch({ from: lang, to, button: b, event, apply })
+        else apply()
       })
     )
 
@@ -201,6 +209,16 @@
       })
     })
   }
+
+  /* 언어 전환 시안이 쓰는 손잡이 */
+  const MockHub = (window.MockHub = {
+    COPY,
+    GAMES,
+    get lang() {
+      return lang
+    },
+    onSwitch: null,
+  })
 
   render()
 })()

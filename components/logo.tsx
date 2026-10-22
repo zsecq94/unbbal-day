@@ -1,3 +1,5 @@
+import { LocaleText } from '@/components/locale-text'
+
 const LEAF = 'M19 19H10A9 9 0 0 1 1 10A9 9 0 0 1 10 1A9 9 0 0 1 19 10Z'
 
 /**
@@ -20,9 +22,11 @@ export function Logo({ name }: { name: string }) {
   return (
     <span className="flex items-center gap-[11px]">
       <LogoMark className="size-[30px] shrink-0 text-ink drop-shadow-[0_0_14px_rgb(31_91_255/0.35)]" />
-      <span className="text-[23px] leading-none font-[800] tracking-[-0.045em] whitespace-nowrap [&:lang(en)]:tracking-[-0.03em]">
-        {name}
-      </span>
+      <LocaleText name="brand">
+        <span className="text-[23px] leading-none font-[800] tracking-[-0.045em] whitespace-nowrap [&:lang(en)]:tracking-[-0.03em]">
+          {name}
+        </span>
+      </LocaleText>
     </span>
   )
 }

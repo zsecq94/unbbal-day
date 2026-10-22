@@ -289,6 +289,44 @@
   animation-timing-function: var(--ease-out-soft);
 }
 
+/* 언어 전환. 같은 페이지의 다른 언어라 틀·심볼·숫자는 제자리에 두고, 바뀌는
+   글자 덩어리(LocaleText)만 갈아 끼운다. 이전 글자가 빠르게 빠지고(120ms), 다
+   빠진 뒤 새 글자가 갈 언어 쪽에서 살짝 들어온다(220ms). 덩어리는 자리를 옮기지
+   않으므로 그룹 애니메이션을 두지 않고, 이미지는 제 크기로 그린다. 언어마다
+   덩어리 크기가 달라도 늘어나거나 새어 나오지 않고 레이아웃도 들지 않는다. */
+::view-transition-group(.words) {
+  animation: none;
+}
+::view-transition-old(.words),
+::view-transition-new(.words) {
+  inline-size: auto;
+  block-size: auto;
+}
+::view-transition-old(.words) {
+  animation: 120ms ease-in both vt-words-out;
+}
+::view-transition-new(.words) {
+  animation: 220ms ease-out 120ms both vt-words-in;
+}
+:root:active-view-transition-type(to-ko)::view-transition-old(.words) {
+  animation-name: vt-words-out-ko;
+}
+:root:active-view-transition-type(to-ko)::view-transition-new(.words) {
+  animation-name: vt-words-in-ko;
+}
+
+/* 지금 언어 칩은 동전이다. 그룹은 갈 언어 칸으로 곧게 가고, 튀어 오름과
+   뒤집힘은 LocaleSwitch가 JS로 건다(운에 따라 길이가 달라진다). */
+::view-transition-group(.coin) {
+  z-index: 2;
+  animation-timing-function: linear;
+}
+::view-transition-old(.coin),
+::view-transition-new(.coin) {
+  animation: none;
+  backface-visibility: hidden;
+}
+
 @keyframes vt-fade {
   from {
     opacity: 0;
@@ -313,6 +351,30 @@
     scale: 1;
   }
 }
+@keyframes vt-words-out {
+  to {
+    opacity: 0;
+    translate: -6px 0;
+  }
+}
+@keyframes vt-words-in {
+  from {
+    opacity: 0;
+    translate: 6px 0;
+  }
+}
+@keyframes vt-words-out-ko {
+  to {
+    opacity: 0;
+    translate: 6px 0;
+  }
+}
+@keyframes vt-words-in-ko {
+  from {
+    opacity: 0;
+    translate: -6px 0;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(*),
@@ -320,5 +382,9 @@
   ::view-transition-group(*) {
     animation-duration: 0s !important;
     animation-delay: 0s !important;
+  }
+  /* 동전은 뒤집지 않으므로 앞면을 바로 감춘다(두 면이 겹쳐 보이지 않게) */
+  ::view-transition-old(.coin) {
+    opacity: 0;
   }
 }
