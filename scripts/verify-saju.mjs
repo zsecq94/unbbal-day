@@ -24,13 +24,12 @@ registerHooks({
 })
 
 const { birthChart, todayOf } = await import('@/lib/saju/chart')
-const { joyDirection, tenGodOf, TEN_GODS } = await import('@/lib/saju/ganji')
+const { tenGodOf, TEN_GODS } = await import('@/lib/saju/ganji')
 const { lunarToSolar } = await import('@/lib/saju/lunar')
 
 const STEMS = '甲乙丙丁戊己庚辛壬癸'
 const BRANCHES = '子丑寅卯辰巳午未申酉戌亥'
 const gz = (p) => STEMS[p.stem] + BRANCHES[p.branch]
-const DIRS = ['北', '东北', '东', '东南', '南', '西南', '西', '西北']
 const SHISHEN = [
   '比肩',
   '劫财',
@@ -247,7 +246,7 @@ section('5. 음력 → 양력(KASI)')
   console.log(`  ${cases.length + 2}건 비교`)
 }
 
-section('6. 오늘의 일진·희신방·십성: 2000–2040 날마다')
+section('6. 오늘의 일진·십성: 2000–2040 날마다')
 {
   let n = 0
   for (
@@ -259,11 +258,6 @@ section('6. 오늘의 일진·희신방·십성: 2000–2040 날마다')
     const lunar = solarAt(t, 540).getLunar()
     if (gz(today.day) !== lunar.getDayInGanZhi())
       fail(`day ${new Date(t).toISOString()}`)
-    if (
-      DIRS[joyDirection(today.day.stem)] !==
-      lunar.getDayPositionXiDesc().replace('正', '')
-    )
-      fail(`joy ${new Date(t).toISOString()} ${lunar.getDayPositionXiDesc()}`)
     n++
   }
   for (let dm = 0; dm < 10; dm++)

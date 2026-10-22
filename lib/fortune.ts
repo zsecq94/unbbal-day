@@ -5,7 +5,7 @@
  */
 
 import { birthChart, todayOf, type Chart } from '@/lib/saju/chart'
-import { joyDirection, type Pillar, type TenGod } from '@/lib/saju/ganji'
+import type { Pillar, TenGod } from '@/lib/saju/ganji'
 import { lunarToSolar } from '@/lib/saju/lunar'
 import { readDay, type DomainKey, type Reason } from '@/lib/saju/reading'
 
@@ -49,17 +49,6 @@ export const PARTS: { key: PartKey; weight: number }[] = [
   { key: 'gender', weight: 8 },
   { key: 'name', weight: 0 },
 ]
-
-export const DIRECTION_CODES = [
-  'N',
-  'NE',
-  'E',
-  'SE',
-  'S',
-  'SW',
-  'W',
-  'NW',
-] as const
 
 export const yearOk = (p: Profile) =>
   p.year.length === 4 && +p.year >= 1900 && +p.year <= new Date().getFullYear()
@@ -144,6 +133,8 @@ export type DomainResult = {
   level: Level
   /** 이 점수가 나온 가장 큰 이유 */
   reason: Reason | TenGod
+  /** 그 이유가 점수를 올렸는가 */
+  up: boolean
   /** 사전의 `content.lines[key][level]`, `content.advice[key][level]`를 가리키는 번호 */
   line: number
   advice: number
@@ -164,8 +155,8 @@ export type Fortune = {
   best: number
   /** 시진 경계가 벽시계로 밀리는 분 */
   shift: number
-  /** 오늘의 희신방 */
-  direction: number
+  /** 사전의 `content.lucky[yong]`을 가리키는 번호. 용신 오행의 색·맛·장소·활동 중 하나 */
+  lucky: number
   /** 원국의 오행 개수(목화토금수, 월지는 2로 셈) */
   elements: number[]
   /** 가장 필요한 오행(용신) */
@@ -217,12 +208,20 @@ export function makeFortune(
     total: r.total,
     tone: toneOf(r.total),
     tenGod: r.tenGod,
-    domains: r.domains.map((d) => ({
-      ...d,
-      level: levelOf(d.score),
-      line: pick(`${d.key}.line`),
-      advice: pick(`${d.key}.advice`),
-    })),
+    domains: r.domains.map(({ up, down, ...d }) => {
+      const level = levelOf(d.score)
+      /* 근거는 점수 단계와 같은 쪽에서 고른다. 주의 단계가 아니면 올린 이유를 댄다. */
+      const reason =
+        (level === 'low' ? (down ?? up) : (up ?? down)) ?? 'favorable'
+      return {
+        ...d,
+        level,
+        reason,
+        up: reason === up,
+        line: pick(`${d.key}.line`),
+        advice: pick(`${d.key}.advice`),
+      }
+    }),
     top: sorted[0].key,
     low: sorted[sorted.length - 1].key,
     headline: pick('headline'),
@@ -230,7 +229,7 @@ export function makeFortune(
     hours: r.hours,
     best: r.best,
     shift: today.shift,
-    direction: joyDirection(today.day.stem),
+    lucky: pick('lucky'),
     elements: r.elements,
     yong: r.yong,
     accuracy: accuracy(p),

@@ -217,27 +217,116 @@
       "pyeonin": "편인",
       "jeongin": "정인"
     },
-    "reasons": {
+    "terms": {
       "god": "{god} 기운",
-      "combineDay": "오늘 지지가 일지와 육합",
-      "combineOther": "오늘 지지가 원국과 육합",
-      "trine": "오늘 지지가 원국과 반합",
-      "peach": "도화가 들어온 날",
-      "clashDay": "오늘 지지가 일지와 충",
-      "clashMonth": "오늘 지지가 월지와 충",
-      "clashYear": "오늘 지지가 년지와 충",
-      "clashHour": "오늘 지지가 시지와 충",
-      "wonjin": "오늘 지지와 원진·해",
-      "punish": "오늘 지지와 형",
-      "stemCombine": "오늘 천간이 일간과 합",
-      "stemClash": "오늘 천간이 일간과 충",
-      "favorable": "용신 오행이 도는 날",
-      "unfavorable": "기신 오행이 센 날"
+      "combineDay": "일지 육합",
+      "combineOther": "육합",
+      "trine": "반합",
+      "peach": "도화",
+      "clashDay": "일지 충",
+      "clashMonth": "월지 충",
+      "clashYear": "년지 충",
+      "clashHour": "시지 충",
+      "wonjin": "원진",
+      "punish": "형",
+      "stemCombine": "천간합",
+      "stemClash": "천간충",
+      "favorable": "용신 기운",
+      "unfavorable": "기신 기운"
     },
-    "answer": "{who}오늘은 {headline} 날이에요. {time} 무렵 기운이 가장 잘 풀리고, {top} 운이 오늘의 에이스예요. {low}{lowParticle} 살살 다루고, {direction}으로 한 걸음 옮겨 보세요.",
+    "why": {
+      "gods": {
+        "bigyeon": {
+          "up": "나와 같은 {term}{termParticle} 들어와 {domain} 쪽에 힘을 보태요.",
+          "down": "나와 같은 {term}{termParticle} 겹쳐 {domain} 쪽에서 고집이 부딪혀요."
+        },
+        "geopjae": {
+          "up": "경쟁하는 {term}{termParticle} 오히려 {domain} 쪽 승부욕에 불을 붙여요.",
+          "down": "내 몫을 노리는 {term}{termParticle} {domain} 쪽에 경쟁과 손실을 불러요."
+        },
+        "siksin": {
+          "up": "여유로운 {term}{termParticle} {domain} 쪽에 넉넉함을 실어 줘요.",
+          "down": "느긋한 {term}{termParticle} {domain} 쪽을 느슨하게 만들어요."
+        },
+        "sanggwan": {
+          "up": "재치 있는 {term}{termParticle} {domain} 쪽에 번뜩임을 더해요.",
+          "down": "날 선 {term}{termParticle} {domain} 쪽에 날카로운 말과 마찰을 부르기 쉬워요."
+        },
+        "pyeonjae": {
+          "up": "굴러드는 {term}{termParticle} {domain} 쪽에 기회를 실어 줘요.",
+          "down": "들썩이는 {term}{termParticle} {domain} 쪽을 들뜨게 해 실속을 놓치기 쉬워요."
+        },
+        "jeongjae": {
+          "up": "차곡차곡 쌓는 {term}{termParticle} {domain} 쪽을 단단하게 받쳐 줘요.",
+          "down": "깐깐한 {term}{termParticle} {domain} 쪽을 빡빡하게 만들어요."
+        },
+        "pyeongwan": {
+          "up": "긴장감 있는 {term}{termParticle} {domain} 쪽 실력을 끌어올려요.",
+          "down": "압박하는 {term}{termParticle} {domain} 쪽에 부담을 얹어요."
+        },
+        "jeonggwan": {
+          "up": "반듯한 {term}{termParticle} {domain} 쪽에 인정과 질서를 더해요.",
+          "down": "규칙을 따지는 {term}{termParticle} {domain} 쪽을 답답하게 만들어요."
+        },
+        "pyeonin": {
+          "up": "예민한 {term}{termParticle} {domain} 쪽에 촉을 세워 줘요.",
+          "down": "생각 많은 {term}{termParticle} {domain} 쪽에 의심을 키워요."
+        },
+        "jeongin": {
+          "up": "돌봐 주는 {term}{termParticle} {domain} 쪽에 도움의 손길을 보내요.",
+          "down": "기대고 싶은 {term}{termParticle} {domain} 쪽을 머뭇거리게 해요."
+        }
+      },
+      "relations": {
+        "combineDay": "오늘은 {term}{termParticle} 생겨 {domain} 쪽이 부드럽게 풀려요.",
+        "combineOther": "오늘 지지와 사주 사이에 {term}{termParticle} 생겨 {domain} 쪽에 손발이 맞아요.",
+        "trine": "오늘 지지와 사주가 {term}{termParticle} 되어 {domain} 쪽에 힘이 모여요.",
+        "peach": "{term}{termParticle} 들어온 날이라 {domain} 쪽에서 매력이 돋보여요.",
+        "clashDay": "오늘은 {term}{termParticle} 걸려 {domain} 쪽이 흔들리기 쉬워요.",
+        "clashMonth": "오늘은 {term}{termParticle} 걸려 {domain} 쪽 일정이 어긋나기 쉬워요.",
+        "clashYear": "오늘은 {term}{termParticle} 걸려 {domain} 쪽에서 윗사람이나 집안 일과 부딪히기 쉬워요.",
+        "clashHour": "오늘은 {term}{termParticle} 걸려 {domain} 쪽 컨디션이 들쭉날쭉해요.",
+        "wonjin": "오늘 지지와 {term}{termParticle} 엮여 {domain} 쪽에 괜한 서운함이 생기기 쉬워요.",
+        "punish": "오늘 지지와 {term}{termParticle} 걸려 {domain} 쪽에 마찰이 생기기 쉬워요.",
+        "stemCombine": "오늘 천간이 내 일간과 {term}{termParticle} 되어 {domain} 쪽에 끌림이 생겨요.",
+        "stemClash": "오늘 천간이 내 일간과 부딪히는 {term}{termParticle} 있어 {domain} 쪽이 피곤해지기 쉬워요.",
+        "favorable": "오늘은 사주에 필요한 {term}{termParticle} 돌아 {domain} 쪽에 순풍이 불어요.",
+        "unfavorable": "오늘은 사주에 버거운 {term}{termParticle} 세서 {domain} 쪽이 무거워요."
+      }
+    },
+    "glossary": {
+      "bigyeon": "비견은 나와 오행·음양이 같은 기운이에요. 자립심과 동료를 뜻하고, 지나치면 고집과 경쟁이 돼요.",
+      "geopjae": "겁재는 나와 오행은 같고 음양이 다른 기운이에요. 승부욕과 배짱을 주지만 재물을 나눠 가져가기도 해요.",
+      "siksin": "식신은 내가 낳는 기운 중 음양이 같은 것이에요. 먹을 복, 여유, 꾸준한 표현력을 뜻해요.",
+      "sanggwan": "상관은 내가 낳는 기운 중 음양이 다른 것이에요. 재치와 창의력을 주지만 규칙과 부딪히기 쉬워요.",
+      "pyeonjae": "편재는 내가 다스리는 기운 중 음양이 같은 것이에요. 굴러드는 돈, 넓은 인맥, 활동력을 뜻해요.",
+      "jeongjae": "정재는 내가 다스리는 기운 중 음양이 다른 것이에요. 성실하게 모으는 돈과 꼼꼼함을 뜻해요.",
+      "pyeongwan": "편관은 나를 다스리는 기운 중 음양이 같은 것이에요. 압박과 도전, 그걸 이겨 내는 추진력을 뜻해요.",
+      "jeonggwan": "정관은 나를 다스리는 기운 중 음양이 다른 것이에요. 명예, 질서, 인정받는 자리를 뜻해요.",
+      "pyeonin": "편인은 나를 낳아 주는 기운 중 음양이 같은 것이에요. 직감과 독특한 생각, 혼자만의 시간을 뜻해요.",
+      "jeongin": "정인은 나를 낳아 주는 기운 중 음양이 다른 것이에요. 도움, 배움, 문서 운을 뜻해요.",
+      "combineDay": "육합은 서로 끌어당겨 하나가 되는 지지의 짝이에요. 나와 배우자의 자리인 일지와 합하면 사람 사이가 부드러워져요.",
+      "combineOther": "육합은 서로 끌어당겨 하나가 되는 지지의 짝이에요. 사주의 다른 기둥과 합하면 주변과 손발이 맞아요.",
+      "trine": "반합은 세 지지가 한 오행으로 모이는 삼합 중 두 글자가 만난 거예요. 힘이 한쪽으로 모여요.",
+      "peach": "도화는 년지·일지로 정해지는 매력과 인기의 자리예요. 그날 지지가 도화면 눈길을 끌어요.",
+      "clashDay": "충은 정반대 자리의 지지가 부딪히는 관계예요. 일지는 나와 배우자의 자리라 마음과 몸이 흔들리기 쉬워요.",
+      "clashMonth": "충은 정반대 자리의 지지가 부딪히는 관계예요. 월지는 사회와 일의 자리라 일정이 어긋나기 쉬워요.",
+      "clashYear": "충은 정반대 자리의 지지가 부딪히는 관계예요. 년지는 집안과 윗사람의 자리예요.",
+      "clashHour": "충은 정반대 자리의 지지가 부딪히는 관계예요. 시지는 하루의 결과와 몸의 리듬을 맡는 자리예요.",
+      "wonjin": "원진과 해는 서로 꺼리고 미워하는 지지의 짝이에요. 이유 없는 서운함과 오해를 부르기 쉬워요.",
+      "punish": "형은 지지끼리 서로 다치게 하는 관계예요. 마찰, 피로, 작은 사고를 조심하라는 뜻이에요.",
+      "stemCombine": "천간합은 두 천간이 끌려 하나가 되는 관계예요. 오늘 천간이 내 일간과 합하면 끌림과 인연이 생겨요.",
+      "stemClash": "천간충은 두 천간이 정면으로 부딪히는 관계예요. 오늘 천간이 내 일간을 치면 기운이 소모돼요.",
+      "favorable": "용신은 내 사주의 균형을 맞추는 데 가장 필요한 오행이에요. 그 기운이 도는 날은 일이 순하게 풀려요.",
+      "unfavorable": "기신은 내 사주에 이미 넘치거나 균형을 깨는 오행이에요. 그 기운이 센 날은 힘이 더 들어요."
+    },
+    "answer": "{who}오늘은 {headline} 날이에요. {time} 무렵 기운이 가장 잘 풀리고, {top} 운이 오늘의 에이스예요. {low}{lowParticle} 살살 다루고, {lucky}{luckyParticle} 부족한 {element} 기운을 채워 보세요.",
+    "domainAnswer": "{who}{line}. {why} {do}{doParticle} 챙기고, {dont}{dontParticle} 피하세요.",
     "particles": {
-      "final": "은",
-      "open": "는"
+      "topic": ["은", "는"],
+      "subject": ["이", "가"],
+      "object": ["을", "를"],
+      "direction": ["으로", "로"]
     },
     "domains": {
       "all": "총운",
@@ -246,6 +335,18 @@
       "health": "건강",
       "work": "일",
       "rel": "관계"
+    },
+    "domainWords": {
+      "money": "금전",
+      "love": "애정",
+      "health": "건강",
+      "work": "일",
+      "rel": "관계"
+    },
+    "levels": {
+      "high": "좋음",
+      "mid": "보통",
+      "low": "주의"
     },
     "domainsLabel": "분야별 점수",
     "notes": {
@@ -257,10 +358,10 @@
       "advice": "{line}. 할 것은 {do}, 피할 것은 {dont}.",
       "do": "DO",
       "dont": "DON'T",
-      "direction": "행운의 방향",
-      "directionText": "오늘 일진 {stem}일의 희신방이에요. 중요한 약속은 이쪽 자리에서 잡아 보세요."
+      "why": "근거",
+      "lucky": "행운 포인트",
+      "luckyText": "사주에 {element} 기운이 가장 필요해요. 오행에서 {element}에 맞는 색·맛·장소·활동을 가까이하면 부족한 기운을 채운다고 봐요. 행운 포인트는 날마다 바뀌어요."
     },
-    "direction": "{name}쪽",
     "hours": {
       "names": [
         "자시",
@@ -306,7 +407,6 @@
       "전갈자리",
       "사수자리"
     ],
-    "directions": ["북", "북동", "동", "남동", "남", "남서", "서", "북서"],
     "content": {
       "headlines": {
         "bigyeon": {
@@ -525,7 +625,7 @@
           "mid": [
             {
               "do": "영수증 한 번 정리",
-              "dont": "충동구매(하루만 참기)"
+              "dont": "충동구매"
             },
             {
               "do": "고정 지출 점검",
@@ -534,7 +634,7 @@
           ],
           "low": [
             {
-              "do": "장바구니에 담기만",
+              "do": "장바구니에 담아만 두기",
               "dont": "큰 결제·보증·빌려주기"
             },
             {
@@ -550,7 +650,7 @@
               "dont": "괜히 튕기기"
             },
             {
-              "do": "칭찬 하나를 구체적으로",
+              "do": "구체적인 칭찬 하나",
               "dont": "휴대폰 보며 대화"
             }
           ],
@@ -566,7 +666,7 @@
           ],
           "low": [
             {
-              "do": "말투 한 번 부드럽게",
+              "do": "부드러운 말투",
               "dont": "늦은 밤 긴 대화"
             },
             {
@@ -592,8 +692,8 @@
               "dont": "늦은 밤 카페인"
             },
             {
-              "do": "물 두 잔 더",
-              "dont": "앉은 채로 두 시간"
+              "do": "물 두 잔 더 마시기",
+              "dont": "두 시간 넘게 앉아 있기"
             }
           ],
           "low": [
@@ -614,14 +714,14 @@
               "dont": "혼자 다 끌어안기"
             },
             {
-              "do": "어려운 일부터 오전에",
+              "do": "오전에 어려운 일부터 처리하기",
               "dont": "지나친 겸손"
             }
           ],
           "mid": [
             {
               "do": "끝낸 일 적어 두기",
-              "dont": "동시에 세 가지"
+              "dont": "동시에 세 가지 하기"
             },
             {
               "do": "할 일을 세 개로 줄이기",
@@ -634,7 +734,7 @@
               "dont": "새 일 덥석 받기"
             },
             {
-              "do": "마감 하나만 확실히",
+              "do": "마감 하나 확실히 지키기",
               "dont": "감정 섞인 메일"
             }
           ]
@@ -642,7 +742,7 @@
         "rel": {
           "high": [
             {
-              "do": "고마운 사람에게 한 줄",
+              "do": "고마운 사람에게 한 줄 보내기",
               "dont": "약속 잡고 미루기"
             },
             {
@@ -666,7 +766,7 @@
               "dont": "뒷말 거들기"
             },
             {
-              "do": "거절은 짧고 정중하게",
+              "do": "짧고 정중한 거절",
               "dont": "농담으로 찌르기"
             }
           ]
@@ -685,6 +785,43 @@
         "새벽닭이 울듯 사람을 만나기 좋아요.",
         "충직한 개처럼 오늘을 되짚어 봐요.",
         "배부른 돼지처럼 일찍 쉬는 게 이득이에요."
+      ],
+      "lucky": [
+        [
+          "초록색 소품",
+          "나무 그늘 아래 산책",
+          "새콤한 과일 한 조각",
+          "싱그러운 샐러드",
+          "화분에 물 주기"
+        ],
+        [
+          "빨간색 포인트",
+          "햇볕 쬐는 산책",
+          "쌉쌀한 커피 한 잔",
+          "저녁의 촛불 하나",
+          "보라색 소품"
+        ],
+        [
+          "베이지색 옷",
+          "고구마 같은 단맛 간식",
+          "흙길 산책",
+          "노란색 소품",
+          "따뜻한 곡물차"
+        ],
+        [
+          "흰색 셔츠",
+          "은색 액세서리",
+          "매콤한 한 끼",
+          "말끔한 책상 정리",
+          "금속 시곗줄"
+        ],
+        [
+          "남색 옷",
+          "물 두 잔",
+          "따뜻한 국물 한 그릇",
+          "물가 산책",
+          "검은색 소품"
+        ]
       ]
     }
   }

@@ -49,18 +49,23 @@ export const dayMaster = (copy: Copy, chart: Chart) =>
     element: copy.elements[Math.floor(chart.day.stem / 2)],
   })
 
-/** 점수의 근거를 말로. 십성이면 그 기운, 아니면 합충 같은 관계. */
-export const reasonText = (copy: Copy, reason: Reason | TenGod) =>
+/** 점수의 근거를 짧은 용어로. 십성이면 그 기운, 아니면 합충 같은 관계. 예: 편재 기운, 일지 충 */
+export const termText = (copy: Copy, reason: Reason | TenGod) =>
   reason in copy.tenGods
-    ? fill(copy.reasons.god, { god: copy.tenGods[reason as TenGod] })
-    : copy.reasons[reason as Reason]
+    ? fill(copy.terms.god, { god: copy.tenGods[reason as TenGod] })
+    : copy.terms[reason as Reason]
 
-/** 받침 유무에 따라 조사를 고른다. 영어 사전은 둘 다 빈 문자열이다. */
-export function particle(copy: Copy, word: string) {
+/**
+ * 앞 낱말의 받침에 맞는 조사(은/는, 이/가, 을/를, 으로/로)를 고른다.
+ * 'ㄹ' 받침 뒤의 으로/로는 '로'다. 영어 사전은 모두 빈 문자열이다.
+ */
+export function josa(copy: Copy, word: string, kind: keyof Copy['particles']) {
+  const [withFinal, without] = copy.particles[kind]
   const code = word.charCodeAt(word.length - 1) - 0xac00
-  return code >= 0 && code < 11172 && code % 28 !== 0
-    ? copy.particles.final
-    : copy.particles.open
+  if (code < 0 || code >= 11172) return without
+  const final = code % 28
+  if (kind === 'direction' && final === 8) return without
+  return final ? withFinal : without
 }
 
 /**

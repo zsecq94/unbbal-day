@@ -65,6 +65,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 절기 시각 표 `lib/saju/solar-terms-data.ts`는 `node scripts/gen-solar-terms.mjs`로 만든다. 직접 고치지 않는다.
 - 계산을 바꾸면 `npm run verify:saju`로 교차 검증한다(`lunar-javascript`와 KASI 공개값).
 - 문구는 사전 `fortune.content`에 오늘 천간의 십성 × 점수 단계별로 둔다. 같은 묶음 안의 문장은 날짜와 원국으로 만든 해시로 고른다.
+- 결과는 상단의 분야 탭(총운·금전·애정·건강·일·관계)으로 문단을 바꾼다. 총운은 하루 전체(좋은 시간, 강한 쪽·약한 쪽, 용신 오행의 행운 포인트)를, 분야는 상태 문장, 그 점수를 움직인 근거(십성·합충, `fortune.why`), 할 것·피할 것을 말한다. 근거는 점수 단계와 같은 쪽(올린 이유/내린 이유)에서 고르고, 분야마다 다른 근거가 없을 때만 용신 적합도를 댄다. 근거 용어의 풀이는 `fortune.glossary`에 있다.
+- 한국어 조사는 `components/games/fortune/shared.ts`의 `josa()`로 붙인다(은/는, 이/가, 을/를, 으로/로).
 - 운세 보기를 누르면 분석 화면(`components/games/fortune/fortune-analyzing.tsx`)이 실제 계산 단계와 그 값(원국, 오행, 용신, 일진, 시간대)을 차례로 보여 준 뒤 결과로 넘어간다. 보여 주는 값은 모두 `Fortune`에 담긴 실제 계산값이다.
 
 ## 스타일

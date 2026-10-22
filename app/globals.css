@@ -33,6 +33,7 @@
   --animate-scan: scan 1100ms cubic-bezier(0.4, 0, 0.2, 1) both;
   --animate-word-in: word-in 560ms var(--ease-out-soft) both;
   --animate-score-flash: score-flash 1s var(--ease-out-soft);
+  --animate-note-in: note-in 220ms var(--ease-out-soft) both;
 
   @keyframes rise-in {
     from {
@@ -98,6 +99,13 @@
     from {
       opacity: 0;
       filter: blur(10px);
+    }
+  }
+  /* 각주 띠 내용이 바뀔 때 살짝 떠오른다 */
+  @keyframes note-in {
+    from {
+      opacity: 0;
+      translate: 0 5px;
     }
   }
   /* 점수가 다 오르면 한 번 빛났다가 제 색으로 돌아온다 */

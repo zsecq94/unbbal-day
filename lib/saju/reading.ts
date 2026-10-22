@@ -241,7 +241,13 @@ const clamp = (v: number, a: number, b: number) =>
 export type Reading = {
   /** 오늘 일진 천간이 일간에게 무엇인가. 그날의 주제다. */
   tenGod: TenGod
-  domains: { key: DomainKey; score: number; reason: Reason | TenGod }[]
+  domains: {
+    key: DomainKey
+    score: number
+    /** 점수를 가장 크게 올린 이유와 내린 이유 */
+    up: Reason | TenGod | null
+    down: Reason | TenGod | null
+  }[]
   total: number
   /** 자시부터 해시까지 열두 시진 점수 */
   hours: number[]
@@ -293,23 +299,26 @@ export function readDay(
   const domains = DOMAIN_KEYS.map((key) => {
     const natureSum = flows.reduce((a, f) => a + f.w * nature(key, f.god), 0)
     const relSum = rels.reduce((a, r) => a + (r.effect[key] ?? 0), 0)
-    /* 근거: 이 분야 점수를 가장 크게 움직인 관계나 십성. 용신 적합도는 모든 분야에
-       같이 걸리므로 낮은 무게로 겨룬다. */
+    /* 근거 후보: 이 분야 점수를 움직인 관계나 십성을 크기순으로. 분야마다 다른 이유를
+       먼저 대고, 그만한 이유(1점 이상)가 없을 때만 모든 분야에 같이 걸리는 용신 적합도를 댄다. */
     const causes = [
-      {
-        why: fit >= 0 ? ('favorable' as const) : ('unfavorable' as const),
-        size: fit * 6,
-      },
       ...rels.map((r) => ({ why: r.reason, size: r.effect[key] ?? 0 })),
       ...flows.map((f) => ({
         why: f.god,
         size: f.w * nature(key, f.god) * 14,
       })),
-    ].sort((a, b) => Math.abs(b.size) - Math.abs(a.size))
+    ]
+      .filter((c) => Math.abs(c.size) >= 1)
+      .sort((a, b) => Math.abs(b.size) - Math.abs(a.size))
+    causes.push({
+      why: fit >= 0 ? ('favorable' as const) : ('unfavorable' as const),
+      size: fit,
+    })
     return {
       key,
       score: clamp(58 + fit * 30 + natureSum * 14 + relSum, 24, 97),
-      reason: causes[0].why,
+      up: causes.find((c) => c.size > 0)?.why ?? null,
+      down: causes.find((c) => c.size < 0)?.why ?? null,
     }
   })
   const total = Math.round(

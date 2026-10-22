@@ -228,27 +228,116 @@
       "pyeonin": "Indirect Resource",
       "jeongin": "Direct Resource"
     },
-    "reasons": {
+    "terms": {
       "god": "{god} energy",
-      "combineDay": "Harmony with your day branch",
-      "combineOther": "Harmony with your chart",
-      "trine": "Half trine with your chart",
-      "peach": "Peach blossom day",
-      "clashDay": "Clash with your day branch",
-      "clashMonth": "Clash with your month branch",
-      "clashYear": "Clash with your year branch",
-      "clashHour": "Clash with your hour branch",
-      "wonjin": "Friction with your branches",
-      "punish": "Punishment with your branches",
-      "stemCombine": "Union with your day stem",
-      "stemClash": "Clash with your day stem",
-      "favorable": "Your helpful element is in the air",
-      "unfavorable": "Your draining element runs strong"
+      "combineDay": "day-branch harmony",
+      "combineOther": "branch harmony",
+      "trine": "half trine",
+      "peach": "peach blossom",
+      "clashDay": "day-branch clash",
+      "clashMonth": "month-branch clash",
+      "clashYear": "year-branch clash",
+      "clashHour": "hour-branch clash",
+      "wonjin": "branch friction",
+      "punish": "branch punishment",
+      "stemCombine": "stem union",
+      "stemClash": "stem clash",
+      "favorable": "helpful element",
+      "unfavorable": "draining element"
     },
-    "answer": "Today is {headline}{who}. Things flow best around the {time}, and {top} is today’s ace. Go easy on {low}{lowParticle}, and take a step {direction}.",
+    "why": {
+      "gods": {
+        "bigyeon": {
+          "up": "{term}{termParticle}, matching your own element, backs up your {domain}.",
+          "down": "{term}{termParticle}, doubling your own element, makes your {domain} stubborn."
+        },
+        "geopjae": {
+          "up": "Competitive {term}{termParticle} lights a fire under your {domain}.",
+          "down": "{term}{termParticle}, eyeing your share, brings rivalry and loss to your {domain}."
+        },
+        "siksin": {
+          "up": "Easygoing {term}{termParticle} brings comfort to your {domain}.",
+          "down": "Laid-back {term}{termParticle} makes your {domain} a little slack."
+        },
+        "sanggwan": {
+          "up": "Witty {term}{termParticle} adds sparks to your {domain}.",
+          "down": "Sharp-tongued {term}{termParticle} invites friction in your {domain}."
+        },
+        "pyeonjae": {
+          "up": "Rolling-in {term}{termParticle} carries chances into your {domain}.",
+          "down": "Restless {term}{termParticle} leaves your {domain} scattered."
+        },
+        "jeongjae": {
+          "up": "Steady {term}{termParticle} gives your {domain} solid footing.",
+          "down": "Penny-pinching {term}{termParticle} makes your {domain} feel tight."
+        },
+        "pyeongwan": {
+          "up": "High-pressure {term}{termParticle} pushes your {domain} to perform.",
+          "down": "Heavy {term}{termParticle} piles weight onto your {domain}."
+        },
+        "jeonggwan": {
+          "up": "Upright {term}{termParticle} brings order and recognition to your {domain}.",
+          "down": "Rule-bound {term}{termParticle} makes your {domain} feel stuffy."
+        },
+        "pyeonin": {
+          "up": "Sensitive {term}{termParticle} sharpens your instincts about your {domain}.",
+          "down": "Overthinking {term}{termParticle} feeds doubt in your {domain}."
+        },
+        "jeongin": {
+          "up": "Nurturing {term}{termParticle} sends helping hands to your {domain}.",
+          "down": "Dependent {term}{termParticle} makes your {domain} hesitate."
+        }
+      },
+      "relations": {
+        "combineDay": "A {term}{termParticle} forms today, so your {domain} softens.",
+        "combineOther": "A {term}{termParticle} with your chart forms today, so your {domain} runs in sync.",
+        "trine": "Today’s branch forms a {term}{termParticle} with your chart, gathering strength for your {domain}.",
+        "peach": "A {term}{termParticle} arrives today, making you stand out in your {domain}.",
+        "clashDay": "A {term}{termParticle} hits today, so your {domain} wobbles.",
+        "clashMonth": "A {term}{termParticle} hits today, so plans around your {domain} slip.",
+        "clashYear": "A {term}{termParticle} hits today, so your {domain} may bump into family or seniors.",
+        "clashHour": "An {term}{termParticle} hits today, so your {domain} runs hot and cold.",
+        "wonjin": "Today’s branch carries {term}{termParticle} with yours, so small hurts creep into your {domain}.",
+        "punish": "Today’s branch forms a {term}{termParticle} with yours, so your {domain} meets friction.",
+        "stemCombine": "Today’s stem forms a {term}{termParticle} with your day stem, drawing attraction into your {domain}.",
+        "stemClash": "Today’s stem strikes your day stem in a {term}{termParticle}, draining your {domain}.",
+        "favorable": "Your {term}{termParticle} is in the air today, so your {domain} has a tailwind.",
+        "unfavorable": "Your {term}{termParticle} runs strong today, so your {domain} feels heavy."
+      }
+    },
+    "glossary": {
+      "bigyeon": "Companion is the energy with your own element and polarity. It means independence and peers; too much turns into stubbornness and rivalry.",
+      "geopjae": "Rob Wealth shares your element but not your polarity. It brings drive and nerve, but it can also walk off with your money.",
+      "siksin": "Eating God is the element you produce, with matching polarity. It means good food, ease and steady self-expression.",
+      "sanggwan": "Hurting Officer is the element you produce, with opposite polarity. It brings wit and creativity but clashes with rules.",
+      "pyeonjae": "Indirect Wealth is the element you control, with matching polarity. It means windfalls, a wide circle and get-up-and-go.",
+      "jeongjae": "Direct Wealth is the element you control, with opposite polarity. It means money earned steadily and careful habits.",
+      "pyeongwan": "Seven Killings is the element that controls you, with matching polarity. It means pressure, challenge and the drive to beat it.",
+      "jeonggwan": "Direct Officer is the element that controls you, with opposite polarity. It means honor, order and recognition.",
+      "pyeonin": "Indirect Resource is the element that feeds you, with matching polarity. It means intuition, unusual ideas and alone time.",
+      "jeongin": "Direct Resource is the element that feeds you, with opposite polarity. It means support, learning and paperwork luck.",
+      "combineDay": "Harmony pairs two branches that pull together. With your day branch, the seat of you and your partner, people soften.",
+      "combineOther": "Harmony pairs two branches that pull together. With your other pillars, the people around you fall in step.",
+      "trine": "A half trine is two of the three branches that gather into one element. Strength flows in one direction.",
+      "peach": "Peach blossom is the seat of charm and popularity, set by your year and day branches. When today lands on it, you draw eyes.",
+      "clashDay": "A clash is two opposite branches colliding. The day branch is the seat of you and your partner, so mood and body wobble.",
+      "clashMonth": "A clash is two opposite branches colliding. The month branch is the seat of work and society, so plans slip.",
+      "clashYear": "A clash is two opposite branches colliding. The year branch is the seat of family and elders.",
+      "clashHour": "A clash is two opposite branches colliding. The hour branch governs results and your body’s rhythm.",
+      "wonjin": "Wonjin and harm pair branches that resent each other. They invite small hurts and misunderstandings.",
+      "punish": "Punishment is branches wounding each other. It warns of friction, fatigue and small accidents.",
+      "stemCombine": "A stem union draws two stems into one. When today’s stem unites with your day stem, attraction and connection appear.",
+      "stemClash": "A stem clash is two stems colliding head-on. When today’s stem strikes your day stem, energy drains.",
+      "favorable": "Your helpful element is the one your chart needs most for balance. Days rich in it run smoothly.",
+      "unfavorable": "Your draining element is the one your chart already has too much of. Days heavy with it take more effort."
+    },
+    "answer": "Today is {headline}{who}. Things flow best around the {time}, and {top} is today’s ace. Go easy on {low}{lowParticle}, and top up your {element} with {lucky}{luckyParticle}.",
+    "domainAnswer": "{line}{who}. {why} Do: {do}{doParticle}. Avoid: {dont}{dontParticle}.",
     "particles": {
-      "final": "",
-      "open": ""
+      "topic": ["", ""],
+      "subject": ["", ""],
+      "object": ["", ""],
+      "direction": ["", ""]
     },
     "domains": {
       "all": "Overall",
@@ -257,6 +346,18 @@
       "health": "Health",
       "work": "Work",
       "rel": "People"
+    },
+    "domainWords": {
+      "money": "money",
+      "love": "love life",
+      "health": "health",
+      "work": "work",
+      "rel": "relationships"
+    },
+    "levels": {
+      "high": "Good",
+      "mid": "Steady",
+      "low": "Careful"
     },
     "domainsLabel": "Scores by area",
     "notes": {
@@ -268,10 +369,10 @@
       "advice": "{line}. Do: {do}. Avoid: {dont}.",
       "do": "DO",
       "dont": "DON'T",
-      "direction": "Lucky direction",
-      "directionText": "The joy direction of today’s {stem} day stem. Face this way for the meetings that matter."
+      "why": "Why",
+      "lucky": "Lucky pick",
+      "luckyText": "Your chart needs {element} the most. In five-element tradition, the colors, tastes, places and habits of {element} top up what’s missing. Your pick changes daily."
     },
-    "direction": "to the {name}",
     "hours": {
       "names": [
         "Rat",
@@ -316,16 +417,6 @@
       "Libra",
       "Scorpio",
       "Sagittarius"
-    ],
-    "directions": [
-      "north",
-      "northeast",
-      "east",
-      "southeast",
-      "south",
-      "southwest",
-      "west",
-      "northwest"
     ],
     "content": {
       "headlines": {
@@ -455,7 +546,7 @@
         "jeongin": {
           "good": [
             "a day helping hands reach you first",
-            "a day what you learned pays off right away"
+            "a day your lessons pay off right away"
           ],
           "mid": [
             "a day you keep what you learn",
@@ -771,6 +862,43 @@
         "Like a rooster’s call: great for meeting people.",
         "Loyal as a dog: look back on the day.",
         "Content as a pig: resting early pays off."
+      ],
+      "lucky": [
+        [
+          "something green",
+          "a walk under the trees",
+          "a slice of sour fruit",
+          "a fresh salad",
+          "watering a plant"
+        ],
+        [
+          "a pop of red",
+          "a sunny walk",
+          "a bittersweet coffee",
+          "a candle at dinner",
+          "a touch of purple"
+        ],
+        [
+          "something beige",
+          "a sweet potato snack",
+          "a walk on a dirt path",
+          "a touch of yellow",
+          "a warm grain tea"
+        ],
+        [
+          "a white shirt",
+          "silver accessories",
+          "a spicy meal",
+          "a tidy desk",
+          "a metal watch"
+        ],
+        [
+          "something navy",
+          "two glasses of water",
+          "a bowl of warm soup",
+          "a walk by the water",
+          "a touch of black"
+        ]
       ]
     }
   }

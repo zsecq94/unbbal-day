@@ -91,6 +91,3 @@ export const dayPillarOfJdn = (jdn: number) => pillarAt(jdn + 49)
 /** 그레고리력 날짜의 율리우스 일수 */
 export const jdnOf = (y: number, m: number, d: number) =>
   Math.round(Date.UTC(y, m - 1, d) / 86400000) + 2440588
-
-/** 희신방: 일 천간으로 정한다(갑기 북동, 을경 북서, 병신 남서, 정임 남, 무계 남동). 방위 번호는 북에서 시계 방향 8방. */
-export const joyDirection = (dayStem: number) => [1, 7, 5, 4, 3][dayStem % 5]
