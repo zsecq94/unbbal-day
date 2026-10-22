@@ -3,197 +3,132 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>오늘의 운세 시안</title>
-    <link rel="stylesheet" href="shared/theme.css" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" href="data:," />
+    <title>운빨데이 · 디자인 시안</title>
+    <link rel="stylesheet" href="./shared/theme.css" />
     <style>
-      .intro {
+      .hero {
         display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 8px 24px;
-        padding: 24px 28px 20px;
-        border-bottom: 1px solid var(--line);
+        flex-direction: column;
+        gap: 18px;
+        padding: 28px 24px 30px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--tile);
       }
-      .intro p {
-        max-width: 46em;
+      @media (min-width: 640px) {
+        .hero {
+          padding: 34px 40px 36px;
+        }
+      }
+      .hero h1 {
+        font-size: clamp(28px, 3.4vw, 46px);
+        line-height: 1.1;
+        font-weight: 800;
+        letter-spacing: -0.05em;
+      }
+      .hero p {
+        max-width: 60ch;
+        font-size: 15.5px;
+        line-height: 1.55;
         color: var(--ink-2);
-        font-size: 15px;
-        line-height: 1.6;
-      }
-      .intro .label {
-        white-space: nowrap;
       }
       .list {
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-      }
-      .item {
-        position: relative;
         display: grid;
-        flex: 1;
-        grid-template-columns: 40px minmax(140px, 0.6fr) minmax(0, 2fr) auto;
-        align-items: center;
-        gap: 8px 28px;
-        min-height: 104px;
-        padding: 20px 28px;
-        border-bottom: 1px solid var(--line);
-        transition: background-color 0.2s;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
       }
-      .item:last-child {
-        border-bottom: 0;
-      }
-      @media (hover: hover) {
-        .item:hover {
-          background: var(--tile-lit);
+      @media (min-width: 900px) {
+        .list {
+          grid-template-columns: repeat(3, 1fr);
         }
       }
-      .item .no {
-        align-self: start;
-        padding-top: 6px;
+      .tile {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 220px;
+        padding: 22px 24px 24px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--tile);
+        color: var(--ink);
+        text-decoration: none;
+        transition:
+          border-color 200ms,
+          background-color 200ms,
+          transform 150ms var(--ease);
       }
-      .item h2 {
-        font-size: clamp(26px, 1.4vw + 16px, 40px);
+      .tile:hover {
+        border-color: rgb(79 134 255 / 0.7);
+        background: var(--tile-lit);
+      }
+      .tile:active {
+        transform: scale(0.985);
+      }
+      .tile .row {
+        display: flex;
+        justify-content: space-between;
+        font: 500 12px var(--font-mono);
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+      }
+      .tile h2 {
+        margin-top: auto;
+        font-size: 28px;
+        line-height: 1.12;
         font-weight: 750;
-        line-height: 1.1;
         letter-spacing: -0.045em;
       }
-      .item h2 a {
-        color: inherit;
-        text-decoration: none;
-      }
-      /* The whole row is the link to the input state. */
-      .item h2 a::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-      }
-      .item h2 a:focus-visible {
-        outline: none;
-      }
-      .item:has(h2 a:focus-visible) {
-        outline: 2px solid var(--ink);
-        outline-offset: -2px;
-      }
-      .item .desc {
+      .tile p {
+        font-size: 14.5px;
+        line-height: 1.5;
         color: var(--ink-2);
-        font-size: 16px;
-        line-height: 1.55;
       }
-      .item .how {
-        display: block;
-        margin-top: 6px;
+      .tile .demo {
+        align-self: flex-start;
+        font: 500 11px var(--font-mono);
+        letter-spacing: 0.1em;
         color: var(--ink-3);
+      }
+      .note {
+        padding: 0 4px;
         font-size: 13px;
-        font-weight: 600;
+        line-height: 1.6;
+        color: var(--ink-3);
       }
-      .item .go {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        gap: 8px;
-      }
-      .item .go a {
-        text-decoration: none;
-      }
-      @media (max-width: 899px) {
-        .item {
-          grid-template-columns: 32px minmax(0, 1fr);
-          gap: 10px 14px;
-          padding: 20px;
-        }
-        .item .desc,
-        .item .go {
-          grid-column: 2;
-        }
-        .intro {
-          padding: 20px;
-        }
+      .note code {
+        font: 500 12px var(--font-mono);
+        color: var(--ink-2);
       }
     </style>
   </head>
-  <body data-home="" data-state="input">
+  <body>
     <main class="frame">
-      <header data-chrome="top-bar"></header>
-      <section class="stage" aria-labelledby="game-title">
-        <span class="stage-frame" aria-hidden="true"></span>
-        <header data-chrome="stage-head"></header>
-
-        <div class="stage-body">
-          <div class="intro">
-            <p>
-              오늘의 운세 화면 시안 다섯 가지예요. 같은 테마 안에서 입력 방식,
-              결과 표현, 움직임을 서로 다르게 잡았어요. 줄을 누르면 입력부터,
-              결과 버튼을 누르면 결과 화면이 바로 열려요.
-            </p>
-            <span class="label">05 SAMPLES</span>
-          </div>
-          <ol class="list">
-            <li class="item">
-              <span class="label no">01</span>
-              <h2><a href="01-sentence.html">문장</a></h2>
-              <p class="desc">
-                빈칸을 채워 한 문장을 완성하면 답도 한 문장으로 와요. 밑줄 친
-                말을 누르면 각주가 열려요.
-                <span class="how">입력 · 문장 속 빈칸 &nbsp;/&nbsp; 결과 · 각주가 달린 문단</span>
-              </p>
-              <span class="go">
-                <a class="btn" href="01-sentence.html?demo">결과 <span class="mono" aria-hidden="true">→</span></a>
-              </span>
-            </li>
-            <li class="item">
-              <span class="label no">02</span>
-              <h2><a href="02-tape.html">눈금</a></h2>
-              <p class="desc">
-                눈금자를 끌어 값을 맞출수록 오차 범위가 좁아지고, 결과에서는
-                하루의 흐름을 커서로 훑어봐요.
-                <span class="how">입력 · 끌어서 맞추는 눈금자 &nbsp;/&nbsp; 결과 · 계단형 하루 그래프</span>
-              </p>
-              <span class="go">
-                <a class="btn" href="02-tape.html?demo">결과 <span class="mono" aria-hidden="true">→</span></a>
-              </span>
-            </li>
-            <li class="item">
-              <span class="label no">03</span>
-              <h2><a href="03-nine.html">구궁</a></h2>
-              <p class="desc">
-                숫자판으로 누를 때마다 아홉 칸이 하나씩 밝혀지고, 결과판의 칸을
-                누르면 그 줄과 칸이 펼쳐져요.
-                <span class="how">입력 · 숫자판 &nbsp;/&nbsp; 결과 · 3×3 운세판</span>
-              </p>
-              <span class="go">
-                <a class="btn" href="03-nine.html?demo">결과 <span class="mono" aria-hidden="true">→</span></a>
-              </span>
-            </li>
-            <li class="item">
-              <span class="label no">04</span>
-              <h2><a href="04-deck.html">카드</a></h2>
-              <p class="desc">
-                한 장에 한 질문씩 답할수록 카드 문양이 선명해지고, 뽑은 카드는
-                밀어서 넘기고 눌러서 뒤집어요.
-                <span class="how">입력 · 한 장씩 넘기는 질문 &nbsp;/&nbsp; 결과 · 넘기고 뒤집는 카드 더미</span>
-              </p>
-              <span class="go">
-                <a class="btn" href="04-deck.html?demo">결과 <span class="mono" aria-hidden="true">→</span></a>
-              </span>
-            </li>
-            <li class="item">
-              <span class="label no">05</span>
-              <h2><a href="05-board.html">보드</a></h2>
-              <p class="desc">
-                한 줄로 적으면 바로 읽어 플랩에 띄우고, 결과는 시간대를 바꿀
-                때마다 다시 뒤집히는 안내판이에요.
-                <span class="how">입력 · 한 줄 자유 입력 &nbsp;/&nbsp; 결과 · 플랩 안내판</span>
-              </p>
-              <span class="go">
-                <a class="btn" href="05-board.html?demo">결과 <span class="mono" aria-hidden="true">→</span></a>
-              </span>
-            </li>
-          </ol>
-        </div>
+      <section class="hero">
+        <h1>디자인 시안</h1>
+        <p>
+          구현의 기준이 된 정적 시안입니다. 앱 코드와는 무관하며, 화면을
+          손볼 때 먼저 여기서 모양과 동작을 맞춰 본 뒤 옮깁니다.
+        </p>
       </section>
+      <ul class="list">
+        <li>
+          <a class="tile" href="./fortune-sentence.html">
+            <span class="row"><span>01</span><span>확정 · 2026-10</span></span>
+            <h2>오늘의 운세 · 문장</h2>
+            <p>빈칸 문장을 채우면 미리보기가 바뀌고, 결과는 각주 달린 한 문단과 여섯 분야 트랙을 짚어 읽습니다.</p>
+            <span class="demo">?demo → 결과 화면 바로 열기</span>
+          </a>
+        </li>
+      </ul>
+      <p class="note">
+        검증: 저장소 루트에서 <code>sh mockups/tools/run.sh</code>. 폰트를
+        node_modules에서 읽으므로 http로 띄워야 합니다.
+      </p>
     </main>
-    <script src="shared/chrome.js"></script>
   </body>
 </html>

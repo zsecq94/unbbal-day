@@ -4,7 +4,8 @@ import { pad2, type Game } from '@/lib/games'
 import { symbolTransition, tileTransition } from '@/lib/transitions'
 
 const FRAME = 'absolute inset-0 rounded-tile border border-line bg-tile'
-const SECTION = 'relative flex flex-1 flex-col overflow-hidden rounded-tile'
+const SECTION =
+  'relative flex min-h-0 flex-1 flex-col overflow-clip rounded-tile'
 
 /**
  * The stage a game plays on, laid out like an enlarged hub tile (index,

@@ -1,23 +1,26 @@
-/* Shared tokens and chrome for the fortune mockups. Mirrors app/globals.css
-   and the stage/top bar components so every sample sits in the real frame. */
+/* ───────────────────────────────────────────────────────────────
+   운빨데이 · 시안 공용 토큰과 크롬
+   app/globals.css의 @theme 토큰을 그대로 옮기고, 허브·스테이지·상단바의
+   생김새를 평범한 CSS로 다시 적었다. 시안 전용이며 앱 코드와 무관하다.
+   ─────────────────────────────────────────────────────────────── */
 
-/* ─── Fonts: local package first, CDN when node_modules can't be read ──── */
+/* 폰트: 저장소의 node_modules를 먼저, 막히면 CDN */
 @font-face {
   font-family: 'Wanted Sans Variable';
   font-style: normal;
-  font-weight: 400 1000;
   font-display: swap;
+  font-weight: 400 1000;
   src:
     url('../../node_modules/wanted-sans/fonts/webfonts/variable/complete/woff2/WantedSansVariable.woff2')
-      format('woff2'),
+      format('woff2-variations'),
     url('https://cdn.jsdelivr.net/npm/wanted-sans@1.0.3/fonts/webfonts/variable/complete/woff2/WantedSansVariable.woff2')
-      format('woff2');
+      format('woff2-variations');
 }
 @font-face {
   font-family: 'Geist Mono';
   font-style: normal;
-  font-weight: 100 900;
   font-display: swap;
+  font-weight: 100 900;
   src:
     url('../../node_modules/next/dist/next-devtools/server/font/geist-mono-latin.woff2')
       format('woff2'),
@@ -25,7 +28,6 @@
       format('woff2');
 }
 
-/* ─── Tokens ───────────────────────────────────────────────────────────── */
 :root {
   --canvas: #0a0a0a;
   --tile: #121212;
@@ -37,20 +39,25 @@
   --line-strong: rgb(255 255 255 / 0.14);
   --brand: #1f5bff;
   --brand-hi: #4f86ff;
-
-  --sans:
+  --font-sans:
     'Wanted Sans Variable', 'Wanted Sans', -apple-system, BlinkMacSystemFont,
     'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
-  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  --radius-tile: 8px;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius: 8px;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-
-  /* Visual viewport offset (iOS pans it when the keyboard opens). */
-  --vv-top: 0px;
+  --gutter: 16px;
+}
+@media (min-width: 640px) {
+  :root {
+    --gutter: 24px;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --gutter: 40px;
+  }
 }
 
-/* ─── Base ─────────────────────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -59,21 +66,20 @@
 html {
   color-scheme: dark;
   background: var(--canvas);
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+  height: 100%;
 }
 body {
   margin: 0;
+  min-height: 100%;
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--sans);
+  font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   word-break: keep-all;
-  overflow-wrap: break-word;
-  -webkit-tap-highlight-color: transparent;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
 }
 ::selection {
   background: var(--brand);
@@ -83,69 +89,24 @@ button,
 input {
   font: inherit;
   color: inherit;
-  letter-spacing: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
 }
 button {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
   cursor: pointer;
-  text-align: inherit;
 }
-input {
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  outline: none;
+svg {
+  display: block;
 }
-input::placeholder {
-  color: var(--ink-3);
-  opacity: 1;
-}
-[hidden] {
-  display: none !important;
-}
-p,
 h1,
 h2,
-h3,
-ol,
-ul,
-dl,
-dd {
+p {
   margin: 0;
-  padding: 0;
-}
-li {
-  list-style: none;
 }
 
-.mono {
-  font-family: var(--mono);
-}
-/* The mono index/label voice: "01", "TODAY". Latin and digits only. */
-.label {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  color: var(--ink-3);
-}
-.nowrap {
-  white-space: nowrap;
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-/* Focus ring: outline-2 outline-offset outline-ink */
+/* 포커스 링: 사각, 잉크 */
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
@@ -153,70 +114,13 @@ li {
 :focus:not(:focus-visible) {
   outline: none;
 }
-/* Text fields show focus with their own underline instead of a box. */
-input:focus-visible {
-  outline: none;
+
+/* 결과 상태: 화면 높이에 맞추고 페이지 스크롤을 만들지 않는다 */
+html[data-state='result'] body {
+  overflow: hidden;
 }
 
-/* ─── Square controls ──────────────────────────────────────────────────── */
-/* Press feedback is motion only: controls dip, colors don't flash. */
-.btn {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--line-strong);
-  color: var(--ink-2);
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-  transition:
-    border-color 0.2s,
-    color 0.2s,
-    background-color 0.2s,
-    opacity 0.2s,
-    transform 0.15s var(--ease);
-}
-.btn .mono {
-  font-size: 14px;
-  font-weight: 400;
-}
-@media (hover: hover) {
-  .btn:hover {
-    border-color: var(--ink);
-    color: var(--ink);
-  }
-}
-.btn:active {
-  transform: scale(0.97);
-}
-.btn-primary {
-  height: 44px;
-  padding: 0 18px;
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--canvas);
-  font-size: 15px;
-}
-@media (hover: hover) {
-  .btn-primary:hover {
-    color: var(--canvas);
-  }
-}
-.btn-primary:disabled {
-  border-color: var(--line-strong);
-  background: transparent;
-  color: var(--ink-3);
-  cursor: not-allowed;
-}
-.btn-primary:disabled:active {
-  transform: none;
-}
-
-/* ─── Page frame (components/page-frame.tsx) ──────────────────────────── */
+/* ─── 페이지 틀 ─────────────────────────────────────────────── */
 .frame {
   display: flex;
   flex-direction: column;
@@ -225,39 +129,47 @@ input:focus-visible {
   max-width: 1920px;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 16px;
+  padding: var(--gutter);
 }
-@media (min-width: 640px) {
-  .frame {
-    padding: 24px;
-  }
-}
-@media (min-width: 1280px) {
-  .frame {
-    padding: 40px;
-  }
-}
-/* A result never scrolls the page: the stage takes exactly what's left. */
-body[data-state='result'] .frame {
+html[data-state='result'] .frame {
   height: 100dvh;
   min-height: 0;
 }
 
-/* ─── Top bar (components/top-bar.tsx) ────────────────────────────────── */
-.top-bar {
+/* ─── 상단바 ────────────────────────────────────────────────── */
+.topbar {
   display: flex;
-  flex: none;
   align-items: center;
   gap: 16px;
   height: 40px;
+  flex: none;
 }
 @media (min-width: 640px) {
-  .top-bar {
+  .topbar {
     gap: 20px;
   }
 }
-.back {
+.topbar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-2);
   text-decoration: none;
+  transition: color 200ms, border-color 200ms;
+}
+.topbar-back:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.topbar-back .arrow {
+  font: 500 14px var(--font-mono);
+}
+.topbar-back .label {
+  font-size: 13px;
+  font-weight: 700;
 }
 .logo {
   display: flex;
@@ -265,68 +177,58 @@ body[data-state='result'] .frame {
   gap: 11px;
 }
 .logo svg {
-  flex: none;
   width: 30px;
   height: 30px;
   color: var(--ink);
   filter: drop-shadow(0 0 14px rgb(31 91 255 / 0.35));
 }
-.logo span {
+.logo .name {
   font-size: 23px;
-  font-weight: 800;
   line-height: 1;
+  font-weight: 800;
   letter-spacing: -0.045em;
   white-space: nowrap;
 }
 .locale {
-  display: flex;
   margin-left: auto;
+  display: flex;
   border: 1px solid var(--line-strong);
-  font-family: var(--mono);
-  font-size: 11px;
+  font: 500 11px var(--font-mono);
   letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
-.locale a {
+.locale button {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 24px;
   min-width: 32px;
   padding: 0 8px;
+  text-transform: uppercase;
   color: var(--ink-3);
-  text-decoration: none;
 }
-.locale a[aria-current] {
+.locale button[aria-current='true'] {
   background: var(--ink);
   color: var(--canvas);
 }
 
-/* ─── Stage (components/game-stage.tsx) ───────────────────────────────── */
-/* overflow: clip, not hidden, so sticky children still stick to the page. */
+/* ─── 스테이지 ──────────────────────────────────────────────── */
 .stage {
   position: relative;
   display: flex;
-  flex: 1;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
-  overflow: clip;
-  border-radius: var(--radius-tile);
-}
-.stage-frame {
-  position: absolute;
-  inset: 0;
   border: 1px solid var(--line);
-  border-radius: var(--radius-tile);
+  border-radius: var(--radius);
   background: var(--tile);
-  pointer-events: none;
+  /* hidden이면 안쪽 sticky가 붙지 않는다 */
+  overflow: clip;
 }
 .stage-head {
-  position: relative;
   display: flex;
-  flex: none;
   align-items: center;
   gap: 16px;
+  flex: none;
   padding: 16px 24px;
   border-bottom: 1px solid var(--line);
 }
@@ -336,35 +238,32 @@ body[data-state='result'] .frame {
     padding: 16px 28px;
   }
 }
-.stage-head .who {
+.stage-head .index {
+  font: 500 12px var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+.stage-head .title {
   display: flex;
-  min-width: 0;
   align-items: center;
   gap: 12px;
+  min-width: 0;
   color: var(--brand-hi);
 }
-.stage-head svg {
-  flex: none;
+.stage-head .title svg {
   width: 28px;
   height: 28px;
-  overflow: visible;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: square;
-}
-.stage-head svg * {
-  vector-effect: non-scaling-stroke;
+  flex: none;
 }
 .stage-head h1 {
-  overflow: hidden;
-  color: var(--ink);
   font-size: 17px;
-  font-weight: 750;
   line-height: 1;
+  font-weight: 750;
   letter-spacing: -0.03em;
-  text-overflow: ellipsis;
+  color: var(--ink);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 @media (min-width: 640px) {
   .stage-head h1 {
@@ -372,46 +271,276 @@ body[data-state='result'] .frame {
   }
 }
 .stage-head .kind {
-  flex: none;
   margin-left: auto;
-  color: var(--ink-2);
+  flex: none;
   font-size: 13px;
   font-weight: 700;
+  color: var(--ink-2);
 }
 .stage-body {
   position: relative;
   display: flex;
-  flex: 1;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
 }
 
-/* ─── Idle effects ─────────────────────────────────────────────────────── */
-/* Anything that moves on its own carries .idle. It holds still while a big
-   transition runs (one thing moves at a time) and is off for reduced motion. */
-body.is-moving .idle,
-body.is-moving .idle::before,
-body.is-moving .idle::after,
-body.is-moving .idle *,
-body.is-moving .idle *::before,
-body.is-moving .idle *::after {
-  animation-play-state: paused !important;
+/* 게임 심볼(48×48 라인 아이콘) */
+.symbol {
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: square;
+}
+.symbol * {
+  vector-effect: non-scaling-stroke;
+}
+.symbol .f {
+  fill: currentColor;
+  stroke: none;
 }
 
+/* ─── 상태 뷰 ───────────────────────────────────────────────── */
+.view {
+  flex: 1;
+  min-height: 0;
+}
+html[data-state='input'] .view-result,
+html[data-state='result'] .view-input {
+  display: none !important;
+}
+/* 한 번에 한 가지만: 이전 뷰 퇴장(120ms) → 새 뷰 등장(220ms부터) */
+.view.leaving {
+  animation: view-out 120ms ease-in both;
+}
+.view.entering {
+  animation:
+    view-fade 220ms ease-out 120ms both,
+    view-rise 360ms var(--ease) 60ms both;
+}
+@keyframes view-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes view-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes view-rise {
+  from {
+    translate: 0 14px;
+  }
+}
+
+/* ─── 공용 컨트롤: 사각, 색이 아닌 모션으로 눌림 ───────────── */
+.mono {
+  font-family: var(--font-mono);
+}
+.label {
+  font: 500 11px var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--ink-2);
+  transition:
+    color 200ms,
+    border-color 200ms,
+    transform 150ms var(--ease);
+}
+.btn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.btn:active {
+  transform: scale(0.985);
+}
+.btn-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--canvas);
+}
+.btn-primary:hover {
+  color: var(--canvas);
+}
+.btn[disabled] {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.btn .key {
+  font: 500 12px var(--font-mono);
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+
+/* 세그먼트: 한 줄로 붙은 사각 선택지 */
+.seg {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--line-strong);
+}
+.seg button {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+  transition: color 200ms, transform 150ms var(--ease);
+}
+.seg button + button {
+  border-left: 1px solid var(--line-strong);
+}
+.seg button:hover {
+  color: var(--ink);
+}
+.seg button:active {
+  transform: scale(0.97);
+}
+.seg button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--canvas);
+}
+
+/* 칩: 여러 개 고르는 사각 */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+  transition: color 200ms, border-color 200ms, transform 150ms var(--ease);
+}
+.chip:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.chip:active {
+  transform: scale(0.97);
+}
+.chip[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--canvas);
+}
+
+/* 텍스트 입력: 사각 상자 */
+.input {
+  display: block;
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  font-size: 16px;
+  color: var(--ink);
+  transition: border-color 200ms;
+}
+.input:hover {
+  border-color: rgb(255 255 255 / 0.28);
+}
+.input:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.input::placeholder {
+  color: var(--ink-3);
+}
+.input.mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+/* 텍스트 링크 */
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+  transition: color 200ms;
+}
+.link:hover {
+  color: var(--ink);
+}
+.link .arrow {
+  font: 500 13px var(--font-mono);
+}
+
+/* 모노 숫자 자리 맞춤 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 세로 눈금 배경(허브의 column-lines) */
+.col-lines {
+  background-image: linear-gradient(
+    to right,
+    rgb(255 255 255 / 0.04) 1px,
+    transparent 1px
+  );
+  background-size: calc(100% / 6) 100%;
+}
+
+/* ─── 대기 효과 공통 규칙 ───────────────────────────────────── */
+/* 큰 전환 중에는 멈춘다 */
+html[data-transit] .idle,
+html[data-transit] .idle * {
+  animation-play-state: paused !important;
+}
+/* 동작 줄이기: 대기 효과와 전환을 끈다 */
 @media (prefers-reduced-motion: reduce) {
   .idle,
-  .idle::before,
-  .idle::after,
   .idle *,
-  .idle *::before,
-  .idle *::after {
+  .idle::before,
+  .idle::after {
     animation: none !important;
+    transition: none !important;
+  }
+  .view.leaving,
+  .view.entering {
+    animation: none !important;
+  }
+  .btn:active,
+  .seg button:active,
+  .chip:active {
+    transform: none;
   }
   *,
   *::before,
   *::after {
-    transition-duration: 0s !important;
-    transition-delay: 0s !important;
-    scroll-behavior: auto !important;
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
   }
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { FortuneGame } from '@/components/games/fortune'
 import type { Game, GameKey } from '@/lib/games'
 import type { Locale } from '@/lib/i18n'
 
@@ -16,4 +17,4 @@ export type GameScreenProps = {
  */
 export const GAME_SCREENS: Partial<
   Record<GameKey, ComponentType<GameScreenProps>>
-> = {}
+> = { fortune: FortuneGame }

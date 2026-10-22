@@ -85,5 +85,265 @@
   "notFound": {
     "title": "Nothing here",
     "body": "Check the address or head back home."
+  },
+  "fortune": {
+    "meter": {
+      "accuracy": "Accuracy",
+      "next": "Next · {label}",
+      "allFilled": "All filled in"
+    },
+    "sentence": "I was born on {month}/{day}/{year} at {time}, by the {calendar} calendar. I'm {gender}, and my name is {name}.",
+    "blanks": {
+      "year": {
+        "label": "Birth year (required)",
+        "placeholder": "0000"
+      },
+      "month": {
+        "label": "Birth month (required)",
+        "placeholder": "00"
+      },
+      "day": {
+        "label": "Birth day (required)",
+        "placeholder": "00"
+      },
+      "time": {
+        "label": "Time of birth (optional, e.g. 14:30)",
+        "placeholder": "what time"
+      },
+      "calendar": {
+        "label": "Solar or lunar calendar (optional)",
+        "placeholder": "solar·lunar"
+      },
+      "gender": {
+        "label": "Gender (optional)",
+        "placeholder": "gender"
+      },
+      "name": {
+        "label": "Name (optional)",
+        "placeholder": "name"
+      }
+    },
+    "parts": {
+      "year": "birth year",
+      "month": "birth month",
+      "day": "birth day",
+      "time": "time of birth",
+      "calendar": "calendar",
+      "gender": "gender",
+      "name": "name"
+    },
+    "options": {
+      "calendar": {
+        "solar": "solar",
+        "lunar": "lunar"
+      },
+      "gender": {
+        "f": "a woman",
+        "m": "a man",
+        "x": "non-binary"
+      }
+    },
+    "clear": "Clear",
+    "empty": "empty",
+    "preview": {
+      "label": "PREVIEW",
+      "empty": "Start with your birth year. Today's sentence takes shape here.",
+      "born": "Born {year} · {zodiac}",
+      "bornAt": "born at {time}",
+      "line": "{parts} — {who}today is a {headline} day"
+    },
+    "hint": "Only your birth date is required. The rest sharpens the reading.",
+    "hintInvalid": "Please check that date.",
+    "go": "Read my fortune",
+    "total": "TOTAL",
+    "edit": "Edit sentence",
+    "who": "{name}, ",
+    "whoLine": {
+      "calendar": {
+        "solar": "solar",
+        "lunar": "lunar"
+      },
+      "accuracy": "accuracy {n}%"
+    },
+    "answer": "{who}today is a {headline} day. The flow peaks around {time}, and {top} is your strongest suit. Go easy on {low}{lowParticle}, and take one step {direction}.",
+    "particles": {
+      "final": "",
+      "open": ""
+    },
+    "domains": {
+      "all": "Overall",
+      "money": "Money",
+      "love": "Love",
+      "health": "Health",
+      "work": "Work",
+      "rel": "People"
+    },
+    "domainsLabel": "Scores by area",
+    "notes": {
+      "headlineDay": "a {headline} day",
+      "bestTime": "Best hours of the day",
+      "scrub": "Hover the chart to read other hours.",
+      "points": "{n} pts",
+      "top": "Strongest area",
+      "low": "Handle with care",
+      "rank": "Ranked #{n}",
+      "advice": "{line}. Do: {do}. Avoid: {dont}.",
+      "do": "DO",
+      "dont": "DON'T",
+      "direction": "Lucky direction",
+      "directionText": "Face this way for the meetings that matter."
+    },
+    "direction": "to the {name}",
+    "hours": {
+      "midnight": "12 AM",
+      "am": "{h} AM",
+      "noon": "12 PM",
+      "pm": "{h} PM",
+      "range": "{from}–{to}"
+    },
+    "zodiac": [
+      "Monkey",
+      "Rooster",
+      "Dog",
+      "Pig",
+      "Rat",
+      "Ox",
+      "Tiger",
+      "Rabbit",
+      "Dragon",
+      "Snake",
+      "Horse",
+      "Goat"
+    ],
+    "signs": [
+      "Capricorn",
+      "Aquarius",
+      "Pisces",
+      "Aries",
+      "Taurus",
+      "Gemini",
+      "Cancer",
+      "Leo",
+      "Virgo",
+      "Libra",
+      "Scorpio",
+      "Sagittarius"
+    ],
+    "directions": [
+      "north",
+      "northeast",
+      "east",
+      "southeast",
+      "south",
+      "southwest",
+      "west",
+      "northwest"
+    ],
+    "content": {
+      "headlines": [
+        "slow and steady",
+        "small start, long reach",
+        "unhurried wins",
+        "answers on familiar roads"
+      ],
+      "summaries": [
+        "Luck follows polishing what you have, not starting big.",
+        "The day sharpens toward the afternoon. Let the morning pass lightly.",
+        "One small choice sets the direction of the day."
+      ],
+      "lines": {
+        "money": [
+          "A small unexpected income shows up",
+          "Money kept matters more than money spent",
+          "A good day to settle what you've put off"
+        ],
+        "love": [
+          "The first word you offer lingers",
+          "Listening beats talking today",
+          "The less you expect, the lighter it feels"
+        ],
+        "health": [
+          "A glass of water, one stretch",
+          "Early morning sits better than late night",
+          "Drop the tension in your shoulders"
+        ],
+        "work": [
+          "Focus returns in the afternoon",
+          "Finish one thing before starting the next",
+          "Notes outlast words today"
+        ],
+        "rel": [
+          "Save that one remark",
+          "Make the call you've been putting off",
+          "Hear someone close out to the end"
+        ]
+      },
+      "advice": {
+        "money": [
+          {
+            "do": "Sort your receipts once",
+            "dont": "Impulse buys, just for today"
+          },
+          {
+            "do": "Write down small spending",
+            "dont": "Big payments until tomorrow"
+          }
+        ],
+        "love": [
+          {
+            "do": "Check in first",
+            "dont": "Long late-night talks"
+          },
+          {
+            "do": "Short and often",
+            "dont": "Digging up old things"
+          }
+        ],
+        "health": [
+          {
+            "do": "Ten minutes' walk after lunch",
+            "dont": "Late caffeine"
+          },
+          {
+            "do": "Two more glasses of water",
+            "dont": "Two hours without standing"
+          }
+        ],
+        "work": [
+          {
+            "do": "The hard task first thing",
+            "dont": "Three things at once"
+          },
+          {
+            "do": "Log what you finished",
+            "dont": "Drifting in meetings"
+          }
+        ],
+        "rel": [
+          {
+            "do": "One line to someone you're grateful for",
+            "dont": "Long group-chat posts"
+          },
+          {
+            "do": "Greet first",
+            "dont": "Joining in on gossip"
+          }
+        ]
+      },
+      "hourNotes": [
+        "Good for quiet tidying",
+        "Time to wake the body",
+        "Luck favors a start",
+        "Good hours for decisions",
+        "Take a short break",
+        "Conversations flow",
+        "Focus returns",
+        "Finishing gets easier",
+        "Good for meeting people",
+        "Move lightly",
+        "Look back on the day",
+        "Better to rest early"
+      ]
+    }
   }
 }
