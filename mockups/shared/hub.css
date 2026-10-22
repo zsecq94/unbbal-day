@@ -1,0 +1,611 @@
+/* ───────────────────────────────────────────────────────────────
+   운빨데이 · 허브 시안 공용 스타일
+   components/game-hub.tsx, components/hero.tsx의 생김새를 평범한 CSS로
+   옮겼다. 위 줄은 소개와 혼자 하는 게임, 아래 줄은 함께하는 게임이다.
+   중단점은 앱(Tailwind)과 같다: sm 640, md 768, xl 1280, 2xl 1536,
+   fit = 폭 1280 이상이면서 높이 760 이상(허브가 한 화면에 들어가는 데스크톱).
+   ─────────────────────────────────────────────────────────────── */
+
+.hub {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* 앱(Tailwind)과 같게: 시안 공용 body의 overflow-wrap: anywhere를 끈다 */
+  overflow-wrap: normal;
+  width: 100%;
+  max-width: 1920px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 16px;
+}
+@media (min-width: 640px) {
+  .hub {
+    padding: 24px;
+  }
+}
+@media (min-width: 1280px) {
+  .hub {
+    padding: 40px;
+  }
+}
+
+/* 위 줄: 소개 + 혼자 하는 게임, 아래 줄: 함께하는 게임 */
+.hub-top {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.hub-bottom {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .hub-top {
+    grid-template-columns: repeat(12, 1fr);
+  }
+  .hub-bottom {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+@media (min-width: 1280px) {
+  .hub-bottom {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+@media (min-width: 1280px) and (min-height: 760px) {
+  .hub {
+    height: 100dvh;
+    padding-block: clamp(1.25rem, 3.7vh, 2.5rem);
+  }
+  .hub-top {
+    flex: 1;
+    min-height: 0;
+  }
+  .hub-bottom {
+    flex: none;
+  }
+}
+
+/* ─── 소개 ─── */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 24px 24px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--tile);
+}
+@media (min-width: 640px) {
+  .hero {
+    padding: 34px 40px 36px;
+  }
+}
+.hero-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.hero-logo svg {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  color: var(--ink);
+  filter: drop-shadow(0 0 14px rgb(31 91 255 / 0.35));
+}
+.hero-logo span {
+  font-size: 23px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.hero-date {
+  display: none;
+  font: 400 12px var(--font-mono);
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+.hero-date b {
+  font-weight: 500;
+  color: var(--ink-2);
+}
+@media (min-width: 640px) {
+  .hero-date {
+    display: inline;
+  }
+}
+.hero-locale {
+  display: flex;
+  border: 1px solid var(--line-strong);
+  font: 400 11px var(--font-mono);
+  letter-spacing: 0.12em;
+}
+.hero-locale button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--ink-3);
+  font: inherit;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.hero-locale button[aria-current='true'] {
+  background: var(--ink);
+  color: var(--canvas);
+}
+.hero h1 {
+  margin-top: 64px;
+  font-size: clamp(2.75rem, 4.4vw + 0.25rem, 5.625rem);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  word-break: keep-all;
+}
+.hero h1:lang(en) {
+  letter-spacing: -0.04em;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--brand-hi);
+}
+@media (min-width: 768px) {
+  .hero h1 {
+    margin-top: 96px;
+  }
+}
+.hero p {
+  margin-top: 24px;
+  font-size: clamp(1.0625rem, 1.05vw, 1.25rem);
+  line-height: 1.5;
+  font-weight: 450;
+  letter-spacing: -0.015em;
+  word-break: keep-all;
+  color: var(--ink-2);
+}
+.hero p b {
+  font-weight: 700;
+  color: var(--ink);
+}
+.hero dl {
+  display: flex;
+  gap: 28px;
+  margin: 28px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line-strong);
+  font: 400 12px var(--font-mono);
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+.hero dl div {
+  display: flex;
+  gap: 8px;
+}
+.hero dt {
+  order: 2;
+}
+.hero dt.ko {
+  font-family: var(--font-sans);
+  letter-spacing: normal;
+}
+.hero dd {
+  margin: 0;
+  font-weight: 500;
+  color: var(--ink);
+}
+@media (min-width: 1280px) and (min-height: 760px) {
+  .hero {
+    padding-top: clamp(1.5rem, 3.2vh, 2.125rem);
+    padding-bottom: clamp(1.5rem, 3.3vh, 2.25rem);
+  }
+  .hero-head {
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    margin-top: auto;
+  }
+  .hero p {
+    margin-top: clamp(1rem, 2.2vh, 1.5rem);
+  }
+  .hero dl {
+    margin-top: clamp(1rem, 2.6vh, 1.75rem);
+    padding-top: clamp(0.875rem, 1.9vh, 1.25rem);
+  }
+}
+
+/* ─── 게임 타일 ─── */
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--tile);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    border-color 200ms,
+    background-color 200ms,
+    transform 150ms var(--ease);
+}
+@media (min-width: 640px) {
+  .tile {
+    padding: 26px 28px 28px;
+  }
+}
+.tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 0.055),
+    transparent 60%
+  );
+  transition: opacity 300ms;
+}
+.tile:active {
+  transform: scale(0.985);
+}
+@media (hover: hover) {
+  .tile:hover {
+    border-color: rgb(79 134 255 / 0.7);
+    background: var(--tile-lit);
+  }
+  .tile:hover::after {
+    opacity: 1;
+  }
+}
+.tile-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: 500 12px var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+.tile-kind {
+  font: 700 13px var(--font-sans);
+  letter-spacing: normal;
+  color: var(--ink-2);
+}
+.tile-hint {
+  display: none;
+  color: var(--brand-hi);
+}
+@media (hover: hover) {
+  .tile:hover .tile-kind {
+    display: none;
+  }
+  .tile:hover .tile-hint {
+    display: inline;
+  }
+}
+.tile-art {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding-block: 20px;
+  color: var(--ink-3);
+  transition: color 200ms;
+}
+.tile-art svg {
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: square;
+  stroke-width: 1.8;
+  transition: transform 450ms var(--ease);
+}
+.tile-art svg * {
+  vector-effect: non-scaling-stroke;
+}
+.tile-art svg .f {
+  fill: currentColor;
+  stroke: none;
+}
+@media (hover: hover) {
+  .tile:hover .tile-art {
+    color: var(--brand-hi);
+  }
+  .tile:hover .tile-art svg {
+    transform: var(--motion);
+  }
+}
+.tile-name {
+  position: relative;
+  display: block;
+  line-height: 1.12;
+  font-weight: 750;
+  word-break: keep-all;
+}
+.tile-desc {
+  position: relative;
+  display: block;
+  margin-top: 10px;
+  letter-spacing: -0.015em;
+  word-break: keep-all;
+  color: var(--ink-2);
+}
+
+/* 크기: lg(운세), md(위 줄 게임), half(위 줄에 위아래로 쌓는 게임), sm(아래 줄) */
+.t-lg,
+.t-md {
+  min-height: 18rem;
+}
+.t-lg .tile-name {
+  font-size: clamp(2.5rem, 3.55vw, 4.25rem);
+  letter-spacing: -0.05em;
+}
+.t-md .tile-name {
+  font-size: clamp(2.125rem, 2.7vw, 3.25rem);
+  letter-spacing: -0.05em;
+}
+.t-lg .tile-art svg,
+.t-md .tile-art svg {
+  width: clamp(7.5rem, min(10vw, 17.6vh), 11.875rem);
+  height: clamp(7.5rem, min(10vw, 17.6vh), 11.875rem);
+}
+.t-lg .tile-desc,
+.t-md .tile-desc,
+.t-half .tile-desc {
+  font-size: clamp(1rem, 1vw, 1.125rem);
+}
+@media (min-width: 640px) {
+  .t-lg .tile-desc,
+  .t-md .tile-desc,
+  .t-half .tile-desc {
+    margin-top: 14px;
+  }
+}
+.t-half {
+  min-height: 14rem;
+}
+.t-half .tile-name {
+  font-size: clamp(1.875rem, 2.2vw, 2.75rem);
+  letter-spacing: -0.045em;
+}
+.t-half .tile-art {
+  padding-block: 16px;
+}
+.t-half .tile-art svg {
+  width: clamp(3rem, min(5vw, 7vh), 6rem);
+  height: clamp(3rem, min(5vw, 7vh), 6rem);
+}
+.t-sm {
+  min-height: 14rem;
+}
+.t-sm .tile-name {
+  font-size: clamp(1.625rem, 1.8vw, 2.125rem);
+  letter-spacing: -0.035em;
+}
+.t-sm .tile-art {
+  padding-block: 16px;
+}
+.t-sm .tile-art svg {
+  width: clamp(4rem, min(5vw, 8.9vh), 6rem);
+  height: clamp(4rem, min(5vw, 8.9vh), 6rem);
+  stroke-width: 1.6;
+}
+.t-sm .tile-desc {
+  min-height: 3.1em;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+/* 영어 이름이 두 줄이 되는 폭에서는 이름 칸을 두 줄 높이로 맞춰 설명 줄을 가지런히 */
+@media (max-width: 767.98px) {
+  .t-sm .tile-name:lang(en) {
+    display: flex;
+    align-items: flex-end;
+    min-height: 2.24em;
+  }
+  .t-sm .tile-desc:lang(en) {
+    min-height: 6.2em;
+  }
+}
+@media (min-width: 768px) {
+  .t-lg,
+  .t-md {
+    min-height: 22rem;
+  }
+  .t-half {
+    min-height: 12rem;
+  }
+  .t-sm {
+    min-height: 16rem;
+  }
+}
+/* 설명이 세 줄, 영어 이름이 두 줄이 되는 좁은 데스크톱 폭(1280–1339)에서만 그 자리를 잡아 둔다 */
+@media (min-width: 1280px) and (max-width: 1339.98px) {
+  .t-sm .tile-desc {
+    min-height: 4.65em;
+  }
+  .t-sm .tile-name:lang(en) {
+    display: flex;
+    align-items: flex-end;
+    min-height: 2.24em;
+  }
+}
+@media (min-width: 1280px) and (min-height: 760px) {
+  .t-lg,
+  .t-md,
+  .t-half {
+    min-height: 0;
+  }
+  /* 아래 줄은 위 줄 타일보다 낮게: 심볼과 여백을 화면 높이에 맞춰 줄이고
+     그만큼 위 줄(특히 위아래로 쌓인 로또·궁합)에 높이를 돌려준다 */
+  .t-sm {
+    min-height: clamp(12rem, 24vh, 18rem);
+    padding-top: clamp(1.125rem, 2.2vh, 1.625rem);
+    padding-bottom: clamp(1.25rem, 2.4vh, 1.75rem);
+  }
+  .t-sm .tile-art {
+    padding-block: clamp(0.25rem, 0.9vh, 0.75rem);
+  }
+  .t-sm .tile-art svg {
+    width: clamp(3rem, min(4vw, 6.4vh), 6rem);
+    height: clamp(3rem, min(4vw, 6.4vh), 6rem);
+  }
+  .t-half .tile-art {
+    padding-block: clamp(0.25rem, 1vh, 1rem);
+  }
+}
+
+/* 아래 줄(함께하는 게임 다섯): 모바일 2열, 태블릿 3+2, 데스크톱 5칸 */
+.g-racing {
+  grid-column: span 2;
+}
+@media (min-width: 768px) {
+  .g-pinball,
+  .g-ladder,
+  .g-wheel {
+    grid-column: span 2;
+  }
+  .g-horse,
+  .g-racing {
+    grid-column: span 3;
+  }
+}
+@media (min-width: 1280px) {
+  .hub-bottom .tile {
+    grid-column: span 1;
+  }
+}
+
+/* ─── 위 줄 배치 ───
+   데스크톱: 24칸 중 소개 10 · 운세 7 · 로또/궁합 7(위아래로 쌓음). 운세와 쌓인 열이 같은 폭이다.
+   태블릿: 소개가 한 줄을 다 쓰고, 그 아래 운세 6 · 로또/궁합 6(위아래로 쌓음).
+   쌓인 두 칸은 운세 높이를 반씩 나눠 갖는다. */
+@media (min-width: 768px) {
+  .hub-top {
+    grid-template-rows: auto 1fr 1fr;
+  }
+  .hero {
+    grid-column: span 12;
+  }
+  .g-fortune {
+    grid-column: span 6;
+    grid-row: span 2;
+  }
+  .g-lotto,
+  .g-match {
+    grid-column: span 6;
+  }
+}
+@media (min-width: 1280px) {
+  .hub-top {
+    grid-template-columns: repeat(24, 1fr);
+    grid-template-rows: 1fr 1fr;
+  }
+  .hero {
+    grid-column: span 10;
+    grid-row: span 2;
+  }
+  .g-fortune,
+  .g-lotto,
+  .g-match {
+    grid-column: span 7;
+  }
+}
+
+/* ─── 상태 줄 ─── */
+.hub-foot {
+  display: flex;
+  min-height: 52px;
+  margin-top: 4px;
+  padding: 0 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-top: 1px solid var(--line-strong);
+}
+.hub-status {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  font: 500 12px var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+.hub-status i {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border: 1px solid var(--ink-3);
+  transition:
+    background-color 200ms,
+    border-color 200ms;
+}
+.hub-status.on i {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+.hub-status .idle {
+  overflow: hidden;
+  font: 500 13px var(--font-sans);
+  letter-spacing: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-2);
+}
+.hub-status .name {
+  font: 700 13px var(--font-sans);
+  letter-spacing: normal;
+  color: var(--ink);
+}
+.hub-status .kind {
+  margin-left: 4px;
+  font: 700 13px var(--font-sans);
+  letter-spacing: normal;
+  color: var(--ink-3);
+}
+.hub-foot small {
+  flex: none;
+  font: 400 12px var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .tile::after,
+  .tile-art,
+  .tile-art svg,
+  .hub-status i {
+    transition: none;
+  }
+  .tile:active {
+    transform: none;
+  }
+  .tile:hover .tile-art svg {
+    transform: none;
+  }
+}

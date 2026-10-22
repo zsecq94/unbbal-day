@@ -29,32 +29,42 @@ export type HubCopy = {
   kinds: Record<GameKind, string>
 }
 
-type TileSize = 'lg' | 'md' | 'sm'
+/** lg: 운세, half: 위 줄에 위아래로 쌓는 혼자 게임, sm: 아래 줄 함께 게임 */
+type TileSize = 'lg' | 'half' | 'sm'
 
-const TILE_SIZE: Record<string, TileSize> = { fortune: 'lg', lotto: 'md' }
+const TILE_SIZE: Record<string, TileSize> = {
+  fortune: 'lg',
+  lotto: 'half',
+  match: 'half',
+}
 
-/* 화면 폭별 그리드 배치. 아래 줄은 모바일 2열, 태블릿 3+3, 데스크톱 6칸. */
+/*
+ * 화면 폭별 그리드 배치. 위 줄은 소개와 혼자 하는 게임, 아래 줄은 함께하는 게임이다.
+ * 위 줄: 데스크톱은 24칸 중 소개 10 · 운세 7 · 로또/궁합 7(위아래로 쌓음)이라 운세와
+ * 쌓인 열이 같은 폭이고, 태블릿은 소개가 한 줄을 다 쓰고 그 아래 운세 6 · 로또/궁합 6이다.
+ * 아래 줄: 모바일 2열, 태블릿 3+2, 데스크톱 5칸.
+ */
 const PLACEMENT: Record<string, string> = {
-  fortune: 'md:col-span-7 xl:col-span-4',
-  lotto: 'md:col-span-5 xl:col-span-3',
-  match: 'md:col-span-2 xl:col-span-1',
+  fortune: 'md:col-span-6 md:row-span-2 xl:col-span-7',
+  lotto: 'md:col-span-6 xl:col-span-7',
+  match: 'md:col-span-6 xl:col-span-7',
   pinball: 'md:col-span-2 xl:col-span-1',
   ladder: 'md:col-span-2 xl:col-span-1',
   wheel: 'md:col-span-2 xl:col-span-1',
-  horse: 'md:col-span-2 xl:col-span-1',
-  racing: 'md:col-span-2 xl:col-span-1',
+  horse: 'md:col-span-3 xl:col-span-1',
+  racing: 'col-span-2 md:col-span-3 xl:col-span-1',
 }
 
 const NAME_SIZE: Record<TileSize, string> = {
   lg: 'text-[clamp(2.5rem,3.55vw,4.25rem)] tracking-[-0.05em]',
-  md: 'text-[clamp(2.125rem,2.7vw,3.25rem)] tracking-[-0.05em]',
+  half: 'text-[clamp(1.875rem,2.2vw,2.75rem)] tracking-[-0.045em]',
   sm: 'text-[clamp(1.625rem,1.8vw,2.125rem)] tracking-[-0.035em]',
 }
 
 const SYMBOL_SIZE: Record<TileSize, string> = {
   lg: 'size-[clamp(7.5rem,min(10vw,17.6vh),11.875rem)]',
-  md: 'size-[clamp(7.5rem,min(10vw,17.6vh),11.875rem)]',
-  sm: 'size-[clamp(4rem,min(5vw,8.9vh),6rem)]',
+  half: 'size-[clamp(3rem,min(5vw,7vh),6rem)]',
+  sm: 'size-[clamp(4rem,min(5vw,8.9vh),6rem)] fit:size-[clamp(3rem,min(4vw,6.4vh),6rem)]',
 }
 
 const ARROWS: Record<string, [number, number]> = {
@@ -187,13 +197,18 @@ export function GameHub({
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[1920px] flex-col gap-3 px-4 py-4 sm:px-6 sm:py-6 xl:px-10 xl:py-10 fit:h-dvh fit:py-[clamp(1.25rem,3.7vh,2.5rem)]">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-12 fit:flex-1">
+      {/* 쌓인 두 칸(로또·궁합)은 운세 높이를 반씩 나눠 갖는다 */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:grid-rows-[auto_1fr_1fr] xl:grid-cols-24 xl:grid-rows-[1fr_1fr] fit:min-h-0 fit:flex-1">
         {hero}
-        {games.slice(0, 2).map((g, i) => renderTile(g, i))}
+        {games
+          .filter((g) => g.kind === 'solo')
+          .map((g) => renderTile(g, games.indexOf(g)))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-6 fit:flex-none">
-        {games.slice(2).map((g, i) => renderTile(g, i + 2))}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-6 xl:grid-cols-5 fit:flex-none">
+        {games
+          .filter((g) => g.kind === 'together')
+          .map((g) => renderTile(g, games.indexOf(g)))}
       </div>
 
       {/* 상태 줄: 포인터 아래 타일 이름을 타일의 번호·종류 줄과 같은 말투로
@@ -295,11 +310,17 @@ function GameTile({
       className={[
         'group relative flex cursor-pointer flex-col overflow-hidden rounded-tile text-left text-ink',
         'px-6 pt-6 pb-6 sm:px-7 sm:pt-[26px] sm:pb-7',
+        /* 한 화면 모드에서 아래 줄은 위 줄 타일보다 낮게: 여백·심볼을 화면 높이에 맞춰 줄인다 */
+        size === 'sm'
+          ? 'fit:pt-[clamp(1.125rem,2.2vh,1.625rem)] fit:pb-[clamp(1.25rem,2.4vh,1.75rem)]'
+          : '',
         'transition-transform duration-150 ease-out-soft active:scale-[0.985] motion-reduce:transition-none motion-reduce:active:scale-100',
         'outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink focus-visible:outline-solid',
-        big
-          ? 'min-h-[18rem] md:min-h-[22rem] fit:min-h-0'
-          : 'min-h-[14rem] md:min-h-[16rem] fit:min-h-[clamp(14rem,30.5vh,20.75rem)]',
+        size === 'half'
+          ? 'min-h-[14rem] md:min-h-[12rem] fit:min-h-0'
+          : big
+            ? 'min-h-[18rem] md:min-h-[22rem] fit:min-h-0'
+            : 'min-h-[14rem] md:min-h-[16rem] fit:min-h-[clamp(12rem,24vh,18rem)]',
         PLACEMENT[game.key],
       ].join(' ')}
     >
@@ -336,7 +357,11 @@ function GameTile({
       <span
         aria-hidden="true"
         className={`relative flex min-h-0 flex-1 items-center justify-center text-ink-3 transition-colors duration-200 motion-reduce:transition-none group-lit:text-brand-hi ${
-          big ? 'py-5' : 'py-4 fit:py-[clamp(0.5rem,1.5vh,1rem)]'
+          size === 'lg'
+            ? 'py-5'
+            : size === 'half'
+              ? 'py-4 fit:py-[clamp(0.25rem,1vh,1rem)]'
+              : 'py-4 fit:py-[clamp(0.25rem,0.9vh,0.75rem)]'
         }`}
       >
         <ViewTransition
@@ -361,7 +386,7 @@ function GameTile({
         className={`relative block leading-[1.12] font-[750] break-keep ${NAME_SIZE[size]} ${
           big
             ? ''
-            : 'max-md:[&:lang(en)]:flex max-md:[&:lang(en)]:min-h-[2.24em] max-md:[&:lang(en)]:items-end xl:max-2xl:[&:lang(en)]:flex xl:max-2xl:[&:lang(en)]:min-h-[2.24em] xl:max-2xl:[&:lang(en)]:items-end'
+            : 'max-md:[&:lang(en)]:flex max-md:[&:lang(en)]:min-h-[2.24em] max-md:[&:lang(en)]:items-end xl:max-[1340px]:[&:lang(en)]:flex xl:max-[1340px]:[&:lang(en)]:min-h-[2.24em] xl:max-[1340px]:[&:lang(en)]:items-end'
         }`}
       >
         {game.name}
@@ -371,7 +396,7 @@ function GameTile({
         className={`relative mt-2.5 block tracking-[-0.015em] break-keep text-ink-2 ${
           big
             ? 'text-[clamp(1rem,1vw,1.125rem)] sm:mt-3.5'
-            : 'min-h-[3.1em] text-[15.5px] leading-[1.55] xl:max-2xl:min-h-[4.65em] max-md:[&:lang(en)]:min-h-[6.2em]'
+            : 'min-h-[3.1em] text-[15.5px] leading-[1.55] xl:max-[1340px]:min-h-[4.65em] max-md:[&:lang(en)]:min-h-[6.2em]'
         }`}
       >
         {game.description}
