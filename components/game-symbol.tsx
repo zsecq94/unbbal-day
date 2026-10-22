@@ -15,6 +15,14 @@ const SYMBOLS: Record<string, ReactNode> = {
       <circle cx="33" cy="31" r="6.5" />
     </>
   ),
+  /* 이름 획수가 한 줄씩 줄어드는 삼각형. 마지막 두 칸이 궁합 점수다. */
+  match: (
+    <>
+      <path d="M5 9h7v7h-7zM15.5 9h7v7h-7zM26 9h7v7h-7zM36.5 9h7v7h-7z" />
+      <path d="M10.25 20.5h7v7h-7zM20.75 20.5h7v7h-7zM31.25 20.5h7v7h-7z" />
+      <path className="f" d="M15.5 32h7v7h-7zM26 32h7v7h-7z" />
+    </>
+  ),
   pinball: (
     <>
       <circle cx="29" cy="13" r="5.5" />

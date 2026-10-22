@@ -46,6 +46,10 @@
       "name": "Lucky Numbers",
       "description": "Draw your lucky numbers from today's fortune."
     },
+    "match": {
+      "name": "Name Match",
+      "description": "Two names, one score: how well do you match?"
+    },
     "pinball": {
       "name": "Pinball",
       "description": "Bouncing marbles, a drop race anyone can win."

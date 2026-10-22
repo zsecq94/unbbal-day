@@ -46,6 +46,10 @@
       "name": "로또 번호 뽑기",
       "description": "오늘의 운세에서 행운의 번호를 찾아요."
     },
+    "match": {
+      "name": "이름 궁합",
+      "description": "두 이름의 획수로 알아보는 우리 사이 궁합."
+    },
     "pinball": {
       "name": "핀볼",
       "description": "통통 튀는 구슬, 끝까지 모르는 낙하 경주."

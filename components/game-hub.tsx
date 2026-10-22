@@ -33,15 +33,16 @@ type TileSize = 'lg' | 'md' | 'sm'
 
 const TILE_SIZE: Record<string, TileSize> = { fortune: 'lg', lotto: 'md' }
 
-/* Grid placement per breakpoint. Bottom band: mobile 2 cols, tablet 3+2, desktop 5. */
+/* Grid placement per breakpoint. Bottom band: mobile 2 cols, tablet 3+3, desktop 6. */
 const PLACEMENT: Record<string, string> = {
   fortune: 'md:col-span-7 xl:col-span-4',
   lotto: 'md:col-span-5 xl:col-span-3',
+  match: 'md:col-span-2 xl:col-span-1',
   pinball: 'md:col-span-2 xl:col-span-1',
   ladder: 'md:col-span-2 xl:col-span-1',
   wheel: 'md:col-span-2 xl:col-span-1',
-  horse: 'md:col-span-3 xl:col-span-1',
-  racing: 'col-span-2 md:col-span-3 xl:col-span-1',
+  horse: 'md:col-span-2 xl:col-span-1',
+  racing: 'md:col-span-2 xl:col-span-1',
 }
 
 const NAME_SIZE: Record<TileSize, string> = {
@@ -192,7 +193,7 @@ export function GameHub({
         {games.slice(0, 2).map((g, i) => renderTile(g, i))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-6 xl:grid-cols-5 fit:flex-none">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-6 fit:flex-none">
         {games.slice(2).map((g, i) => renderTile(g, i + 2))}
       </div>
 

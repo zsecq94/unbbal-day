@@ -9,13 +9,21 @@ export type GameMeta = {
 }
 
 export type GameKey =
-  'fortune' | 'lotto' | 'pinball' | 'ladder' | 'wheel' | 'horse' | 'racing'
+  | 'fortune'
+  | 'lotto'
+  | 'match'
+  | 'pinball'
+  | 'ladder'
+  | 'wheel'
+  | 'horse'
+  | 'racing'
 
 export type Game = GameMeta & { name: string; description: string }
 
 export const GAMES: GameMeta[] = [
   { key: 'fortune', kind: 'solo', motion: 'rotate(-10deg) scale(1.04)' },
   { key: 'lotto', kind: 'solo', motion: 'rotate(120deg)' },
+  { key: 'match', kind: 'solo', motion: 'translateY(4px) scale(1.06)' },
   { key: 'pinball', kind: 'together', motion: 'translateY(5px) rotate(-6deg)' },
   { key: 'ladder', kind: 'together', motion: 'translateY(-6px)' },
   { key: 'wheel', kind: 'together', motion: 'rotate(90deg)' },
