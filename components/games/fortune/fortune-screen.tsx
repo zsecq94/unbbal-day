@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -16,21 +17,24 @@ import {
 import type { Dictionary } from '@/app/[lang]/dictionaries'
 import {
   accuracy,
+  chartOf,
   dateValid,
   EMPTY_PROFILE,
   makeFortune,
   PARTS,
   partOk,
   signIndex,
-  timeValid,
+  solarDate,
   zodiacIndex,
   type Fortune,
   type PartKey,
   type Profile,
 } from '@/lib/fortune'
 import type { Locale } from '@/lib/i18n'
+import { localZone } from '@/lib/saju/time'
+import { FortuneAnalyzing } from './fortune-analyzing'
 import { FortuneResult } from './fortune-result'
-import { fill, hourLabel, useReducedMotion } from './shared'
+import { fill, scramble, useReducedMotion } from './shared'
 
 export type FortuneCopy = Dictionary['fortune']
 
@@ -43,8 +47,17 @@ const TEXT_KEYS: PartKey[] = ['year', 'month', 'day', 'time', 'name']
 const digits = (v: string, n: number) => v.replace(/\D/g, '').slice(0, n)
 
 /**
+ * 오늘은 방문자 시간대로 본다. 태어난 곳은 한국어면 서울, 아니면 방문자 시간대로 본다.
+ * 서울은 표준시 변경과 서머타임 이력, 태양시 보정(30분)이 함께 적용된다.
+ */
+const zonesFor = (locale: Locale) => {
+  const zone = localZone()
+  return { zone, birthZone: locale === 'ko' ? 'Asia/Seoul' : zone }
+}
+
+/**
  * 오늘의 운세. 입력은 빈칸이 뚫린 한 문장이고, 결과는 각주가 달린 한 문단이다.
- * 생년월일만 필수이며, 나머지 빈칸은 채울수록 정확도 눈금이 올라간다.
+ * 생년월일만 필수이며, 결과를 바꾸는 빈칸을 채울수록 정확도 눈금이 올라간다.
  */
 export function FortuneScreen({
   copy,
@@ -54,24 +67,33 @@ export function FortuneScreen({
   locale: Locale
 }) {
   const [profile, setProfile] = useState<Profile>(EMPTY_PROFILE)
-  const [view, setView] = useState<'input' | 'result'>('input')
+  const [view, setView] = useState<'input' | 'analyzing' | 'result'>('input')
   const [fortune, setFortune] = useState<Fortune | null>(null)
   /* 화면이 바뀌면 초점을 새 화면의 시작점으로 옮긴다 */
   useEffect(() => {
     const target =
       view === 'result'
         ? document.querySelector<HTMLElement>('[data-fortune-answer]')
-        : (document.querySelector<HTMLElement>(
-            '[data-fortune-blank]:placeholder-shown'
-          ) ?? document.querySelector<HTMLElement>('[data-fortune-blank]'))
-    target?.focus({ preventScroll: view === 'result' })
+        : view === 'analyzing'
+          ? document.querySelector<HTMLElement>('[data-fortune-skip]')
+          : (document.querySelector<HTMLElement>(
+              '[data-fortune-blank]:placeholder-shown'
+            ) ?? document.querySelector<HTMLElement>('[data-fortune-blank]'))
+    target?.focus({ preventScroll: view !== 'input' })
   }, [view])
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!dateValid(profile)) return
-    setFortune(makeFortune(profile))
-    setView('result')
+    setFortune(makeFortune(profile, { now: Date.now(), ...zonesFor(locale) }))
+    setView('analyzing')
+  }
+  const showResult = useCallback(() => setView('result'), [])
+
+  if (view === 'analyzing' && fortune) {
+    return (
+      <FortuneAnalyzing copy={copy} fortune={fortune} onDone={showResult} />
+    )
   }
 
   if (view === 'result' && fortune) {
@@ -190,7 +212,7 @@ function FortuneForm({
       set({ [key]: `0${p[key]}` })
   }
 
-  /* 괘선을 문장의 줄 상자에 맞춘다. */
+  /* 괘선을 문장의 줄 상자에 맞춘다. 맞추기 전(하이드레이션 전)에는 괘선을 그리지 않는다. */
   useLayoutEffect(() => {
     const sheet = sheetRef.current
     const sentence = sentenceRef.current
@@ -200,6 +222,7 @@ function FortuneForm({
       if (!lh) return
       sheet.style.setProperty('--lh', `${lh}px`)
       sheet.style.setProperty('--rule-y', `${sentence.offsetTop % lh}px`)
+      sheet.style.setProperty('--rule-c', 'rgb(255 255 255 / 0.045)')
     }
     const ro = new ResizeObserver(rule)
     ro.observe(sheet)
@@ -228,36 +251,39 @@ function FortuneForm({
     }
   }, [menu])
 
-  const missing = PARTS.filter((x) => !partOk(p, x.key)).sort(
+  const missing = PARTS.filter((x) => x.weight > 0 && !partOk(p, x.key)).sort(
     (a, b) => b.weight - a.weight
   )[0]
 
-  /* 미리보기 한 줄 */
-  const preview = useMemo(() => {
-    if (!partOk(p, 'year')) return copy.preview.empty
+  /* 미리보기 한 줄. 날짜가 서면 원국으로 띠(입춘 기준)와 시진을 보여 준다. */
+  const { preview, termEdge } = useMemo(() => {
+    if (!partOk(p, 'year')) return { preview: copy.preview.empty }
+    const zones = valid ? zonesFor(locale) : null
+    const chart = zones && chartOf(p, zones.birthZone)
+    const solar = solarDate(p)
     const parts = [
       fill(copy.preview.born, {
         year: p.year,
-        zodiac: copy.zodiac[zodiacIndex(+p.year)],
+        zodiac: copy.zodiac[zodiacIndex(+p.year, chart)],
       }),
     ]
-    if (partOk(p, 'month') && partOk(p, 'day'))
-      parts.push(copy.signs[signIndex(+p.month, +p.day)])
-    if (timeValid(p))
+    if (solar) parts.push(copy.signs[signIndex(solar.m, solar.d)])
+    if (chart?.hour)
       parts.push(
-        fill(copy.preview.bornAt, {
-          time: hourLabel(copy, +p.time.split(':')[0]),
-        })
+        fill(copy.preview.bornAt, { hour: copy.hours.names[chart.hour.branch] })
       )
-    if (!dateValid(p)) return `${parts.join(' · ')} …`
-    const f = makeFortune(p)
-    return fill(copy.preview.line, {
-      parts: parts.join(' · '),
-      who: p.name.trim() ? fill(copy.who, { name: p.name.trim() }) : '',
-      headline:
-        copy.content.headlines[f.headline % copy.content.headlines.length],
-    })
-  }, [copy, p])
+    if (!zones) return { preview: `${parts.join(' · ')} …` }
+    const f = makeFortune(p, zones)
+    const headlines = copy.content.headlines[f.tenGod][f.tone]
+    return {
+      preview: fill(copy.preview.line, {
+        parts: parts.join(' · '),
+        who: p.name.trim() ? fill(copy.who, { name: p.name.trim() }) : '',
+        headline: headlines[f.headline % headlines.length],
+      }),
+      termEdge: chart?.termEdge,
+    }
+  }, [copy, locale, p, valid])
 
   /* 문장 템플릿을 빈칸과 글로 나눈다. 빈칸 뒤에 붙는 말은 함께 묶어 줄이 갈리지 않게 한다. */
   const segments = (() => {
@@ -311,7 +337,7 @@ function FortuneForm({
         className="relative flex flex-1 flex-col justify-center gap-7 px-5 pt-10 pb-7 sm:px-7 sm:pt-14 sm:pb-9 lg:px-[clamp(28px,6vw,104px)] lg:pt-12 lg:pb-10"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(to bottom, transparent 0 calc(var(--lh, 60px) - 1px), rgb(255 255 255 / 0.045) calc(var(--lh, 60px) - 1px) var(--lh, 60px))',
+            'repeating-linear-gradient(to bottom, transparent 0 calc(var(--lh, 60px) - 1px), var(--rule-c, transparent) calc(var(--lh, 60px) - 1px) var(--lh, 60px))',
           backgroundPosition: '0 var(--rule-y, 0px)',
         }}
       >
@@ -355,7 +381,9 @@ function FortuneForm({
         <p className="text-sm leading-[1.5] break-keep text-ink-3">
           {p.year.length === 4 && p.month && p.day && !valid
             ? copy.hintInvalid
-            : copy.hint}
+            : termEdge
+              ? copy.hintEdge
+              : copy.hint}
         </p>
         <button
           type="submit"
@@ -482,31 +510,18 @@ export function Tween({ value, ms = 420 }: { value: number; ms?: number }) {
 /** 미리보기: 바뀐 글자가 잠깐 섞였다가 자리를 잡는다. */
 function Preview({ text, reduced }: { text: string; reduced: boolean }) {
   const ref = useRef<HTMLOutputElement>(null)
+  /* 처음 글은 서버가 이미 그려 두었으니 섞지 않는다 */
+  const shown = useRef(text)
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    if (reduced) {
+    const changed = shown.current !== text
+    shown.current = text
+    if (reduced || !changed) {
       el.textContent = text
       return
     }
-    const pool = '가나다라마바사아자차카타파하0123456789'
-    const t0 = performance.now()
-    let raf = 0
-    const step = (now: number) => {
-      const k = Math.min(1, (now - t0) / 360)
-      const n = Math.floor(text.length * k)
-      el.textContent =
-        text.slice(0, n) +
-        [...text.slice(n)]
-          .map((c) =>
-            c === ' ' ? ' ' : pool[Math.floor(Math.random() * pool.length)]
-          )
-          .join('')
-      if (k < 1) raf = requestAnimationFrame(step)
-      else el.textContent = text
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
+    return scramble(el, text)
   }, [text, reduced])
   return (
     <output ref={ref} aria-live="polite" className="break-keep">
@@ -556,25 +571,8 @@ function Blank({
     return () => clearTimeout(t)
   }, [ok, reduced])
 
-  const localRef = useRef<HTMLInputElement | null>(null)
-  const measureRef = useRef<HTMLSpanElement>(null)
-  const value = p[key]
-  useLayoutEffect(() => {
-    const input = localRef.current
-    const measure = measureRef.current
-    if (!input || !measure) return
-    const size = () => {
-      input.style.width = `calc(${Math.ceil(measure.getBoundingClientRect().width)}px + 0.1em + 2px)`
-    }
-    size()
-    document.fonts.ready.then(size)
-    const ro = new ResizeObserver(size)
-    ro.observe(measure)
-    return () => ro.disconnect()
-  }, [value])
-
   const underline = [
-    'inline-block min-w-[1.4em] px-[0.05em] text-center leading-[1.25] font-[750] text-ink outline-none',
+    'inline-block px-[0.05em] text-center leading-[1.25] font-[750] text-ink outline-none',
     'border-b-2 transition-colors duration-200 motion-reduce:transition-none',
     ok
       ? 'border-solid border-line-strong'
@@ -584,7 +582,7 @@ function Blank({
     'focus:border-solid focus:border-ink',
   ].join(' ')
 
-  const mark = (
+  const mark = weight > 0 && (
     <span
       aria-hidden="true"
       className={`absolute bottom-full left-1/2 mb-px -translate-x-1/2 font-mono text-[10px] leading-none font-medium tracking-[0.06em] whitespace-nowrap transition-colors duration-700 ${
@@ -614,7 +612,7 @@ function Blank({
           aria-expanded={menuOpen}
           aria-label={`${copy.blanks[key].label}: ${label || copy.empty}`}
           onClick={onPick}
-          className={`${underline} ${label ? '' : 'text-ink-3'} ${
+          className={`${underline} min-w-[1.4em] ${label ? '' : 'text-ink-3'} ${
             menuOpen ? 'border-solid! border-ink!' : ''
           }`}
         >
@@ -627,22 +625,12 @@ function Blank({
   const { label, placeholder } = copy.blanks[key]
   const numeric = TEXT_KEYS.includes(key) && key !== 'name'
   return (
-    <span className="relative mx-[0.06em] inline-block leading-[1.25]">
+    <span className="relative mx-[0.06em] inline-grid leading-[1.25]">
       {mark}
-      {/* 너비는 같은 칸에 겹쳐 둔 보이지 않는 글의 너비를 따른다 */}
-      {/* 너비는 같은 글을 보이지 않게 써 둔 자의 너비를 따른다 */}
-      <span
-        ref={measureRef}
-        aria-hidden="true"
-        className="invisible absolute px-[0.05em] font-[750] whitespace-pre"
-      >
-        {p[key] || placeholder}
-      </span>
+      {/* 너비는 같은 칸에 겹쳐 둔 보이지 않는 글이 정한다. CSS만으로 정해져서
+          하이드레이션 전에도 같은 너비로 그려진다. 기준선은 앞에 둔 입력칸을 따른다. */}
       <input
-        ref={(el) => {
-          localRef.current = el
-          inputRef(el)
-        }}
+        ref={inputRef}
         value={p[key]}
         onChange={(e) => onText(e.target.value)}
         onBlur={onBlur}
@@ -657,8 +645,14 @@ function Blank({
         placeholder={placeholder}
         aria-label={label}
         enterKeyHint={key === 'name' ? 'done' : 'next'}
-        className={`${underline} bg-transparent placeholder:text-ink-3`}
+        className={`${underline} col-start-1 row-start-1 w-0 min-w-full bg-transparent placeholder:text-ink-3`}
       />
+      <span
+        aria-hidden="true"
+        className="invisible col-start-1 row-start-1 min-w-[1.4em] ps-[0.05em] pe-[calc(0.15em+2px)] font-[750] whitespace-pre"
+      >
+        {p[key] || placeholder}
+      </span>
     </span>
   )
 }

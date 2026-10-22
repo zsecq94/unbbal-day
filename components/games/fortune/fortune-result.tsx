@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Fragment,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -17,9 +18,31 @@ import {
 } from '@/lib/fortune'
 import type { Locale } from '@/lib/i18n'
 import { Tween, type FortuneCopy } from './fortune-screen'
-import { blockLabel, fill, particle, useReducedMotion } from './shared'
+import {
+  blockClock,
+  blockLabel,
+  dayMaster,
+  fill,
+  ganji,
+  particle,
+  pillarWords,
+  reasonText,
+  useReducedMotion,
+} from './shared'
 
 type NoteId = `k${1 | 2 | 3 | 4 | 5}` | `d:${'all' | DomainKey}`
+
+/**
+ * 결과 등장 순서(ms). 빛줄기가 훑고 점수가 오르는 동안 문단이 낱말 단위로 떠오르고,
+ * 이어서 분야 막대가 하나씩 차오른 뒤 각주 띠가 올라온다.
+ */
+const REVEAL = {
+  score: 1000,
+  words: 180,
+  perWord: 42,
+  afterWords: 160,
+  perTrack: 90,
+}
 const DOMAIN_ORDER: ('all' | DomainKey)[] = [
   'all',
   'money',
@@ -57,7 +80,16 @@ export function FortuneResult({
   const score = (key: 'all' | DomainKey) =>
     key === 'all' ? f.total : domain(key).score
   const pickText = <T,>(arr: T[], i: number) => arr[i % arr.length]
-  const headline = pickText(copy.content.headlines, f.headline)
+  const headline = pickText(
+    copy.content.headlines[f.tenGod][f.tone],
+    f.headline
+  )
+  /* 오늘의 근거: 일진과 그 천간이 일간에게 갖는 십성 */
+  const basis = fill(copy.basis, {
+    day: ganji(copy, f.today),
+    dm: dayMaster(copy, f.chart),
+    god: copy.tenGods[f.tenGod],
+  })
   const who = p.name.trim() ? fill(copy.who, { name: p.name.trim() }) : ''
   const direction = fill(copy.direction, {
     name: copy.directions[f.direction],
@@ -66,7 +98,7 @@ export function FortuneResult({
   /* 문단: 템플릿의 {headline} {time} {top} {low} {direction}이 각주 1–5가 된다 */
   const KW: Record<string, [NoteId, string]> = {
     headline: ['k1', headline],
-    time: ['k2', blockLabel(copy, f.best)],
+    time: ['k2', blockLabel(copy, f.best, f.shift)],
     top: ['k3', name(f.top)],
     low: ['k4', name(f.low)],
     direction: ['k5', direction],
@@ -76,34 +108,55 @@ export function FortuneResult({
     lowParticle: particle(copy, name(f.low)),
   }
   const answer: ReactNode[] = []
+  /* 낱말마다 등장 시각을 하나씩 늦춘다. 밑줄 친 말은 한 덩어리로 떠오른다. */
+  let unit = 0
+  const appear = (node: ReactNode, key: string) => (
+    <span
+      key={key}
+      className="animate-word-in motion-reduce:animate-none"
+      style={{ animationDelay: `${REVEAL.words + unit++ * REVEAL.perWord}ms` }}
+    >
+      {node}
+    </span>
+  )
+  const pushText = (text: string) =>
+    text.split(/(\s+)/).forEach((part, i) => {
+      if (!part) return
+      answer.push(/^\s+$/.test(part) ? part : appear(part, `w${unit}-${i}`))
+    })
   const re = /\{(\w+)\}/g
   let last = 0
   let m: RegExpExecArray | null
   while ((m = re.exec(copy.answer))) {
-    if (m.index > last) answer.push(copy.answer.slice(last, m.index))
+    if (m.index > last) pushText(copy.answer.slice(last, m.index))
     const kw = KW[m[1]]
     if (kw) {
       const [id, text] = kw
       answer.push(
-        <Keyword
-          key={id}
-          id={id}
-          text={text}
-          n={id.slice(1)}
-          pinned={pinned === id}
-          hot={shown === id}
-          onEnter={() => setShown(id)}
-          onLeave={() => setShown(pinned)}
-          onPin={() => {
-            setPinned(id)
-            setShown(id)
-          }}
-        />
+        appear(
+          <Keyword
+            key={id}
+            id={id}
+            text={text}
+            n={id.slice(1)}
+            pinned={pinned === id}
+            hot={shown === id}
+            onEnter={() => setShown(id)}
+            onLeave={() => setShown(pinned)}
+            onPin={() => {
+              setPinned(id)
+              setShown(id)
+            }}
+          />,
+          id
+        )
       )
-    } else answer.push(vars[m[1]] ?? '')
+    } else pushText(vars[m[1]] ?? '')
     last = m.index + m[0].length
   }
-  if (last < copy.answer.length) answer.push(copy.answer.slice(last))
+  if (last < copy.answer.length) pushText(copy.answer.slice(last))
+  const tracksAt = REVEAL.words + unit * REVEAL.perWord + REVEAL.afterWords
+  const noteAt = tracksAt + DOMAIN_ORDER.length * REVEAL.perTrack
 
   /* 문단이 남는 높이에 꼭 맞게 글자 크기를 잡는다 */
   useLayoutEffect(() => {
@@ -159,17 +212,18 @@ export function FortuneResult({
           idx,
           hl: 'all',
           title: `${name('all')} ${f.total}`,
-          sub: fill(copy.notes.headlineDay, { headline }),
-          text: pickText(copy.content.summaries, f.summary),
+          sub: basis,
+          text: pickText(copy.content.summaries[f.tenGod], f.summary),
         }
       const d = domain(key)
-      const line = pickText(copy.content.lines[key], d.line)
-      const advice = pickText(copy.content.advice[key], d.advice)
+      const line = pickText(copy.content.lines[key][d.level], d.line)
+      const advice = pickText(copy.content.advice[key][d.level], d.advice)
+      const why = reasonText(copy, d.reason)
       return {
         idx,
         hl: key,
         title: `${name(key)} ${d.score}`,
-        sub,
+        sub: sub ? `${sub} · ${why}` : why,
         text: fill(copy.notes.advice, { line, ...advice }),
         viz: (
           <div className="grid h-full content-center gap-1.5 text-[13px] leading-[1.4] text-ink-2">
@@ -191,17 +245,8 @@ export function FortuneResult({
     }
     if (id.startsWith('d:')) {
       const key = id.slice(2) as 'all' | DomainKey
-      const rank = [...f.domains]
-        .sort((a, b) => b.score - a.score)
-        .findIndex((d) => d.key === key)
       const sub =
-        key === 'all'
-          ? ''
-          : key === f.top
-            ? copy.notes.top
-            : key === f.low
-              ? copy.notes.low
-              : fill(copy.notes.rank, { n: rank + 1 })
+        key === f.top ? copy.notes.top : key === f.low ? copy.notes.low : ''
       return dom(key, String(DOMAIN_ORDER.indexOf(key) + 1), sub)
     }
     switch (id) {
@@ -217,7 +262,9 @@ export function FortuneResult({
           hl: '',
           title: direction,
           sub: copy.notes.direction,
-          text: copy.notes.directionText,
+          text: fill(copy.notes.directionText, {
+            stem: copy.stems[f.today.stem],
+          }),
           viz: <Compass code={DIRECTION_CODES[f.direction]} />,
         }
       default: {
@@ -225,7 +272,7 @@ export function FortuneResult({
         return {
           idx: '2',
           hl: '',
-          title: blockLabel(copy, i),
+          title: blockLabel(copy, i, f.shift),
           sub:
             hotHour === null
               ? copy.notes.bestTime
@@ -237,6 +284,7 @@ export function FortuneResult({
             <Hours
               hours={f.hours}
               best={f.best}
+              shift={f.shift}
               hot={hotHour}
               onHot={setHotHour}
             />
@@ -246,29 +294,45 @@ export function FortuneResult({
     }
   }
 
+  /* 사주 네 기둥 · 띠 · 별자리 · 정확도. 줄은 기둥 사이나 가운뎃점 뒤에서만 갈린다. */
   const whoLine = [
-    fill(copy.preview.born, {
-      year: p.year,
-      zodiac: copy.zodiac[zodiacIndex(+p.year)],
-    }),
-    copy.signs[signIndex(+p.month, +p.day)],
-    p.calendar ? copy.whoLine.calendar[p.calendar] : '',
-    fill(copy.whoLine.accuracy, { n: f.accuracy }),
-  ]
-    .filter(Boolean)
-    .join(' · ')
+    ...pillarWords(copy, f.chart).map((w, i) => [i > 0 ? ' ' : '', w]),
+    ...[
+      copy.zodiac[zodiacIndex(+p.year, f.chart)],
+      copy.signs[signIndex(f.birth.m, f.birth.d)],
+      fill(copy.whoLine.accuracy, { n: f.accuracy }),
+    ].map((w) => ['\u00a0· ', w]),
+  ].map(([gap, w], i) => (
+    <Fragment key={i}>
+      {gap}
+      <span className="whitespace-nowrap">{w}</span>
+    </Fragment>
+  ))
 
   return (
-    <div className="@container flex min-h-0 flex-1 animate-rise-in flex-col gap-3.5 px-5 pt-[18px] pb-5 motion-reduce:animate-none sm:gap-5 sm:px-7 sm:pt-[26px] sm:pb-7 xl:px-[clamp(28px,4vw,72px)] xl:py-8">
+    <div className="@container relative flex min-h-0 flex-1 flex-col gap-3.5 px-5 pt-[18px] pb-5 motion-reduce:animate-none sm:gap-5 sm:px-7 sm:pt-[26px] sm:pb-7 xl:px-[clamp(28px,4vw,72px)] xl:py-8">
       {/* 페이지 틀을 화면 높이에 고정한다(globals.css의 fit-viewport) */}
       <span className="fit-viewport" aria-hidden="true" />
-      <div className="flex flex-none flex-wrap items-center gap-x-5 gap-y-1.5">
+      {/* 등장할 때 빛줄기가 위에서 아래로 한 번 훑는다 */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 animate-scan bg-no-repeat motion-reduce:hidden"
+        style={{
+          backgroundImage:
+            'linear-gradient(to bottom, transparent, rgb(79 134 255 / 0.1) 45%, rgb(79 134 255 / 0.22) 50%, rgb(79 134 255 / 0.1) 55%, transparent)',
+          backgroundSize: '100% 38%',
+        }}
+      />
+      <div className="flex flex-none animate-rise-in flex-wrap items-center gap-x-5 gap-y-1.5 motion-reduce:animate-none">
         <p className="flex items-baseline gap-2.5">
           <span className="font-mono text-[11px] font-medium tracking-[0.12em] text-ink-3 uppercase">
             {copy.total}
           </span>
-          <b className="font-mono text-[clamp(34px,2.6vw+18px,60px)] leading-none font-medium tracking-[-0.05em] tabular-nums">
-            <Tween value={f.total} ms={700} />
+          <b
+            className="animate-score-flash font-mono text-[clamp(34px,2.6vw+18px,60px)] leading-none font-medium tracking-[-0.05em] tabular-nums motion-reduce:animate-none"
+            style={{ animationDelay: `${REVEAL.score}ms` }}
+          >
+            <Tween value={f.total} ms={REVEAL.score} />
           </b>
           <span className="font-mono text-[13px] text-ink-3">/100</span>
         </p>
@@ -307,7 +371,7 @@ export function FortuneResult({
         aria-label={copy.domainsLabel}
         className="grid flex-none grid-cols-3 gap-x-3 gap-y-1 border-t border-line-strong pt-3.5 sm:grid-cols-6 sm:gap-3.5"
       >
-        {DOMAIN_ORDER.map((key) => {
+        {DOMAIN_ORDER.map((key, i) => {
           const id: NoteId = `d:${key}`
           const hl = note.hl === key
           const on = pinned === id
@@ -339,6 +403,7 @@ export function FortuneResult({
                 className="col-span-full h-0.5 bg-[length:calc(var(--v)*1%)_100%,100%_1px] bg-position-[0_0,0_50%] bg-no-repeat transition-[background-size] duration-700 ease-out-soft motion-reduce:transition-none starting:bg-[length:0_100%,100%_1px]"
                 style={{
                   ['--v' as string]: score(key),
+                  transitionDelay: `${tracksAt + i * REVEAL.perTrack}ms`,
                   backgroundImage: `linear-gradient(${hl || on ? 'var(--color-brand-hi), var(--color-brand-hi)' : 'var(--color-ink-2), var(--color-ink-2)'}), linear-gradient(var(--color-line-strong), var(--color-line-strong))`,
                 }}
               />
@@ -349,7 +414,8 @@ export function FortuneResult({
 
       <div
         aria-live="polite"
-        className="grid h-[104px] flex-none grid-cols-[28px_minmax(0,1fr)] grid-rows-[22px_auto] content-start gap-x-3.5 gap-y-2 border-t border-line pt-3 @[760px]:h-24 @[760px]:grid-cols-[28px_minmax(0,1fr)_minmax(260px,36%)] @[760px]:gap-x-[18px]"
+        style={{ animationDelay: `${noteAt}ms` }}
+        className="grid h-[104px] flex-none animate-rise-in grid-cols-[28px_minmax(0,1fr)] grid-rows-[22px_auto] content-start gap-x-3.5 gap-y-2 border-t border-line pt-3 motion-reduce:animate-none @[760px]:h-24 @[760px]:grid-cols-[28px_minmax(0,1fr)_minmax(260px,36%)] @[760px]:gap-x-[18px]"
       >
         <span className="grid h-[22px] w-7 place-items-center border border-line-strong font-mono text-xs font-medium text-brand-hi">
           {note.idx}
@@ -436,15 +502,17 @@ function Keyword({
   )
 }
 
-/** 두 시간 단위 계단선. 칸을 훑으면 그 시간의 점수와 한마디가 보인다. */
+/** 열두 시진 계단선. 칸을 훑으면 그 시간의 점수와 한마디가 보인다. */
 function Hours({
   hours,
   best,
+  shift,
   hot,
   onHot,
 }: {
   hours: number[]
   best: number
+  shift: number
   hot: number | null
   onHot: (i: number | null) => void
 }) {
@@ -485,8 +553,8 @@ function Hours({
         />
       </svg>
       <span className="flex justify-between font-mono text-[10px] leading-none tracking-[0.06em] text-ink-3">
-        {['00', '06', '12', '18', '24'].map((t) => (
-          <span key={t}>{t}</span>
+        {[0, 3, 6, 9, 12].map((i) => (
+          <span key={i}>{blockClock(i, shift)}</span>
         ))}
       </span>
     </div>

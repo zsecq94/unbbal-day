@@ -25,6 +25,14 @@
   --animate-menu-in: menu-in 160ms var(--ease-out-soft) both;
   --animate-breathe: breathe 1.8s ease-in-out infinite alternate;
   --animate-sweep: sweep 1.1s var(--ease-out-soft);
+  --animate-blink: blink 1s steps(1) infinite;
+  --animate-grow: grow 480ms var(--ease-out-soft) both;
+  --animate-draw: draw 900ms var(--ease-out-soft) both;
+  --animate-flash: flash 600ms var(--ease-out-soft);
+  --animate-leave: leave 280ms cubic-bezier(0.4, 0, 1, 1) both;
+  --animate-scan: scan 1100ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  --animate-word-in: word-in 560ms var(--ease-out-soft) both;
+  --animate-score-flash: score-flash 1s var(--ease-out-soft);
 
   @keyframes rise-in {
     from {
@@ -36,6 +44,67 @@
     from {
       opacity: 0;
       translate: 0 -4px;
+    }
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  /* 막대가 바닥에서 자란다 (transform-origin: bottom) */
+  @keyframes grow {
+    from {
+      scale: 1 0;
+    }
+  }
+  /* 선이 그려진다 (pathLength=1, stroke-dasharray: 1) */
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  /* 눈금에 불이 한 번 들어왔다 꺼진다 */
+  @keyframes flash {
+    30% {
+      background-color: var(--color-brand-hi);
+    }
+  }
+  /* 분석 화면이 흐려지며 빠져나간다 */
+  @keyframes leave {
+    to {
+      opacity: 0;
+      filter: blur(8px);
+      translate: 0 -12px;
+    }
+  }
+  /* 결과 위로 빛줄기가 한 번 훑고 지나간다 (배경 띠를 위에서 아래로) */
+  @keyframes scan {
+    from {
+      background-position: 0 -60%;
+    }
+    80% {
+      opacity: 1;
+    }
+    to {
+      background-position: 0 160%;
+      opacity: 0;
+    }
+  }
+  /* 낱말이 흐릿하게 떠올라 또렷해진다 */
+  @keyframes word-in {
+    from {
+      opacity: 0;
+      filter: blur(10px);
+    }
+  }
+  /* 점수가 다 오르면 한 번 빛났다가 제 색으로 돌아온다 */
+  @keyframes score-flash {
+    from {
+      color: var(--color-brand-hi);
+      text-shadow: 0 0 28px rgb(79 134 255 / 0.55);
     }
   }
   @keyframes breathe {

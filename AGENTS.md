@@ -57,6 +57,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 게임을 추가할 때 손대는 곳은 `GameKey`와 `GAMES`, 두 사전의 `games.<key>`, `components/game-symbol.tsx`의 `SYMBOLS`, `components/game-hub.tsx`의 `PLACEMENT`다. 화면이 준비되면 `components/games/registry.ts`에 등록한다.
 - 허브 심볼은 48×48 그리드의 라인 아이콘이다. 채울 패스에는 `className="f"`를 붙인다.
 
+## 오늘의 운세 계산
+
+- 사주(명리학) 규칙으로 계산한다. 난수를 쓰지 않으며 같은 입력이면 같은 날에는 같은 결과가 나온다.
+- 달력 엔진은 `lib/saju/`에 있다. 간지 규칙 `ganji.ts`, 절기 `terms.ts`, 시간대 `time.ts`, 음력 변환 `lunar.ts`(`korean-lunar-calendar`, KASI 자료), 원국과 오늘의 기둥 `chart.ts`. 해석(용신, 십성, 합충, 점수)은 `reading.ts`, 화면에 넘기는 묶음은 `lib/fortune.ts`다.
+- 해와 달 기둥은 절입 시각으로, 날과 시 기둥은 태양시로 정한다. 서울은 UTC+8:30으로 보고(자시 23:30 시작), 23시 자시부터 다음 날로 넘긴다. 과거 표준시 변경과 서머타임은 `Intl`의 tz 데이터를 따른다. 태어난 곳은 한국어면 서울, 아니면 방문자 시간대로 본다.
+- 절기 시각 표 `lib/saju/solar-terms-data.ts`는 `node scripts/gen-solar-terms.mjs`로 만든다. 직접 고치지 않는다.
+- 계산을 바꾸면 `npm run verify:saju`로 교차 검증한다(`lunar-javascript`와 KASI 공개값).
+- 문구는 사전 `fortune.content`에 오늘 천간의 십성 × 점수 단계별로 둔다. 같은 묶음 안의 문장은 날짜와 원국으로 만든 해시로 고른다.
+- 운세 보기를 누르면 분석 화면(`components/games/fortune/fortune-analyzing.tsx`)이 실제 계산 단계와 그 값(원국, 오행, 용신, 일진, 시간대)을 차례로 보여 준 뒤 결과로 넘어간다. 보여 주는 값은 모두 `Fortune`에 담긴 실제 계산값이다.
+
 ## 스타일
 
 - 디자인 토큰(색, 폰트, 반경, 이징)은 `app/globals.css`의 `@theme`에 정의되어 있다. 토큰이 있는 값은 토큰 클래스를 쓴다.
