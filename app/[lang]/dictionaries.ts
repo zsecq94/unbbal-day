@@ -15,7 +15,7 @@ const dictionaries: Record<Locale, () => Promise<Dictionary>> = {
   en: () => import('./dictionaries/en.json').then((m) => m.default),
 }
 
-/** The locale of the current request, read from the root `[lang]` segment. */
+/** 현재 요청의 로케일. 루트 `[lang]` 세그먼트에서 읽는다. */
 export async function getLocale(): Promise<Locale> {
   const locale = await lang()
   if (!isLocale(locale)) notFound()

@@ -9,9 +9,9 @@ export type GameScreenProps = {
 }
 
 /**
- * Game screens by key, rendered inside the stage frame of
- * `app/[lang]/games/[game]/page.tsx`. A key without an entry shows the
- * coming-soon stage. Register a game here once its screen exists:
+ * 키별 게임 화면. `app/[lang]/games/[game]/page.tsx`의 스테이지 프레임 안에
+ * 그려진다. 등록이 없는 키는 준비 중 화면이 나온다. 화면이 생기면 여기에
+ * 등록한다:
  *
  *   fortune: FortuneScreen,
  */

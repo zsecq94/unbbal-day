@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* ─── Design tokens ─────────────────────────────────────────── */
+/* ─── 디자인 토큰 ───────────────────────────────────────────── */
 @theme {
   --color-canvas: #0a0a0a;
   --color-tile: #121212;
@@ -146,8 +146,8 @@
     var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* ─── Variants ──────────────────────────────────────────────── */
-/* "lit" = pointer hover (only on hover-capable devices) or keyboard focus */
+/* ─── 변형(variant) ─────────────────────────────────────────── */
+/* "lit" = 포인터 호버(호버 가능한 기기에서만) 또는 키보드 초점 */
 @custom-variant lit {
   @media (hover: hover) {
     &:hover {
@@ -170,14 +170,14 @@
   }
 }
 
-/* Desktop screens tall enough to hold the whole hub in one view */
+/* 허브 전체가 한 화면에 들어갈 만큼 높은 데스크톱 화면 */
 @custom-variant fit {
   @media (width >= 80rem) and (height >= 47.5rem) {
     @slot;
   }
 }
 
-/* ─── Utilities ─────────────────────────────────────────────── */
+/* ─── 유틸리티 ──────────────────────────────────────────────── */
 @utility column-lines {
   background-image: linear-gradient(
     to right,
@@ -207,7 +207,7 @@
   }
 }
 
-/* ─── Base ──────────────────────────────────────────────────── */
+/* ─── 기본 ──────────────────────────────────────────────────── */
 @layer base {
   html {
     color-scheme: dark;
@@ -230,17 +230,17 @@
   }
 }
 
-/* ─── View transitions ──────────────────────────────────────── */
-/* Vocabulary lives in lib/transitions.ts; pages opt in via PageTransition. */
+/* ─── 뷰 전환 (View transitions) ───────────────────────────── */
+/* 어휘는 lib/transitions.ts에 있고, 페이지는 PageTransition으로 참여한다. */
 
-/* Keep the live page clickable while snapshots animate. */
+/* 스냅샷이 움직이는 동안에도 실제 페이지를 누를 수 있게 둔다. */
 ::view-transition {
   pointer-events: none;
 }
 
-/* Page bodies. One thing at a time: the old page leaves fast, the frame
-   travels, and the new page's content arrives once the frame has settled.
-   Forward: the hub recedes, the game rises. Back: reversed. */
+/* 페이지 본문. 한 번에 한 가지만 움직인다. 이전 페이지가 빠르게 빠지고,
+   프레임이 옮겨 가고, 프레임이 자리 잡으면 새 페이지 내용이 들어온다.
+   앞으로: 허브가 물러나고 게임이 떠오른다. 뒤로: 그 반대. */
 ::view-transition-old(.nav-forward) {
   animation:
     120ms ease-in both vt-fade reverse,
@@ -262,9 +262,9 @@
     380ms var(--ease-out-soft) 60ms both vt-approach;
 }
 
-/* Shared elements. The pressed tile's frame grows into the stage frame
-   underneath the page content (a flat rect scales without artifacts), while
-   the symbol and the brand mark travel on top of everything. */
+/* 공유 요소. 누른 타일의 프레임은 페이지 내용 아래에서 스테이지 프레임으로
+   자라나고(평평한 사각형이라 늘려도 깨지지 않는다), 심볼과 브랜드 마크는
+   모든 것 위로 옮겨 간다. */
 ::view-transition-group(.grow),
 ::view-transition-group(.morph) {
   animation-duration: 380ms;

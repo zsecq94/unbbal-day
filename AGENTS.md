@@ -19,6 +19,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - 포맷은 `.prettierrc`를 따른다. 세미콜론 없음, 작은따옴표, 80자, Tailwind 클래스 자동 정렬.
 - 파일명은 kebab-case, 컴포넌트는 named export, import 경로는 `@/` 별칭을 쓴다.
+- 주석과 문서는 한국어로 쓴다. 코드 식별자, 고유명사, 명령 예시는 원문 그대로 둔다.
 
 ## Next.js 16
 

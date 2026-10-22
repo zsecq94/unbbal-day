@@ -3,7 +3,7 @@ import { PageTransition } from '@/components/page-transition'
 import { TopBar } from '@/components/top-bar'
 import { getDictionary } from './dictionaries'
 
-/** Rendered for `notFound()` anywhere under a locale, including the catch-all. */
+/** 로케일 아래 어디서든(나머지 경로 포함) `notFound()`가 불리면 그려진다. */
 export default async function NotFound() {
   const dict = await getDictionary()
 

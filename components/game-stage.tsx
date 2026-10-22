@@ -8,9 +8,9 @@ const SECTION =
   'relative flex min-h-0 flex-1 flex-col overflow-clip rounded-tile'
 
 /**
- * The stage a game plays on, laid out like an enlarged hub tile (index,
- * symbol, name, kind). Its frame is the shared element the pressed tile's
- * frame grows into; the symbol is the one that flew out of the tile.
+ * 게임이 펼쳐지는 스테이지. 허브 타일을 크게 키운 모양(번호, 심볼, 이름,
+ * 종류)이다. 프레임은 누른 타일의 프레임이 자라나 닿는 공유 요소이고,
+ * 심볼은 타일에서 날아온 그 심볼이다.
  */
 export function GameStage({
   game,
@@ -68,7 +68,7 @@ export function GameStage({
   )
 }
 
-/** Same footprint as the stage, shown only if the game content isn't ready. */
+/** 스테이지와 같은 자리를 차지한다. 게임 내용이 준비되지 않았을 때만 보인다. */
 export function GameStageFallback() {
   return (
     <section aria-busy="true" className={SECTION}>

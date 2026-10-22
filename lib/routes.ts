@@ -1,9 +1,9 @@
 import type { GameKey } from '@/lib/games'
 import type { Locale } from '@/lib/i18n'
 
-/** Hub (home) for a locale. */
+/** 로케일의 허브(홈). */
 export const hubPath = (locale: Locale) => `/${locale}`
 
-/** Game screen. Every game lives under `/[lang]/games/[game]`. */
+/** 게임 화면. 모든 게임은 `/[lang]/games/[game]` 아래에 있다. */
 export const gamePath = (locale: Locale, key: GameKey) =>
   `/${locale}/games/${key}`

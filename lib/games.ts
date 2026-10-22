@@ -1,10 +1,10 @@
 export type GameKind = 'solo' | 'together'
 
-/** Language-independent game metadata. Copy lives in the locale dictionaries. */
+/** 언어와 무관한 게임 메타데이터. 문구는 로케일 사전에 있다. */
 export type GameMeta = {
   key: GameKey
   kind: GameKind
-  /** Hover motion for the line symbol, as a CSS transform. */
+  /** 라인 심볼의 호버 모션(CSS transform). */
   motion: string
 }
 

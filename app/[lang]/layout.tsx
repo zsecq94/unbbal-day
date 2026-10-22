@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
     getLocale(),
   ])
   return {
-    // Child pages (games) set a plain title and get the brand suffixed.
+    // 하위 페이지(게임)는 이름만 제목으로 두고, 브랜드명은 여기서 뒤에 붙인다.
     title: { default: meta.title, template: `%s · ${brand.name}` },
     description: meta.description,
     alternates: {

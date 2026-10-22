@@ -33,7 +33,7 @@ type TileSize = 'lg' | 'md' | 'sm'
 
 const TILE_SIZE: Record<string, TileSize> = { fortune: 'lg', lotto: 'md' }
 
-/* Grid placement per breakpoint. Bottom band: mobile 2 cols, tablet 3+3, desktop 6. */
+/* 화면 폭별 그리드 배치. 아래 줄은 모바일 2열, 태블릿 3+3, 데스크톱 6칸. */
 const PLACEMENT: Record<string, string> = {
   fortune: 'md:col-span-7 xl:col-span-4',
   lotto: 'md:col-span-5 xl:col-span-3',
@@ -64,7 +64,7 @@ const ARROWS: Record<string, [number, number]> = {
   ArrowUp: [0, -1],
 }
 
-/** Closest tile in the pressed direction, measured from rendered positions. */
+/** 누른 방향에서 가장 가까운 타일. 그려진 위치로 잰다. */
 function nearestInDirection(
   rects: DOMRect[],
   from: number,
@@ -91,10 +91,10 @@ function nearestInDirection(
 }
 
 /**
- * The hub is a grid of tiles, each a link into its game. Arrow keys roam the
- * grid (roving tabindex), Enter/Space follow the link. Pressing a tile is
- * answered by motion alone: it dips like a button, then its frame grows into
- * the game stage (see `GameStage`).
+ * 허브는 타일 그리드이고, 타일마다 게임으로 가는 링크다. 화살표 키로 그리드를
+ * 돌아다니고(roving tabindex), Enter/Space로 링크를 따라간다. 타일을 누르면
+ * 모션으로만 답한다. 버튼처럼 살짝 눌린 뒤 프레임이 게임 스테이지로 자라난다
+ * (`GameStage` 참고).
  */
 export function GameHub({
   hero,
@@ -107,19 +107,18 @@ export function GameHub({
   locale: Locale
   copy: HubCopy
 }) {
-  /** Tile under the mouse pointer; the footer status line names it. */
+  /** 마우스 포인터 아래 타일. 하단 상태 줄이 이 타일 이름을 보여 준다. */
   const [hoverKey, setHoverKey] = useState<string | null>(null)
-  /** Tile that owns the single tab stop. */
+  /** 하나뿐인 탭 정지점을 가진 타일. */
   const [focusKey, setFocusKey] = useState<string>(games[0].key)
   const tileRefs = useRef<(HTMLAnchorElement | null)[]>([])
 
   const hoverIndex = games.findIndex((g) => g.key === hoverKey)
   const hovered = hoverIndex === -1 ? null : games[hoverIndex]
 
-  // Next keeps the hub mounted (hidden) while a game is open. Clear the
-  // hover status on the way out, and on the way back restore the scroll
-  // position and focus saved at press time (see `launch`) so the stage
-  // shrinks into a tile that is actually on screen.
+  // 게임이 열려 있는 동안 Next는 허브를 언마운트하지 않고 숨겨 둔다. 나갈 때는
+  // 호버 상태를 비우고, 돌아올 때는 누른 시점에 저장한 스크롤 위치와 초점을
+  // 되살려(`launch` 참고) 스테이지가 실제로 화면에 보이는 타일로 줄어들게 한다.
   const saved = useRef<{ scrollY: number; index: number } | null>(null)
   useLayoutEffect(() => {
     if (saved.current) {
@@ -130,8 +129,8 @@ export function GameHub({
   }, [])
 
   const launch = (index: number) => {
-    // Read the scroll position before the game page enters the DOM: once it
-    // does, scroll anchoring shifts `scrollY` by the new page's height.
+    // 게임 페이지가 DOM에 들어오기 전에 스크롤 위치를 읽는다. 들어온 뒤에는
+    // 스크롤 앵커링이 새 페이지 높이만큼 `scrollY`를 옮겨 버린다.
     saved.current = { scrollY: window.scrollY, index }
   }
 
@@ -154,7 +153,7 @@ export function GameHub({
       } else if (e.key === 'Home') to = 0
       else if (e.key === 'End') to = games.length - 1
       else if (e.key === ' ') {
-        // Links ignore Space; make the grid feel like buttons.
+        // 링크는 Space를 무시한다. 그리드가 버튼처럼 느껴지게 직접 누른다.
         e.preventDefault()
         e.currentTarget.click()
         return
@@ -197,8 +196,8 @@ export function GameHub({
         {games.slice(2).map((g, i) => renderTile(g, i + 2))}
       </div>
 
-      {/* Status line: names the tile under the pointer, in the same voice as
-          the tiles' own index/kind row. Decorative only, so hidden from AT. */}
+      {/* 상태 줄: 포인터 아래 타일 이름을 타일의 번호·종류 줄과 같은 말투로
+          보여 준다. 장식일 뿐이라 보조 기술에서는 숨긴다. */}
       <footer className="mt-1 flex min-h-[52px] items-center justify-between gap-6 border-t border-line-strong px-1">
         <p
           aria-hidden="true"
@@ -248,11 +247,10 @@ type GameTileProps = {
 }
 
 /**
- * A tile is a link. Its frame is a named shared element that grows into the
- * stage frame, and its symbol flies to the stage header (see `GameStage`).
- * `prefetch` is explicit so the game's own content (which depends on the URL)
- * is ready before the click; otherwise the stage would suspend and no morph
- * pair would form.
+ * 타일은 링크다. 프레임은 스테이지 프레임으로 자라나는 이름 붙은 공유 요소이고,
+ * 심볼은 스테이지 헤더로 날아간다(`GameStage` 참고). URL에 따라 달라지는 게임
+ * 내용이 클릭 전에 준비되도록 `prefetch`를 명시한다. 그러지 않으면 스테이지가
+ * 서스펜드되어 모프 짝이 생기지 않는다.
  */
 function GameTile({
   ref,
@@ -305,8 +303,8 @@ function GameTile({
         PLACEMENT[game.key],
       ].join(' ')}
     >
-      {/* The frame alone is the shared element: a flat rect scales cleanly,
-          while the text above it fades with the page. */}
+      {/* 프레임만 공유 요소다. 평평한 사각형은 깔끔하게 늘어나고,
+          그 위의 글자는 페이지와 함께 흐려진다. */}
       <ViewTransition
         name={tileTransition(game.key)}
         share="grow"

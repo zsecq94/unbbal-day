@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-/* Line symbols drawn on a 48×48 grid. `.f` paths are filled. */
+/* 48×48 그리드에 그린 라인 심볼. `.f` 패스는 채운다. */
 const SYMBOLS: Record<string, ReactNode> = {
   fortune: (
     <>

@@ -1,7 +1,7 @@
 import { GameSymbol } from '@/components/game-symbol'
 import type { Game } from '@/lib/games'
 
-/** Stage content for a game whose screen isn't built yet. */
+/** 화면이 아직 없는 게임의 스테이지 내용. */
 export function GameComingSoon({
   game,
   copy,

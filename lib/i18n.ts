@@ -6,7 +6,7 @@ export const LOCALE_COOKIE = 'NEXT_LOCALE'
 export const isLocale = (value: string | undefined): value is Locale =>
   LOCALES.includes(value as Locale)
 
-/** Picks the best supported locale from an Accept-Language header. */
+/** Accept-Language 헤더에서 지원하는 로케일 중 가장 알맞은 것을 고른다. */
 export function matchLocale(acceptLanguage: string | null): Locale {
   if (!acceptLanguage) return DEFAULT_LOCALE
   const ranked = acceptLanguage

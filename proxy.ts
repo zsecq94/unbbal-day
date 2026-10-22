@@ -6,8 +6,8 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const [, first, section, key, ...rest] = pathname.split('/')
   if (isLocale(first)) {
-    // Unknown game keys 404 here, before the partially prerendered game shell
-    // starts streaming with a 200.
+    // 모르는 게임 키는 부분 프리렌더된 게임 셸이 200으로 스트리밍을 시작하기
+    // 전에 여기서 404로 보낸다.
     if (section === 'games' && key && !rest.length && !isGameKey(key)) {
       request.nextUrl.pathname = `/${first}/404`
       return NextResponse.rewrite(request.nextUrl)
@@ -15,7 +15,7 @@ export function proxy(request: NextRequest) {
     return
   }
 
-  // A locale the visitor picked explicitly wins over the browser preference.
+  // 방문자가 직접 고른 로케일이 브라우저 선호 언어보다 우선한다.
   const saved = request.cookies.get(LOCALE_COOKIE)?.value
   const locale = isLocale(saved)
     ? saved
@@ -26,6 +26,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip Next internals, API routes and anything that looks like a file.
+  // Next 내부 경로, API 라우트, 파일처럼 보이는 경로는 건너뛴다.
   matcher: ['/((?!_next|api|.*\\..*).*)'],
 }

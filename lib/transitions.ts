@@ -1,23 +1,22 @@
 import type { GameKey } from '@/lib/games'
 
 /**
- * Page transition vocabulary.
+ * 페이지 전환 어휘.
  *
- * Links tag a navigation with a transition type (`<Link transitionTypes>`),
- * and each page maps the type to its enter/exit motion via `PageTransition`.
- * Shared element names pair an element on the outgoing page with one on the
- * incoming page so the browser morphs between them. The matching CSS lives in
- * `app/globals.css` under "View transitions".
+ * 링크는 이동에 전환 타입을 붙이고(`<Link transitionTypes>`), 각 페이지는
+ * `PageTransition`으로 그 타입을 들어오고 나가는 모션에 연결한다. 공유 요소
+ * 이름은 나가는 페이지와 들어오는 페이지의 요소를 짝지어 브라우저가 그 사이를
+ * 모프하게 한다. 짝이 되는 CSS는 `app/globals.css`의 "View transitions"에 있다.
  */
 
-/** Going deeper: hub → game. */
+/** 안으로 들어간다: 허브 → 게임. */
 export const NAV_FORWARD = 'nav-forward'
-/** Coming back up: game → hub. */
+/** 밖으로 돌아온다: 게임 → 허브. */
 export const NAV_BACK = 'nav-back'
 
-/** The brand mark travels from the hero into the game top bar. */
+/** 브랜드 마크가 히어로에서 게임 상단바로 옮겨 간다. */
 export const BRAND_TRANSITION = 'brand'
-/** The pressed tile grows into the game stage frame. */
+/** 누른 타일이 게임 스테이지 프레임으로 자라난다. */
 export const tileTransition = (key: GameKey) => `tile-${key}`
-/** The tile symbol lands in the stage header. */
+/** 타일 심볼이 스테이지 헤더에 내려앉는다. */
 export const symbolTransition = (key: GameKey) => `symbol-${key}`

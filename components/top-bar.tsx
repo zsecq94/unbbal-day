@@ -7,16 +7,16 @@ import { hubPath } from '@/lib/routes'
 import { BRAND_TRANSITION, NAV_BACK } from '@/lib/transitions'
 
 /**
- * Chrome above any non-hub page: the way back, the brand, the language.
- * Reads only the locale (a root param), so it belongs to the shared app shell.
+ * 허브 밖 모든 페이지 위에 놓이는 상단바: 돌아가는 길, 브랜드, 언어.
+ * 로케일(루트 파라미터)만 읽으므로 공용 앱 셸에 속한다.
  */
 export async function TopBar() {
   const [dict, locale] = await Promise.all([getDictionary(), getLocale()])
 
   return (
     <header className="flex h-10 items-center gap-4 sm:gap-5">
-      {/* scroll={false}: the hub restores its own scroll position so the
-          stage shrinks back into the tile the visitor pressed. */}
+      {/* scroll={false}: 허브가 스크롤 위치를 직접 되살려야 스테이지가
+          방문자가 누른 타일로 다시 줄어든다. */}
       <Link
         href={hubPath(locale)}
         transitionTypes={[NAV_BACK]}

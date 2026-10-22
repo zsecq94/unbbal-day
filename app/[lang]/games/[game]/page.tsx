@@ -14,7 +14,7 @@ import { getDictionary, getLocale } from '../../dictionaries'
 
 type Props = PageProps<'/[lang]/games/[game]'>
 
-/* Every game page is prerendered for every locale. */
+/* 모든 게임 페이지를 모든 로케일로 미리 렌더한다. */
 export function generateStaticParams() {
   return GAMES.map(({ key }) => ({ game: key }))
 }
@@ -35,9 +35,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * The top bar is URL-independent and lives in the shared app shell. Which
- * game to show depends on the URL, so that part is read behind Suspense; hub
- * tiles prefetch it per link so the stage is ready before the click.
+ * 상단바는 URL과 무관해서 공용 앱 셸에 둔다. 어떤 게임을 보여 줄지는 URL에
+ * 달려 있어서 그 부분은 Suspense 안에서 읽는다. 허브 타일이 링크마다 미리
+ * 받아 두므로 클릭 전에 스테이지가 준비된다.
  */
 export default function GamePage({ params }: Props) {
   return (
