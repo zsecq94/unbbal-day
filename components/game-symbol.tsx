@@ -14,12 +14,14 @@ const SYMBOLS: Record<string, ReactNode> = {
       <path d="M24 13 L26.6 21.4 L35 24 L26.6 26.6 L24 35 L21.4 26.6 L13 24 L21.4 21.4 Z" />
     </>
   ),
-  /* 뽑힌 공 하나만 채운다 */
+  /* 뽑힌 공 하나만 채운다. 채운 원에도 같은 선을 둘러 빈 원과 바깥 크기를
+     맞춘다(선 굵기는 화면 픽셀이라 반지름만 키우면 크기마다 어긋난다) */
   lotto: (
     <>
       <circle cx="24" cy="13" r="7" />
       <circle cx="13" cy="32" r="7" />
-      <circle className="f" cx="35" cy="32" r="7.6" />
+      <circle className="f" cx="35" cy="32" r="7" />
+      <circle cx="35" cy="32" r="7" />
     </>
   ),
   /* 두 사람(겹친 두 원)과 궁합(채운 교집합) */

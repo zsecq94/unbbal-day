@@ -14,7 +14,7 @@
     fortune:
       '<circle cx="24" cy="24" r="17"/><path d="M24 13 L26.6 21.4 L35 24 L26.6 26.6 L24 35 L21.4 26.6 L13 24 L21.4 21.4 Z"/>',
     lotto:
-      '<circle cx="24" cy="13" r="7"/><circle cx="13" cy="32" r="7"/><circle class="f" cx="35" cy="32" r="7.6"/>',
+      '<circle cx="24" cy="13" r="7"/><circle cx="13" cy="32" r="7"/><circle class="f" cx="35" cy="32" r="7"/><circle cx="35" cy="32" r="7"/>',
     match:
       '<circle cx="17" cy="24" r="11"/><circle cx="31" cy="24" r="11"/><path class="f" d="M24 15.51 A11 11 0 0 1 24 32.49 A11 11 0 0 1 24 15.51 Z"/>',
     pinball:
