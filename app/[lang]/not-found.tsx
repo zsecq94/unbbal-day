@@ -20,7 +20,7 @@ export default async function NotFound() {
             <span className="border border-line-strong px-2.5 py-1 font-mono text-[11px] tracking-[0.14em] text-ink-3">
               404
             </span>
-            <LocaleText name="not-found">
+            <LocaleText name="not-found" align="center">
               <div className="flex flex-col items-center gap-3">
                 <h1
                   id="not-found-title"

@@ -248,7 +248,7 @@ export function GameHub({
             </LocaleText>
           )}
         </p>
-        <LocaleText name="copyright">
+        <LocaleText name="copyright" align="end">
           <small className="shrink-0 font-mono text-xs tracking-[0.12em] text-ink-3">
             {copy.copyright}
           </small>
@@ -357,7 +357,7 @@ function GameTile({
         className="relative flex items-center justify-between font-mono text-xs font-medium tracking-[0.12em] text-ink-3"
       >
         <span>{pad2(index + 1)}</span>
-        <LocaleText name={`kind-${game.key}`}>
+        <LocaleText name={`kind-${game.key}`} align="end">
           <span className="inline-flex items-center gap-2 font-sans text-[13px] font-bold tracking-normal text-ink-2 group-lit:hidden">
             {kind}
           </span>

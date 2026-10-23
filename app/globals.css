@@ -302,6 +302,18 @@
   inline-size: auto;
   block-size: auto;
 }
+/* 그룹은 새 덩어리 자리에 있고 이미지는 기본으로 그 왼쪽 끝에 붙는다. 오른쪽이나
+   가운데에 맞춘 덩어리는 이미지도 같은 쪽에 붙여, 폭이 바뀌어도 글자 끝(가운데)이
+   제자리에 있게 한다. */
+::view-transition-old(.words-end),
+::view-transition-new(.words-end) {
+  inset-inline: auto 0;
+}
+::view-transition-old(.words-center),
+::view-transition-new(.words-center) {
+  inset-inline: 0;
+  margin-inline: auto;
+}
 ::view-transition-old(.words) {
   animation: 120ms ease-in both vt-words-out;
 }

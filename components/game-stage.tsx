@@ -67,7 +67,7 @@ export function GameStage({
             </h1>
           </LocaleText>
         </span>
-        <LocaleText name="stage-kind">
+        <LocaleText name="stage-kind" align="end">
           <span className="ml-auto shrink-0 text-[13px] font-bold text-ink-2">
             {kind}
           </span>
