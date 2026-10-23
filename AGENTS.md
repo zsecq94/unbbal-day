@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## 프로젝트
 
 - 운빨데이. Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS 4, npm.
-- 명령은 `npm run dev`, `npm run build`, `npm run lint`, `npm run format`, `npm run check`.
+- 명령은 `npm run dev`, `npm run build`, `npm run lint`, `npm run format`, `npm run check`. 계산 검증은 `npm run verify:saju`, `verify:match`, `verify:lotto`.
 - `npm run check`(`next typegen`, 타입체크, ESLint, Prettier 검사)와 `npm run build`가 통과하는 상태를 유지한다. `git commit` 전에 훅이 `npm run check`를 자동 실행하고 실패하면 커밋을 막는다.
 - `.next/types` 생성 타입 때문에 tsc가 실패하면(라우트 삭제·이름변경 뒤) `next typegen` 또는 dev 서버 재시작으로 재생성한다.
 
@@ -30,7 +30,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - 허브는 `/[lang]`, 게임은 `/[lang]/games/[game]`이다. 경로 문자열은 `lib/routes.ts`의 `hubPath()`, `gamePath()`로만 만든다.
 - `app/[lang]/games/[game]/page.tsx`는 `GAMES`로 `generateStaticParams`해 모든 게임·로케일을 정적 생성한다. 로케일 아래 어떤 라우트에도 안 걸리는 경로는 `app/[lang]/[...rest]/page.tsx`가 `notFound()`로 보내고 `app/[lang]/not-found.tsx`가 그린다. 모르는 게임 키는 `[game]` 라우트가 먼저 잡으므로 `proxy.ts`가 `/[lang]/404`로 리라이트한다(정적 셸이 먼저 스트리밍되면 200이 나가서 페이지 안의 `notFound()`만으로는 부족하다).
-- 게임 화면은 `components/games/registry.ts`의 `GAME_SCREENS`에 키로 등록한다. 게임끼리 함께 쓰는 도구(`fill`, `useReducedMotion`)는 `components/games/shared.ts`에 있다. 등록이 없으면 `components/game-coming-soon.tsx`가 나온다. 스테이지는 `components/game-stage.tsx`, 허브 밖 페이지의 본문 틀과 상단바(홈 링크·로고·언어)는 `components/page-frame.tsx`, `components/top-bar.tsx`다.
+- 게임 화면은 `components/games/registry.ts`의 `GAME_SCREENS`에 키로 등록한다. 게임끼리 함께 쓰는 도구(`fill`, `useReducedMotion`, 사전 템플릿에 요소를 넣는 `compose`, 강조 배열을 그리는 `rich`)는 `components/games/shared.tsx`에 있다. 등록이 없으면 `components/game-coming-soon.tsx`가 나온다. 스테이지는 `components/game-stage.tsx`, 허브 밖 페이지의 본문 틀과 상단바(홈 링크·로고·언어)는 `components/page-frame.tsx`, `components/top-bar.tsx`다.
 - 게임 페이지의 `title`은 게임 이름만 넣는다. 루트 레이아웃의 `title.template`이 브랜드명을 붙인다.
 - `partialPrefetching`이 켜져 있다. `params`는 페이지 최상위에서 `await`하지 않고 `<Suspense>` 안의 자식 컴포넌트에서 읽는다(`app/[lang]/games/[game]/page.tsx`의 `Stage`). URL에 안 묶이는 상단바는 바깥에 둔다. 게임으로 가는 링크는 `prefetch={true}`로 URL별 내용까지 미리 받아야 전환 모프가 성립한다.
 
@@ -84,6 +84,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 문구는 사전 `match`에 있다. 점수 구간 문구(`bands`)는 구간마다 여러 개이고 두 이름의 해시로 고른다. 조사(과/와)는 `andParticle()`로 붙인다.
 - 이름 입력칸은 리렌더해도 요소를 새로 만들지 않는다(한글 조합이 끊긴다). 조합 중(`compositionstart`~`compositionend`)에는 덜 된 글자로 오류를 띄우지 않고, 조합을 확정하는 Enter는 다음 칸 이동으로 처리하지 않는다.
 - 여러 사람을 한 번에 계산하는 모드는 설계만 하고 넣지 않았다(전통 규칙이 없다). 시안은 저장소 밖에 보관했다.
+
+## 로또 번호 뽑기
+
+- 계산은 `lib/lotto/`에 있다. 운세로 뽑기는 "상생 궤도"(`orbit.ts`)로, 운빨데이가 만든 방식이다(재료는 명리: 간지 순번, 하도 수, 상생·상극, 기신). 1–45를 한 바퀴 길로 잇고(45 다음은 1), 칸의 오행은 끝자리 하도 수(1·6 수, 2·7 화, 3·8 목, 4·9 금, 5·0 토)다. 오늘 일진의 60갑자 순번 칸에서 출발해, 시주를 알면 시간·시지만큼 먼저 걸어 출발점만 옮기고, 원국의 년·월·일 여섯 글자로 한 번씩 걸어 내려앉은 칸을 번호로 삼는다. 걸음 수는 글자 번호(천간 1–10, 지지 1–12)에 오늘 일진의 같은 쪽 글자 번호를 더한 값이고, 지금 칸과 글자가 상극이면 작은 번호 쪽, 아니면 큰 번호 쪽으로 간다. 기신 칸이나 이미 뽑힌 칸이면 한 칸 더 간다. 난수를 쓰지 않으며 같은 원국이면 같은 날에는 같은 번호다. 오늘 글자를 걸음 수에 더하지 않으면 다음 날과 같은 번호가 자주 나와서 더한다.
+- 원국·일진·용신·금전운·좋은 시간은 오늘의 운세와 같은 `makeFortune`에서 가져온다(`index.ts`의 `luckyDraw`). 그냥 뽑기는 `random.ts`의 `crypto` 균등 추출이고 고정수(최대 5)·제외수(최대 39) 말고는 거르지 않는다(통계 필터 없음). 보너스 번호는 뽑지 않는다(사는 사람이 고르는 번호가 아니다). 결과의 "안내"에 확률·나이·보너스 번호 설명을 둔다.
+- 운세로 뽑기는 생년월일을 받지 않는다. 오늘의 운세 결과의 "오늘의 행운 번호"가 원국 입력을 `lib/lotto/handoff.ts`(브라우저 메모리, 이름은 넘기지 않음)로 넘기고 로또로 간다. 넘겨받은 원국이 없으면 운세로 안내하고, 그냥 뽑기는 바로 쓸 수 있다. 같은 원국은 한 번만 걷고, 언어를 바꿔 다시 열면 바로 결과를 보여 준다.
+- 화면은 `components/games/lotto/`에 있다. 45개 번호가 밤하늘의 별이고(확정 시안 `mockups/lotto-stars.html`), 걸음이 별을 건너 별자리를 그린다. 앱에서는 내려앉은 별을 그 번호의 로또 공 색으로 빛내고, 별이 공이 되어 아래 자리로 날아가게 더했다. 별·선·빛 효과·배경 하늘은 `sky.ts`(DOM을 직접 다루는 엔진)가 그리고, 글자와 상태는 `lotto-screen.tsx`가 갖는다. 별 자리는 결정적 의사난수라 누구에게나 같은 하늘이다.
+- 하늘 스타일은 `sky.css`(클래스 이름은 `sky-classes.ts`, 모두 `lk-` 접두어)다. `next.config.ts`의 Turbopack 규칙이 모든 `*.css`를 일반 CSS로 다뤄서 CSS 모듈은 클래스 이름표를 내보내지 못한다.
+- 문구는 사전 `lotto`에 있고, 간지·오행·시진 이름은 사전 `fortune`의 것을 빌려 쓴다. 공 색은 `@theme`의 `ball-*`(실제 6/45 번호대 색)이다.
+- 계산을 바꾸면 `npm run verify:lotto`로 하도 묶음, 예시 원국의 번호, 걸음 규칙, 번호별 빈도·다음 날과 같은 번호 비율, 그냥 뽑기의 분포(카이제곱)·고정·제외, 추첨일을 확인한다.
 
 ## 스타일
 

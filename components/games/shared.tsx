@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { Fragment, useSyncExternalStore, type ReactNode } from 'react'
 
 /** `{name}` 자리를 채운다. */
 export const fill = (template: string, vars: Record<string, string | number>) =>
@@ -17,3 +17,27 @@ export const useReducedMotion = () =>
     () => matchMedia(query).matches,
     () => false
   )
+
+/** 사전의 강조 배열(`["…", { "b": "…" }]`)을 그린다. */
+export function rich(parts: (string | { b: string })[]) {
+  return parts.map((p, i) =>
+    typeof p === 'string' ? (
+      <Fragment key={i}>{p}</Fragment>
+    ) : (
+      <b key={i} className="font-bold text-ink">
+        {p.b}
+      </b>
+    )
+  )
+}
+
+/** `{name}` 자리에 글이나 요소를 넣는다. */
+export function compose(template: string, vars: Record<string, ReactNode>) {
+  return template
+    .split(/(\{\w+\})/)
+    .map((part, i) => {
+      const key = /^\{(\w+)\}$/.exec(part)?.[1]
+      return key ? <Fragment key={i}>{vars[key]}</Fragment> : part
+    })
+    .filter((p) => p !== '')
+}

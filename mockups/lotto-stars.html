@@ -1,0 +1,2542 @@
+<!doctype html>
+<!-- 로또 시안 · 밤하늘: 45개 번호가 밤하늘의 별이다. 오늘의 사주 걸음이 1–45 길을 따라 별을 건너 "오늘의 내 별자리"를 그리고, 그냥 뽑기는 같은 하늘에 별똥별을 떨어뜨린다. -->
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" href="data:," />
+    <title>운빨데이 · 로또 · 밤하늘</title>
+    <link rel="stylesheet" href="./shared/theme.css" />
+    <link rel="stylesheet" href="./shared/lotto.css" />
+    <style>
+      /* ─── 페이지: 어느 상태에서도 한 화면에 들어간다 ─────────── */
+      html body {
+        overflow: hidden;
+      }
+      html .frame {
+        height: 100dvh;
+        min-height: 0;
+      }
+
+      /* ─── 스테이지 전체가 밤하늘 ─────────────────────────────── */
+      .stage {
+        background:
+          radial-gradient(120% 80% at 78% -10%, rgb(36 56 120 / 0.32), transparent 60%),
+          radial-gradient(90% 70% at 10% 110%, rgb(60 36 110 / 0.22), transparent 60%),
+          linear-gradient(180deg, #060812 0%, #04050b 100%);
+        border-color: rgb(255 255 255 / 0.07);
+      }
+      .stage > .stage-head,
+      .stage > .stage-body {
+        position: relative;
+        z-index: 1;
+      }
+      .stage-head {
+        border-bottom-color: rgb(255 255 255 / 0.06);
+      }
+      /* overflow 대신 paint 격리로 자른다(층이 시차로 움직여도 스테이지 밖으로 새지 않는다) */
+      .sky-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        contain: paint;
+        pointer-events: none;
+      }
+      .sky-bg canvas {
+        position: absolute;
+        top: -20px;
+        left: -20px;
+        transition: translate 1100ms var(--ease);
+      }
+      /* 먼 층일수록 덜 움직인다(시차) */
+      .sky-bg .l-far {
+        translate: calc(var(--px, 0) * -3px) calc(var(--py, 0) * -2px);
+      }
+      .sky-bg .l-tw.a {
+        translate: calc(var(--px, 0) * -6px) calc(var(--py, 0) * -4px);
+      }
+      .sky-bg .l-tw.b {
+        translate: calc(var(--px, 0) * -9px) calc(var(--py, 0) * -6px);
+      }
+      .sky-bg .l-tw.c {
+        translate: calc(var(--px, 0) * -12px) calc(var(--py, 0) * -8px);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .sky-bg .l-far {
+          animation: drift 70s ease-in-out infinite alternate;
+        }
+        .sky-bg .l-tw.a {
+          animation: twinkle 3.4s ease-in-out infinite alternate;
+        }
+        .sky-bg .l-tw.b {
+          animation: twinkle 4.8s ease-in-out -1.7s infinite alternate;
+        }
+        .sky-bg .l-tw.c {
+          animation: twinkle 6.2s ease-in-out -3.1s infinite alternate;
+        }
+      }
+      @keyframes twinkle {
+        from {
+          opacity: 0.3;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes drift {
+        to {
+          transform: translate(-14px, 6px);
+        }
+      }
+
+      /* ─── 위 띠: 모드와 계산 방식 ─────────────────────────────── */
+      .band {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 12px 18px;
+        padding: 10px 16px;
+        border-bottom: 1px solid rgb(255 255 255 / 0.06);
+      }
+      @media (min-width: 640px) {
+        .band {
+          padding: 12px 28px;
+        }
+      }
+      .band .seg {
+        background: rgb(6 8 16 / 0.6);
+      }
+      .band .seg button {
+        height: 34px;
+      }
+      .method {
+        display: none;
+        min-width: 0;
+        overflow: hidden;
+        font-size: 13px;
+        color: var(--ink-3);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .method b {
+        margin-right: 8px;
+        font-weight: 750;
+        color: var(--ink-2);
+      }
+      @media (min-width: 900px) {
+        .method {
+          display: block;
+        }
+      }
+      .band .link {
+        margin-left: auto;
+        flex: none;
+      }
+      .band .link[hidden] {
+        display: none;
+      }
+      .rules {
+        position: absolute;
+        top: calc(100% - 1px);
+        right: 12px;
+        left: 12px;
+        z-index: 20;
+        display: grid;
+        gap: 12px;
+        max-width: 560px;
+        margin-left: auto;
+        padding: 18px 20px 20px;
+        border: 1px solid var(--line-strong);
+        background: #070910;
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: var(--ink-2);
+        animation: pop 160ms var(--ease) both;
+      }
+      @media (min-width: 640px) {
+        .rules {
+          right: 28px;
+        }
+      }
+      .rules[hidden] {
+        display: none;
+      }
+      .rules b {
+        color: var(--ink);
+      }
+      .rules ol {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding-left: 20px;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          translate: 0 -4px;
+        }
+      }
+
+      /* ─── 장면: 하늘 머리글 + 별 45개 ─────────────────────────── */
+      .scene {
+        position: relative;
+        display: flex;
+        flex: 1 1 0;
+        flex-direction: column;
+        min-height: 0;
+        contain: paint;
+      }
+      .sky-head {
+        display: flex;
+        flex: none;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 2px 16px;
+        padding: 12px 16px 0;
+      }
+      @media (min-width: 640px) {
+        .sky-head {
+          padding: 14px 28px 0;
+        }
+      }
+      .cname {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        white-space: nowrap;
+        transition:
+          opacity 600ms var(--ease),
+          letter-spacing 900ms var(--ease);
+      }
+      @media (min-width: 900px) {
+        .cname {
+          font-size: 17px;
+        }
+      }
+      .cname .hj {
+        font: 500 12px var(--font-mono);
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+      }
+      .cname.dim {
+        opacity: 0.32;
+      }
+      .cname.reveal {
+        animation: reveal 1100ms var(--ease) both;
+      }
+      @keyframes reveal {
+        from {
+          opacity: 0.3;
+          letter-spacing: 0.06em;
+          text-shadow: 0 0 0 transparent;
+        }
+        40% {
+          text-shadow: 0 0 18px rgb(170 200 255 / 0.9);
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .src {
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--ink-3);
+      }
+      .src b {
+        font-weight: 700;
+        color: var(--ink-2);
+      }
+      .field-wrap {
+        position: relative;
+        flex: 1 1 0;
+        min-height: 0;
+      }
+      .field {
+        position: absolute;
+        inset: 12px 30px 14px 30px;
+        translate: calc(var(--px, 0) * -5px) calc(var(--py, 0) * -4px);
+        transition:
+          translate 1100ms var(--ease),
+          right 420ms var(--ease),
+          opacity 300ms;
+      }
+      .lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+      }
+      .lines * {
+        vector-effect: non-scaling-stroke;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .road {
+        stroke: rgb(170 190 255 / 0.075);
+        stroke-width: 1;
+        transition: stroke 600ms;
+      }
+      html[data-state='result'] .road {
+        stroke: rgb(170 190 255 / 0.05);
+      }
+      /* 별자리 선: 빛이 번지는 글로 */
+      .lines.glow {
+        filter: drop-shadow(0 0 2px rgb(170 195 255 / 0.9)) drop-shadow(0 0 10px rgb(110 145 255 / 0.55));
+      }
+      .cl {
+        stroke: rgb(226 234 255 / 0.85);
+        stroke-width: 1.4;
+        transition:
+          opacity 300ms,
+          stroke 300ms;
+      }
+      .field.focus .cl {
+        opacity: 0.28;
+      }
+      .field.focus .cl.on {
+        opacity: 1;
+        stroke: #fff;
+      }
+      .rt {
+        stroke: rgb(130 165 255 / 0.95);
+        stroke-width: 1.6;
+      }
+      .pvl {
+        stroke: rgb(200 215 255 / 0.32);
+        stroke-width: 1;
+      }
+      .rl {
+        stroke: var(--gc);
+        stroke-width: 1.4;
+        opacity: 0.85;
+      }
+      .g-const,
+      .g-route,
+      .g-preview,
+      .g-rand {
+        display: none;
+      }
+      .field[data-mode='fortune'] .g-const,
+      .field[data-mode='fortune'] .g-route,
+      .field[data-mode='preview'] .g-preview,
+      .field[data-mode='random'] .g-rand {
+        display: inline;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .field.climax .cl {
+          animation: cl-flash 1300ms var(--ease);
+        }
+      }
+      @keyframes cl-flash {
+        22% {
+          stroke: #fff;
+          stroke-width: 3.2;
+        }
+      }
+
+      /* ─── 별 ─────────────────────────────────────────────── */
+      .star {
+        --tint: #f4f4f0;
+        --halo: rgb(220 220 214 / 0.45);
+        position: absolute;
+        left: calc(var(--x) * 100%);
+        top: calc(var(--y) * 100%);
+      }
+      .star[data-el='wood'] {
+        --tint: #dcf9ea;
+        --halo: rgb(69 192 138 / 0.55);
+      }
+      .star[data-el='fire'] {
+        --tint: #ffe4e1;
+        --halo: rgb(255 95 87 / 0.5);
+      }
+      .star[data-el='earth'] {
+        --tint: #fff0d4;
+        --halo: rgb(217 164 65 / 0.5);
+      }
+      .star[data-el='water'] {
+        --tint: #e1eaff;
+        --halo: rgb(79 134 255 / 0.62);
+      }
+      .star > i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        pointer-events: none;
+      }
+      .star .core {
+        width: var(--s);
+        height: var(--s);
+        margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+        border-radius: 50%;
+        background: var(--tint);
+        box-shadow: 0 0 calc(var(--s) * 2.2) calc(var(--s) * 0.3) var(--halo);
+        opacity: var(--o);
+        transition:
+          scale 260ms var(--ease),
+          opacity 320ms,
+          filter 320ms,
+          box-shadow 320ms;
+      }
+      /* 빛살: 내려앉은 별에만 */
+      .star .flare {
+        width: 44px;
+        height: 44px;
+        margin: -22px 0 0 -22px;
+        opacity: 0;
+        transition: opacity 400ms;
+      }
+      .star .flare::before,
+      .star .flare::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--tint), transparent);
+      }
+      .star .flare::after {
+        rotate: 90deg;
+      }
+      .star .ring {
+        width: 22px;
+        height: 22px;
+        margin: -11px 0 0 -11px;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px var(--tint);
+        opacity: 0;
+        transition:
+          opacity 300ms,
+          scale 300ms var(--ease);
+      }
+      .star .lbl {
+        position: absolute;
+        left: 0;
+        top: 0;
+        translate: var(--lx, 5px) var(--ly, -14px);
+        font: 500 var(--lfs, 10px) / 1 var(--font-mono);
+        letter-spacing: -0.02em;
+        color: rgb(214 222 245 / 0.46);
+        white-space: nowrap;
+        transition:
+          color 300ms,
+          opacity 300ms;
+      }
+      /* 구름: 기신·제외 별을 살짝 가린다 */
+      .star::before {
+        content: '';
+        position: absolute;
+        left: -26px;
+        top: -13px;
+        width: 52px;
+        height: 26px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgb(150 160 195 / 0.2), rgb(150 160 195 / 0.06) 60%, transparent);
+        opacity: 0;
+        transition: opacity 500ms;
+        pointer-events: none;
+      }
+
+      /* 운세 모드 */
+      .field[data-mode='fortune'] .star.gi::before,
+      .field[data-mode='random'] .star.r-excl::before {
+        opacity: 1;
+      }
+      .field[data-mode='fortune'] .star.gi .core,
+      .field[data-mode='random'] .star.r-excl .core {
+        opacity: 0.2;
+        filter: blur(0.7px);
+      }
+      .field[data-mode='fortune'] .star.gi .lbl,
+      .field[data-mode='random'] .star.r-excl .lbl {
+        color: rgb(214 222 245 / 0.2);
+      }
+      .field[data-mode='fortune'] .star.start .ring,
+      .field[data-mode='preview'] .star.today .ring {
+        opacity: 0.85;
+        box-shadow: inset 0 0 0 1px var(--brand-hi);
+        scale: 1.05;
+      }
+      .field[data-mode='preview'] .star.today .core {
+        opacity: 1;
+        scale: 1.6;
+      }
+      .field[data-mode='fortune'] .star.pass .core {
+        scale: 2.6;
+        opacity: 1;
+      }
+      .field[data-mode='fortune'] .star.f-land .core,
+      .field[data-mode='random'] .star.r-pick .core {
+        scale: 2.1;
+        opacity: 1;
+        background: #fff;
+        filter: none;
+        box-shadow:
+          0 0 6px 2px #fff,
+          0 0 12px 4px var(--halo),
+          0 0 34px 12px rgb(150 180 255 / 0.25);
+      }
+      .field[data-mode='random'] .star.r-pick .core {
+        box-shadow:
+          0 0 8px 2px var(--gc),
+          0 0 24px 7px color-mix(in oklab, var(--gc) 35%, transparent);
+      }
+      .field[data-mode='fortune'] .star.f-land .flare,
+      .field[data-mode='random'] .star.r-pick .flare {
+        opacity: 0.9;
+      }
+      .field[data-mode='fortune'] .star.f-land .lbl,
+      .field[data-mode='random'] .star.r-pick .lbl {
+        color: var(--ink);
+        font-weight: 700;
+      }
+      .field[data-mode='preview'] .star.pv .core {
+        opacity: 0.95;
+        scale: 1.45;
+      }
+      .field[data-mode='preview'] .star.pv .lbl {
+        color: rgb(214 222 245 / 0.7);
+      }
+      .field.focus .star.f-land:not(.sel) .core {
+        scale: 1.5;
+        opacity: 0.6;
+      }
+      .field.focus .star.sel .core {
+        scale: 2.7;
+      }
+      .field.focus .star.sel .ring {
+        opacity: 1;
+        scale: 1.35;
+        box-shadow: inset 0 0 0 1.5px var(--ink);
+      }
+      .field[data-mode='random'] .star.r-fixed .ring {
+        opacity: 1;
+        box-shadow: inset 0 0 0 1.5px var(--ink);
+        scale: 0.8;
+      }
+      .field[data-mode='random'] .star.r-fixed .core {
+        opacity: 1;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .star.flick .core {
+          animation: flick 520ms linear;
+        }
+        .star.bloom .core {
+          animation: bloom 950ms var(--ease);
+        }
+        .star.bloom .ring {
+          animation: ring-out 1100ms cubic-bezier(0.1, 0.6, 0.3, 1);
+        }
+        .star.bloom .flare {
+          animation: flare-in 950ms var(--ease);
+        }
+        .field.climax .star.f-land .core {
+          animation: pulse 1200ms var(--ease) calc(var(--i, 0) * 70ms) both;
+        }
+        .field.climax .star.f-land .flare {
+          animation: flare-in 1200ms var(--ease) calc(var(--i, 0) * 70ms) both;
+        }
+        /* 결과에 남은 별자리의 빛살이 아주 천천히 돈다 */
+        html[data-state='result'] .field[data-mode='fortune'] .star.f-land .flare {
+          animation: spin 40s linear infinite;
+        }
+      }
+      @keyframes flick {
+        20% {
+          opacity: 0.9;
+          scale: 1.8;
+        }
+        40% {
+          opacity: 0.1;
+        }
+        65% {
+          opacity: 0.7;
+        }
+      }
+      @keyframes bloom {
+        0% {
+          scale: 0.6;
+        }
+        28% {
+          scale: 4.4;
+          box-shadow:
+            0 0 14px 5px #fff,
+            0 0 40px 14px var(--halo);
+        }
+      }
+      @keyframes ring-out {
+        from {
+          opacity: 1;
+          scale: 0.3;
+        }
+        to {
+          opacity: 0;
+          scale: 3.4;
+        }
+      }
+      @keyframes flare-in {
+        0% {
+          scale: 0.2;
+          opacity: 0;
+        }
+        35% {
+          scale: 2.1;
+          opacity: 1;
+        }
+      }
+      @keyframes pulse {
+        30% {
+          scale: 3.4;
+          box-shadow:
+            0 0 14px 5px #fff,
+            0 0 44px 16px rgb(160 190 255 / 0.5);
+        }
+      }
+      @keyframes spin {
+        to {
+          rotate: 360deg;
+        }
+      }
+
+      .fx {
+        position: absolute;
+        top: -30px;
+        left: -30px;
+        pointer-events: none;
+      }
+
+      /* ─── 고정·제외 판: 하늘 위에 떠 있는 작은 패널 ───────────── */
+      .board {
+        --bw: 312px;
+        position: absolute;
+        z-index: 4;
+        top: 10px;
+        right: 16px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        width: var(--bw);
+        max-height: calc(100% - 20px);
+        padding: 10px 12px 12px;
+        border: 1px solid var(--line-strong);
+        background: rgb(8 10 20 / 0.72);
+        backdrop-filter: blur(8px);
+      }
+      html[data-state='random'] .board {
+        display: flex;
+      }
+      .scene[data-board='float'] .board {
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+      .board[data-open='false'] {
+        width: auto;
+        padding: 6px 8px 6px 12px;
+      }
+      .scene[data-board='float'] .board[data-open='false'] {
+        left: auto;
+      }
+      .bd-head {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 12px;
+      }
+      .bd-count {
+        font: 500 11.5px var(--font-mono);
+        color: var(--ink-2);
+        white-space: nowrap;
+      }
+      .bd-head .link {
+        margin-left: auto;
+        height: 22px;
+        white-space: nowrap;
+      }
+      .bd-grid {
+        display: grid;
+        flex: 1 1 auto;
+        grid-template-columns: repeat(9, minmax(0, 1fr));
+        grid-template-rows: repeat(5, minmax(0, 30px));
+        gap: 3px;
+        min-height: 0;
+      }
+      .board[data-open='false'] .bd-grid,
+      .board[data-open='false'] .bd-hint,
+      .board[data-open='false'] .bd-count {
+        display: none;
+      }
+      .cell {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 0;
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+        font: 500 12px / 1 var(--font-mono);
+        color: var(--ink-2);
+        transition:
+          color 200ms,
+          box-shadow 200ms,
+          scale 150ms var(--ease);
+      }
+      .cell:hover {
+        color: var(--ink);
+        box-shadow: inset 0 0 0 1px var(--ink-2);
+      }
+      .cell:active {
+        scale: 0.88;
+      }
+      .cell:focus-visible {
+        outline-offset: 1px;
+      }
+      /* 고정: 채운 네모 */
+      .cell[data-state='fixed'] {
+        background: var(--ink);
+        box-shadow: none;
+        font-weight: 700;
+        color: var(--canvas);
+      }
+      /* 제외: 빗금과 취소선 */
+      .cell[data-state='excluded'] {
+        color: var(--ink-3);
+        text-decoration: line-through;
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05);
+      }
+      .cell[data-state='excluded']::after {
+        content: '';
+        position: absolute;
+        inset: 48% 10%;
+        height: 1px;
+        background: var(--ink-3);
+        rotate: -40deg;
+      }
+      .bd-hint {
+        flex: none;
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--ink-3);
+      }
+      .bd-hint.bad {
+        color: #e0916f;
+      }
+      .bd-hint .gl {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        margin: 0 3px 0 1px;
+        vertical-align: -0.5px;
+      }
+      .bd-hint .gl.g-fix {
+        background: var(--ink);
+      }
+      .bd-hint .gl.g-ex {
+        position: relative;
+        box-shadow: inset 0 0 0 1px var(--ink-3);
+      }
+      .bd-hint .gl.g-ex::after {
+        content: '';
+        position: absolute;
+        inset: 4px -1px;
+        height: 1px;
+        background: var(--ink-2);
+        rotate: -40deg;
+      }
+      /* 넓은 화면: 판 옆으로 별을 비켜 놓는다 */
+      html[data-state='random'] .scene[data-board='dock'][data-open='true'] .field {
+        right: calc(312px + 46px);
+      }
+      html[data-state='random'] .scene[data-board='dock'] .sky-head {
+        padding-right: calc(312px + 40px);
+      }
+      /* 좁은 화면: 판이 하늘을 덮는 동안 별 번호는 숨긴다 */
+      html[data-state='random'] .scene[data-board='float'][data-open='true'] .lbl {
+        opacity: 0;
+      }
+      html[data-state='random'] .scene[data-board='float'][data-open='true'] .sky-head {
+        visibility: hidden;
+      }
+      html[data-state='random'] .scene[data-board='float'][data-open='true'] .field {
+        opacity: 0.55;
+      }
+      html[data-state='random'] .scene[data-board='float'] .sky-head {
+        padding-right: 130px;
+      }
+
+      /* ─── 아래 띠: 상태 뷰 ───────────────────────────────────── */
+      .bands {
+        position: relative;
+        z-index: 3;
+        display: grid;
+        flex: none;
+        border-top: 1px solid rgb(255 255 255 / 0.07);
+        background: linear-gradient(180deg, rgb(5 7 14 / 0.5), rgb(5 7 14 / 0.82));
+      }
+      .bands > .view {
+        display: none;
+        grid-area: 1 / 1;
+        flex: none;
+        min-width: 0;
+      }
+      html[data-state='input'] .view-input,
+      html[data-state='random'] .view-random,
+      html[data-state='analyzing'] .view-analyzing,
+      html[data-state='analyzing'] .view-result,
+      html[data-state='result'] .view-analyzing,
+      html[data-state='result'] .view-result {
+        display: flex;
+        flex-direction: column;
+      }
+      /* 걷기와 결과는 같은 칸에 겹쳐 두어 하늘 크기가 그대로다 */
+      html[data-state='analyzing'] .view-result,
+      html[data-state='result'] .view-analyzing {
+        visibility: hidden;
+      }
+      a.btn,
+      a.link {
+        text-decoration: none;
+      }
+
+      /* 안내 */
+      .in-band {
+        display: grid;
+        gap: 10px;
+        padding: 14px 16px 16px;
+      }
+      @media (min-width: 640px) {
+        .in-band {
+          padding: 18px 28px 20px;
+        }
+      }
+      @media (min-width: 700px) {
+        .in-band {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: end;
+          gap: 12px 40px;
+        }
+      }
+      .in-text {
+        display: grid;
+        gap: 8px;
+      }
+      .gate-title {
+        font-size: clamp(20px, 1.4vw + 12px, 34px);
+        line-height: 1.3;
+        font-weight: 750;
+        letter-spacing: -0.035em;
+      }
+      .aside {
+        max-width: 40em;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--ink-2);
+      }
+      @media (max-width: 639px) {
+        .aside {
+          font-size: 13px;
+          line-height: 1.55;
+        }
+      }
+      .go-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 20px;
+      }
+
+      /* 걷기 */
+      .an-band {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: 'slots skip' 'cap cap';
+        align-items: center;
+        align-content: center;
+        flex: 1;
+        gap: 10px 16px;
+        padding: 12px 16px;
+      }
+      @media (min-width: 700px) {
+        .an-band {
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          grid-template-areas: 'slots cap skip';
+          gap: 12px 28px;
+          padding: 16px 28px;
+        }
+      }
+      .slots {
+        grid-area: slots;
+        display: flex;
+        gap: 8px;
+      }
+      .slots .slot,
+      .slots .ball {
+        --size: 30px;
+      }
+      @media (max-width: 699px) {
+        .slots {
+          gap: 6px;
+        }
+        #skip .key {
+          display: none;
+        }
+      }
+      @media (min-width: 700px) {
+        .slots .slot,
+        .slots .ball {
+          --size: 40px;
+        }
+      }
+      .slot {
+        display: inline-block;
+        flex: none;
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px var(--line-strong);
+      }
+      .slots .ball {
+        box-shadow: 0 0 18px rgb(200 215 255 / 0.28);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .slots .ball.in {
+          animation: ball-in 420ms var(--ease) both;
+        }
+      }
+      @keyframes ball-in {
+        from {
+          scale: 0.4;
+          opacity: 0;
+        }
+      }
+      .caption {
+        grid-area: cap;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 2px 8px;
+        min-height: 3.1em;
+        align-content: center;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--ink-2);
+      }
+      @media (min-width: 700px) {
+        .caption {
+          justify-content: center;
+          min-height: 0;
+          font-size: 15px;
+          text-align: center;
+        }
+      }
+      .caption b {
+        font-weight: 700;
+        color: var(--ink);
+      }
+      .caption .cap-ch {
+        font-size: 22px;
+        line-height: 1;
+        font-weight: 700;
+        color: var(--ink);
+      }
+      .caption .num {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .caption .cap-to {
+        color: #b9cbff;
+      }
+      .caption > span {
+        white-space: nowrap;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .caption .swap {
+          animation: rise 280ms var(--ease) both;
+        }
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          translate: 0 6px;
+        }
+      }
+      #skip {
+        grid-area: skip;
+        height: 38px;
+        background: rgb(6 8 16 / 0.5);
+      }
+
+      /* 결과 */
+      .view-result {
+        position: relative;
+      }
+      .res-band {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: 'picks' 'why' 'meta' 'acts';
+        gap: 8px;
+        padding: 12px 16px;
+      }
+      @media (min-width: 700px) {
+        .res-band {
+          grid-template-columns: auto minmax(0, 1fr);
+          grid-template-areas: 'picks why' 'meta acts';
+          align-items: center;
+          gap: 14px 32px;
+          padding: 16px 28px;
+        }
+      }
+      .picks {
+        grid-area: picks;
+        display: flex;
+        gap: 8px;
+      }
+      .pick {
+        --size: 36px;
+        box-shadow: 0 0 18px rgb(200 215 255 / 0.25);
+        transition:
+          translate 200ms var(--ease),
+          scale 150ms var(--ease),
+          box-shadow 200ms;
+      }
+      @media (min-width: 700px) {
+        .picks {
+          gap: 10px;
+        }
+        .pick {
+          --size: 44px;
+        }
+      }
+      .pick:hover {
+        translate: 0 -2px;
+      }
+      .pick:active {
+        scale: 0.92;
+      }
+      .pick[aria-pressed='true'] {
+        translate: 0 -3px;
+        box-shadow:
+          0 0 0 2px #05070e,
+          0 0 0 3.5px var(--ink),
+          0 0 26px rgb(200 215 255 / 0.5);
+      }
+      .why {
+        grid-area: why;
+        height: 4.65em;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink-2);
+      }
+      @media (min-width: 700px) {
+        .why {
+          height: auto;
+          min-height: 3.1em;
+          font-size: 14.5px;
+        }
+      }
+      .why b {
+        color: var(--ink);
+      }
+      .res-meta {
+        grid-area: meta;
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 14px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--ink-3);
+      }
+      .meta b {
+        font-weight: 700;
+        color: var(--ink);
+      }
+      .meta span {
+        white-space: nowrap;
+      }
+      .note-inline {
+        display: none;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--ink-3);
+      }
+      @media (min-width: 1100px) and (min-height: 760px) {
+        .note-inline {
+          display: block;
+        }
+      }
+      .acts {
+        grid-area: acts;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 16px;
+      }
+      @media (min-width: 700px) {
+        .acts {
+          justify-content: flex-end;
+          gap: 8px 20px;
+        }
+      }
+      .acts .btn {
+        height: 38px;
+        background: rgb(6 8 16 / 0.5);
+      }
+      @media (max-width: 699px) {
+        .acts .btn {
+          height: 34px;
+          padding: 0 12px;
+        }
+      }
+      @media (max-width: 1099px) {
+        #toRandom {
+          display: none;
+        }
+      }
+      @media (min-width: 700px) and (max-width: 1099px) {
+        .pick {
+          --size: 40px;
+        }
+        .picks {
+          gap: 8px;
+        }
+      }
+      .notes {
+        position: absolute;
+        right: 12px;
+        bottom: calc(100% + 8px);
+        left: 12px;
+        z-index: 10;
+        display: grid;
+        gap: 8px;
+        max-width: 460px;
+        margin-left: auto;
+        padding: 14px 16px;
+        border: 1px solid var(--line-strong);
+        background: #070910;
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--ink-2);
+        animation: pop 160ms var(--ease) both;
+      }
+      .notes[hidden] {
+        display: none;
+      }
+      @media (min-width: 640px) {
+        .notes {
+          right: 28px;
+        }
+      }
+
+      /* 그냥 뽑기 */
+      .rd-band {
+        display: grid;
+        grid-template-areas: 'ctl' 'tk' 'foot';
+        gap: 8px;
+        padding: 10px 16px 12px;
+      }
+      @media (min-width: 900px) {
+        .rd-band {
+          grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+          grid-template-areas: 'ctl tk' 'foot tk';
+          align-content: start;
+          gap: 10px 32px;
+          padding: 14px 28px;
+        }
+      }
+      .rd-ctl {
+        grid-area: ctl;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+      }
+      #games button {
+        height: 32px;
+        padding: 0 11px;
+      }
+      #draw {
+        height: 38px;
+        padding: 0 20px;
+      }
+      @media (max-width: 420px) {
+        .rd-ctl .label {
+          display: none;
+        }
+      }
+      .tk-wrap {
+        grid-area: tk;
+        position: relative;
+        height: clamp(40px, calc((100dvh - 500px) * 0.5), 200px);
+        overflow: clip;
+      }
+      .tickets {
+        display: grid;
+        align-content: start;
+        gap: 4px;
+        height: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+      }
+      .ticket {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 36px;
+      }
+      .ticket .t-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: 30px;
+        font: 600 13px var(--font-mono);
+        color: var(--gc, var(--ink-3));
+      }
+      .ticket .t-label::before {
+        content: '';
+        width: 10px;
+        height: 2px;
+        background: var(--gc, var(--ink-3));
+      }
+      .ticket .t-balls {
+        display: flex;
+        gap: 6px;
+      }
+      .ticket .ball,
+      .ticket .slot {
+        --size: 30px;
+      }
+      .ticket .ball.fixed {
+        box-shadow:
+          0 0 0 2px #05070e,
+          0 0 0 3px var(--ink-2);
+      }
+      .ticket.past {
+        min-height: 30px;
+      }
+      .ticket.past .ball {
+        --size: 24px;
+        opacity: 0.7;
+      }
+      .ticket.past .t-label {
+        color: var(--ink-3);
+      }
+      .ticket.past .t-label::before {
+        background: var(--ink-3);
+      }
+      .tk-empty {
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink-3);
+      }
+      .tk-past-head {
+        margin-top: 8px;
+      }
+      .rd-foot {
+        grid-area: foot;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px 16px;
+      }
+      @media (min-width: 900px) {
+        .rd-foot {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+      .rd-note {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--ink-3);
+      }
+      @media (max-width: 899px) {
+        .rd-note {
+          font-size: 11.5px;
+        }
+      }
+      #copy-all {
+        flex: none;
+      }
+      .fly {
+        position: fixed;
+        z-index: 40;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="frame">
+      <section class="stage" id="stage" aria-labelledby="game-title" data-index="02" data-title="로또 번호 뽑기" data-kind="혼자">
+        <div class="sky-bg idle" id="skyBg" data-clips aria-hidden="true">
+          <canvas class="l-far" data-may-clip></canvas>
+          <canvas class="l-tw a" data-may-clip></canvas>
+          <canvas class="l-tw b" data-may-clip></canvas>
+          <canvas class="l-tw c" data-may-clip></canvas>
+        </div>
+        <div class="stage-body">
+          <div class="band">
+            <div class="seg" role="group" aria-label="뽑는 방식">
+              <button type="button" id="mode-fortune" aria-pressed="true">운세로 뽑기</button>
+              <button type="button" id="mode-random" aria-pressed="false">그냥 뽑기</button>
+            </div>
+            <p class="method" id="method"></p>
+            <button class="link" type="button" id="rulesBtn" aria-expanded="false" aria-controls="rules">별 잇는 규칙</button>
+            <div class="rules" id="rules" hidden>
+              <p><b>별 잇기</b> · 운빨데이가 만든 방식이에요. 재료(간지 순번, 하도 수, 상생·상극, 기신)는 명리에서 가져왔어요.</p>
+              <ol>
+                <li>별 45개가 번호 순서대로 한 줄 길로 이어져 있어요. 별빛의 오행은 끝자리 하도 수로 정해요. 1·6은 수, 2·7은 화, 3·8은 목, 4·9는 금, 5·0은 토예요.</li>
+                <li>오늘 일진의 60갑자 순번 별에서 출발해요. 태어난 시를 알면 시주 두 글자만큼 먼저 걸어 출발점을 옮겨요.</li>
+                <li>원국의 년·월·일 여섯 글자로 한 번씩 걷고, 내려앉은 별이 번호가 돼요. 걸음 수는 글자 번호(천간 1–10, 지지 1–12)에 오늘 일진의 같은 쪽 글자 번호를 더한 값이에요.</li>
+                <li>지금 별과 글자의 오행이 상극이면 작은 번호 쪽, 아니면 큰 번호 쪽으로 걸어요.</li>
+                <li>구름에 가린 기신 별이나 이미 빛난 별에 닿으면 한 별 더 가요.</li>
+              </ol>
+              <p>같은 날 같은 생일이면 언제나 같은 별자리예요. 어느 번호든 당첨 확률은 같아요.</p>
+            </div>
+          </div>
+
+          <!-- ─── 장면: 밤하늘 ─── -->
+          <div class="scene" id="scene" data-board="dock" data-open="true">
+            <div class="sky-head">
+              <p class="cname" id="cname"></p>
+              <p class="src" id="src"></p>
+            </div>
+            <div class="field-wrap">
+              <div class="field" id="field" role="img" data-mode="preview">
+                <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  <polygon class="road" id="road" />
+                  <g class="g-preview" id="gPreview"></g>
+                </svg>
+                <svg class="lines glow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  <g class="g-route" id="gRoute"></g>
+                  <g class="g-const" id="gConst"></g>
+                  <g class="g-rand" id="gRand"></g>
+                </svg>
+                <div id="stars" aria-hidden="true"></div>
+                <canvas class="fx" id="fx" data-may-clip aria-hidden="true"></canvas>
+              </div>
+            </div>
+            <div class="board" id="board" data-open="true" aria-label="고정·제외 판">
+              <div class="bd-head">
+                <span class="bd-count" id="bdCount"></span>
+                <button class="link" type="button" id="boardToggle" aria-expanded="true" aria-controls="bdGrid">접기</button>
+              </div>
+              <div class="bd-grid" id="bdGrid"></div>
+              <p class="bd-hint" id="rdHint" aria-live="polite"></p>
+            </div>
+          </div>
+
+          <div class="bands">
+            <!-- ─── 안내: 넘겨받은 원국이 없을 때 ─── -->
+            <div class="view view-input" id="viewInput">
+              <div class="in-band">
+                <div class="in-text">
+                  <span class="label">운세로 뽑기</span>
+                  <p class="gate-title">오늘의 운세에서 본 내 사주로 별을 이어요.</p>
+                  <p class="aside">운세로 뽑기는 오늘의 운세에서 본 내 사주로 걸어요. 생년월일은 여기서 받지 않아요. 운세 결과에서 "오늘의 행운 번호"를 누르면 사주 글자들이 오늘의 출발 별부터 하늘을 건너 나만의 별자리를 그려요.</p>
+                </div>
+                <div class="go-row">
+                  <a class="btn btn-primary" id="to-fortune" href="./fortune-sentence.html?lotto=stars">오늘의 운세 보러 가기 <span class="key" aria-hidden="true">→</span></a>
+                  <button class="link" type="button" id="gateRandom"><span>그냥 뽑기</span><span class="arrow" aria-hidden="true">→</span></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ─── 걷기 ─── -->
+            <div class="view view-analyzing" id="viewAnalyzing">
+              <div class="an-band">
+                <div class="slots" id="slots" aria-hidden="true"></div>
+                <p class="caption" id="caption" aria-live="polite"></p>
+                <button class="btn" type="button" id="skip">건너뛰기 <span class="key" aria-hidden="true">Enter</span></button>
+              </div>
+            </div>
+
+            <!-- ─── 결과 ─── -->
+            <div class="view view-result" id="viewResult">
+              <div class="res-band">
+                <div class="picks" id="picks" role="group" aria-label="오늘의 번호"></div>
+                <p class="why" id="why" aria-live="polite"></p>
+                <div class="res-meta">
+                  <p class="meta" id="meta"></p>
+                  <p class="note-inline">어느 번호든 1등 확률은 8,145,060분의 1로 같아요. 이건 오늘 내 사주가 걸어간 길이에요.</p>
+                </div>
+                <span class="acts">
+                  <a class="link" id="back" href="./fortune-sentence.html?lotto=stars"><span class="arrow" aria-hidden="true">←</span><span>오늘의 운세로</span></a>
+                  <button class="link" type="button" id="replay">다시 걷기</button>
+                  <button class="link" type="button" id="toRandom"><span>그냥 뽑기</span><span class="arrow" aria-hidden="true">→</span></button>
+                  <button class="link" type="button" id="notesBtn" aria-expanded="false" aria-controls="notes">안내</button>
+                  <button class="btn" type="button" id="copy">번호 복사</button>
+                </span>
+              </div>
+              <div class="notes" id="notes" hidden>
+                <p>어느 번호든 1등 확률은 8,145,060분의 1로 같아요. 이건 오늘 내 사주가 걸어간 길이에요.</p>
+                <p>로또는 만 19세 이상, 한 회 10만 원까지 살 수 있어요.</p>
+                <p>보너스 번호는 추첨에서 정해져요. 내 번호 중 하나가 보너스 번호와 맞으면 2등을 가를 때 쓰여요.</p>
+              </div>
+            </div>
+
+            <!-- ─── 그냥 뽑기 ─── -->
+            <div class="view view-random" id="viewRandom">
+              <div class="rd-band">
+                <div class="rd-ctl">
+                  <span class="label">게임 수</span>
+                  <div class="seg" id="games" role="group" aria-label="게임 수">
+                    <button type="button" data-n="1" aria-pressed="true">1</button>
+                    <button type="button" data-n="2" aria-pressed="false">2</button>
+                    <button type="button" data-n="3" aria-pressed="false">3</button>
+                    <button type="button" data-n="4" aria-pressed="false">4</button>
+                    <button type="button" data-n="5" aria-pressed="false">5</button>
+                  </div>
+                  <button class="btn btn-primary" type="button" id="draw">뽑기</button>
+                </div>
+                <div class="tk-wrap" data-clips><div class="tickets" id="tickets" data-scrolls aria-live="polite"></div></div>
+                <div class="rd-foot">
+                  <p class="rd-note">모든 번호가 같은 확률로 나와요. 자주 나온 번호 같은 통계 필터는 넣지 않았어요.</p>
+                  <button class="link" type="button" id="copy-all">전부 복사</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      /* 스테이지 헤더 심볼: components/game-symbol.tsx의 lotto */
+      window.STAGE_SYMBOL =
+        '<circle cx="24" cy="13" r="7"/><circle cx="13" cy="32" r="7"/><circle class="f" cx="35" cy="32" r="7"/><circle cx="35" cy="32" r="7"/>'
+    </script>
+    <script src="./shared/chrome.js"></script>
+    <script src="./shared/lotto.bundle.js"></script>
+    <script>
+      ;(() => {
+      'use strict'
+
+      const L = window.Lotto
+      const { ELEMENTS, ELEMENTS_HANJA, pad2 } = L
+      const $ = (s) => document.querySelector(s)
+      const html = document.documentElement
+      const params = new URLSearchParams(location.search)
+      const demo = params.get('demo')
+      const reduced = () => Mock.reduced.matches
+      const NS = 'http://www.w3.org/2000/svg'
+      L.ballScheme('mono')
+
+      /* ── 말 ─────────────────────────────────────────────── */
+      const SIDE = { stem: '간', branch: '지' }
+      const pillarLabel = (m) => L.PILLARS[m.pillar] + SIDE[m.side]
+      const HOUR_NAMES = ['자시', '축시', '인시', '묘시', '진시', '사시', '오시', '미시', '신시', '유시', '술시', '해시']
+      const hasFinal = (w) => {
+        const i = w.charCodeAt(w.length - 1) - 0xac00
+        return i >= 0 && i <= 11171 && i % 28 !== 0
+      }
+      const topic = (w) => (hasFinal(w) ? '은' : '는')
+      const narrow = matchMedia('(max-width: 699px)')
+      const wide = matchMedia('(min-width: 900px)')
+      const elFull = (e) => `${ELEMENTS[e]}(${ELEMENTS_HANJA[e]})`
+      const REL = { same: '같은 기운', gen: '상생', clash: '상극' }
+      const dirWord = (dir) => (dir > 0 ? '큰 번호 쪽' : '작은 번호 쪽')
+      const hourRange = (b, shift) => {
+        const from = (((b * 120 - 60 + shift) % 1440) + 1440) % 1440
+        const f = (m) => `${pad2(Math.floor((m % 1440) / 60))}:${pad2(m % 60)}`
+        return `${f(from)}–${f(from + 120)}`
+      }
+      const svgEl = (tag, attrs) => {
+        const e = document.createElementNS(NS, tag)
+        for (const k in attrs) e.setAttribute(k, attrs[k])
+        return e
+      }
+
+      /* ── 타이머 ─────────────────────────────────────────── */
+      let timers = []
+      const later = (ms, fn) => timers.push(setTimeout(fn, ms))
+      const stopTimers = () => {
+        timers.forEach(clearTimeout)
+        timers = []
+      }
+
+      /* ── 하늘: 별 45개의 자리 ────────────────────────────────
+         결정적 의사난수로 흩뿌리되(은하수 띠 쪽이 조금 더 촘촘하다) 서로 일정 거리 이상 떨어뜨린다.
+         가로가 세로의 두 배인 하늘을 기준으로 거리를 재고, 실제 하늘 비율에 맞게 늘인다.
+         번호는 가까운 별끼리 잇는 순회로(최근접 + 2-opt, 교차 없음)를 따라 붙인다. 그래서 1–45 길이 하늘을 구불구불 돈다. */
+      function mulberry32(a) {
+        return () => {
+          a |= 0
+          a = (a + 0x6d2b79f5) | 0
+          let t = Math.imul(a ^ (a >>> 15), 1 | a)
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+        }
+      }
+      const VA = 2
+      const vd = (a, b) => Math.hypot((a[0] - b[0]) * VA, a[1] - b[1])
+      /* 은하수 띠: 왼쪽 아래 → 오른쪽 위 */
+      const bandDist = (x, y) => {
+        const dx = 1, dy = -0.8
+        const t = (x * dx + (y - 0.9) * dy) / (dx * dx + dy * dy)
+        return Math.hypot((x - t * dx) * VA, y - (0.9 + t * dy))
+      }
+      const SKY = (() => {
+        const rnd = mulberry32(2026)
+        let dmin = 0.18
+        let pts = []
+        for (;;) {
+          pts = []
+          let tries = 0
+          while (pts.length < 45 && tries < 60000) {
+            tries++
+            const x = 0.015 + rnd() * 0.97
+            const y = 0.02 + rnd() * 0.96
+            if (rnd() > 0.45 + 0.55 * Math.exp(-((bandDist(x, y) / 0.32) ** 2))) continue
+            if (pts.every((p) => vd(p, [x, y]) >= dmin)) pts.push([x, y])
+          }
+          if (pts.length === 45) break
+          dmin *= 0.97
+        }
+        const n = pts.length
+        let first = 0
+        pts.forEach((p, i) => {
+          if (p[0] < pts[first][0]) first = i
+        })
+        const used = new Set([first])
+        const t = [first]
+        while (t.length < n) {
+          const last = pts[t.at(-1)]
+          let best = -1
+          let bd = 1e9
+          for (let i = 0; i < n; i++)
+            if (!used.has(i) && vd(last, pts[i]) < bd) {
+              bd = vd(last, pts[i])
+              best = i
+            }
+          used.add(best)
+          t.push(best)
+        }
+        for (let improved = true; improved; ) {
+          improved = false
+          for (let i = 0; i < n - 1; i++)
+            for (let j = i + 2; j < n; j++) {
+              if (i === 0 && j === n - 1) continue
+              const a = pts[t[i]], b = pts[t[i + 1]], c = pts[t[j]], e = pts[t[(j + 1) % n]]
+              if (vd(a, c) + vd(b, e) < vd(a, b) + vd(c, e) - 1e-9) {
+                t.splice(i + 1, j - i, ...t.slice(i + 1, j + 1).reverse())
+                improved = true
+              }
+            }
+        }
+        return t.map((i) => pts[i])
+      })()
+      const X = [], Y = [], MAG = []
+      SKY.forEach(([x, y], i) => {
+        X[i + 1] = x
+        Y[i + 1] = y
+      })
+      {
+        const r = mulberry32(4545)
+        for (let n = 1; n <= 45; n++) MAG[n] = { s: 2.6 + r() * 2.4, o: 0.62 + r() * 0.36 }
+      }
+
+      /* ── 별 45개 ────────────────────────────────────────── */
+      const stage = $('#stage')
+      const scene = $('#scene')
+      const field = $('#field')
+      const gConst = $('#gConst')
+      const gRoute = $('#gRoute')
+      const gRand = $('#gRand')
+      const gPreview = $('#gPreview')
+      const stars = []
+      {
+        let s = ''
+        for (let n = 1; n <= 45; n++)
+          s += `<span class="star" data-n="${n}" data-el="${L.elementColor(n)}" style="--x:${X[n].toFixed(4)};--y:${Y[n].toFixed(4)};--s:${MAG[n].s.toFixed(2)}px;--o:${MAG[n].o.toFixed(2)}"><i class="flare"></i><i class="core"></i><i class="ring"></i><b class="lbl">${n}</b></span>`
+        $('#stars').innerHTML = s
+        $('#stars').querySelectorAll('.star').forEach((el) => (stars[+el.dataset.n] = el))
+      }
+      const P = (n) => `${(X[n] * 100).toFixed(2)},${(Y[n] * 100).toFixed(2)}`
+      $('#road').setAttribute('points', Array.from({ length: 45 }, (_, i) => P(i + 1)).join(' '))
+      const starsClear = (...cls) => stars.forEach((s) => s && s.classList.remove(...cls))
+
+      /** 선 하나. ms를 주면 그어 나간다 */
+      function addLine(g, a, b, cls, { ms = 0, attrs = {} } = {}) {
+        const line = svgEl('line', {
+          x1: (X[a] * 100).toFixed(2), y1: (Y[a] * 100).toFixed(2),
+          x2: (X[b] * 100).toFixed(2), y2: (Y[b] * 100).toFixed(2),
+          class: cls, ...attrs,
+        })
+        g.append(line)
+        if (ms) growPath(line, [a, b], ms)
+        return line
+      }
+      /** 선을 그어 나간다. 점선 대시(pathLength)는 non-scaling-stroke와 함께 쓰면 깨져서, 끝점을 직접 늘린다 */
+      function growPath(el, pts, ms) {
+        if (reduced()) return
+        const xy = pts.map((n) => [X[n] * 100, Y[n] * 100])
+        const seg = []
+        let total = 0
+        for (let i = 1; i < xy.length; i++) {
+          const d = Math.hypot((xy[i][0] - xy[i - 1][0]) * (FW || 1), (xy[i][1] - xy[i - 1][1]) * (FH || 1))
+          seg.push(d)
+          total += d
+        }
+        const set = (e) => {
+          let left = e * total
+          const out = [xy[0]]
+          for (let i = 1; i < xy.length; i++) {
+            if (left >= seg[i - 1]) {
+              out.push(xy[i])
+              left -= seg[i - 1]
+              continue
+            }
+            const f = seg[i - 1] ? left / seg[i - 1] : 1
+            out.push([xy[i - 1][0] + (xy[i][0] - xy[i - 1][0]) * f, xy[i - 1][1] + (xy[i][1] - xy[i - 1][1]) * f])
+            break
+          }
+          if (el.tagName === 'line') {
+            const [x, y] = out.at(-1)
+            el.setAttribute('x2', x.toFixed(2))
+            el.setAttribute('y2', y.toFixed(2))
+          } else el.setAttribute('points', out.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' '))
+        }
+        set(0)
+        const t0 = performance.now()
+        effects.push((now) => {
+          const k = Math.min(1, Math.max(0, (now - t0) / ms))
+          set(1 - (1 - k) ** 3)
+          if (k >= 1) return false
+        })
+        fxKick()
+      }
+
+      /* ── 별 번호 자리: 이웃 별·번호와 겹치지 않는 쪽에 붙인다 ── */
+      let FW = 0, FH = 0
+      const FXM = 30
+      const fxCanvas = $('#fx')
+      const fxc = fxCanvas.getContext('2d')
+      let dpr = 1
+      function layoutField() {
+        FW = field.clientWidth
+        FH = field.clientHeight
+        if (!FW || !FH) return
+        const fs = FW >= 760 ? 11 : 10
+        field.style.setProperty('--lfs', fs + 'px')
+        const cw = fs * 0.62
+        const lh = Math.ceil(fs * 1.3)
+        const ov = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t))
+        const placed = []
+        for (let n = 1; n <= 45; n++) {
+          const x = X[n] * FW
+          const y = Y[n] * FH
+          const lw = String(n).length * cw + 2
+          const C = [
+            [5, -lh - 1], [7, -lh / 2], [5, 2], [-5 - lw, -lh - 1],
+            [-7 - lw, -lh / 2], [-5 - lw, 2], [-lw / 2, -lh - 7], [-lw / 2, 7],
+          ]
+          let best = null
+          let bs = Infinity
+          C.forEach(([dx, dy], ci) => {
+            const r = { l: x + dx, t: y + dy, r: x + dx + lw, b: y + dy + lh }
+            let s = ci * 0.5
+            for (const q of placed) s += ov(r, q) * 40
+            for (let m = 1; m <= 45; m++) {
+              if (m === n) continue
+              const cx = X[m] * FW, cy = Y[m] * FH
+              s += ov(r, { l: cx - 6, t: cy - 6, r: cx + 6, b: cy + 6 }) * 2
+            }
+            if (r.l < -20 || r.r > FW + 20 || r.t < -8 || r.b > FH + 10) s += 1e5
+            if (s < bs) {
+              bs = s
+              best = [dx, dy, r]
+            }
+          })
+          placed.push(best[2])
+          stars[n].style.setProperty('--lx', best[0].toFixed(1) + 'px')
+          stars[n].style.setProperty('--ly', best[1].toFixed(1) + 'px')
+        }
+        dpr = Math.min(2, window.devicePixelRatio || 1)
+        fxCanvas.width = Math.round((FW + FXM * 2) * dpr)
+        fxCanvas.height = Math.round((FH + FXM * 2) * dpr)
+        fxCanvas.style.width = FW + FXM * 2 + 'px'
+        fxCanvas.style.height = FH + FXM * 2 + 'px'
+      }
+      new ResizeObserver(layoutField).observe(field)
+
+      /* ── 하늘 배경: 성운과 먼지 별(정적으로 한 번 그리고, 층마다 반짝임·시차만 준다) ── */
+      const bgCanvases = [...document.querySelectorAll('#skyBg canvas')]
+      function paintSky() {
+        const W = Math.ceil(stage.clientWidth) + 40
+        const H = Math.ceil(stage.clientHeight) + 40
+        if (W < 60 || H < 60) return
+        const d = Math.min(2, window.devicePixelRatio || 1)
+        const rnd = mulberry32(99)
+        const gauss = () => {
+          const u = Math.max(1e-6, rnd())
+          return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rnd())
+        }
+        const ctxs = bgCanvases.map((c) => {
+          c.width = Math.round(W * d)
+          c.height = Math.round(H * d)
+          c.style.width = W + 'px'
+          c.style.height = H + 'px'
+          const x = c.getContext('2d')
+          x.setTransform(d, 0, 0, d, 0, 0)
+          return x
+        })
+        /* 은하수 축: 왼쪽 아래에서 오른쪽 위로 */
+        const along = (t, off) => {
+          const x0 = -0.05 * W, y0 = 1.0 * H, x1 = 1.05 * W, y1 = 0.02 * H
+          const lx = x1 - x0, ly = y1 - y0, len = Math.hypot(lx, ly)
+          return [x0 + lx * t + (-ly / len) * off, y0 + ly * t + (lx / len) * off]
+        }
+        const far = ctxs[0]
+        const glowAt = (c, x, y, r, rgb, a) => {
+          const g = c.createRadialGradient(x, y, 0, x, y, r)
+          g.addColorStop(0, `rgba(${rgb},${a})`)
+          g.addColorStop(1, `rgba(${rgb},0)`)
+          c.fillStyle = g
+          c.beginPath()
+          c.arc(x, y, r, 0, Math.PI * 2)
+          c.fill()
+        }
+        const NEB = ['92,120,255', '150,96,230', '70,190,210', '255,150,190', '120,150,255']
+        const span = Math.min(W, H)
+        for (let i = 0; i < 34; i++) {
+          const [x, y] = along(rnd(), gauss() * span * 0.1)
+          glowAt(far, x, y, span * (0.12 + rnd() * 0.26), NEB[i % NEB.length], 0.03 + rnd() * 0.055)
+        }
+        /* 띠의 먼지 */
+        for (let i = 0; i < 2600; i++) {
+          const t = rnd()
+          const [x, y] = along(t, gauss() * span * (0.09 + 0.05 * Math.sin(t * 9)))
+          far.fillStyle = `rgba(222,228,255,${(0.06 + rnd() * 0.32).toFixed(3)})`
+          const r = 0.3 + rnd() * 0.55
+          far.fillRect(x, y, r, r)
+        }
+        for (let i = 0; i < 420; i++) {
+          far.fillStyle = `rgba(222,228,255,${(0.05 + rnd() * 0.25).toFixed(3)})`
+          far.fillRect(rnd() * W, rnd() * H, 0.8, 0.8)
+        }
+        /* 어두운 먼지 결 */
+        far.globalCompositeOperation = 'destination-out'
+        for (let i = 0; i < 9; i++) {
+          const [x, y] = along(0.1 + rnd() * 0.8, gauss() * span * 0.03)
+          far.save()
+          far.translate(x, y)
+          far.rotate(-0.75 + gauss() * 0.15)
+          far.scale(3.2, 0.5)
+          glowAt(far, 0, 0, span * (0.05 + rnd() * 0.05), '0,0,0', 0.35)
+          far.restore()
+        }
+        far.globalCompositeOperation = 'source-over'
+        /* 반짝이는 별 세 층 */
+        const TINTS = ['255,255,255', '214,226,255', '255,236,214', '200,220,255']
+        for (let L2 = 1; L2 <= 3; L2++) {
+          const c = ctxs[L2]
+          for (let i = 0; i < 90; i++) {
+            let x, y
+            if (rnd() < 0.45) [x, y] = along(rnd(), gauss() * span * 0.16)
+            else [x, y] = [rnd() * W, rnd() * H]
+            const r = 0.4 + rnd() ** 2.4 * 1.3
+            const a = 0.3 + rnd() * 0.6
+            const tint = TINTS[Math.floor(rnd() * TINTS.length)]
+            if (r > 1.05) glowAt(c, x, y, r * 6, tint, 0.14)
+            c.fillStyle = `rgba(${tint},${a.toFixed(3)})`
+            c.beginPath()
+            c.arc(x, y, r, 0, Math.PI * 2)
+            c.fill()
+            if (r > 1.45) {
+              c.strokeStyle = `rgba(${tint},0.22)`
+              c.lineWidth = 0.6
+              c.beginPath()
+              c.moveTo(x - r * 6, y)
+              c.lineTo(x + r * 6, y)
+              c.moveTo(x, y - r * 6)
+              c.lineTo(x, y + r * 6)
+              c.stroke()
+            }
+          }
+        }
+      }
+      let skyTimer = 0
+      new ResizeObserver(() => {
+        clearTimeout(skyTimer)
+        skyTimer = setTimeout(paintSky, 120)
+      }).observe(stage)
+      paintSky()
+
+      /* 시차: 포인터 쪽으로 층마다 다르게 아주 조금 */
+      let pxRaf = 0
+      stage.addEventListener('pointermove', (e) => {
+        if (reduced() || e.pointerType !== 'mouse' || pxRaf) return
+        pxRaf = requestAnimationFrame(() => {
+          pxRaf = 0
+          const r = stage.getBoundingClientRect()
+          stage.style.setProperty('--px', (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3))
+          stage.style.setProperty('--py', (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3))
+        })
+      })
+      /* 큰 전환 중에는 대기 효과를 멈춘다(theme.css의 .idle 규칙) */
+
+      /* ── 빛 효과(캔버스): 빛 한 점의 꼬리, 번쩍임, 별똥별. 할 일이 없으면 루프를 멈춘다 ── */
+      let effects = []
+      let fxRaf = 0
+      let walker = null
+      const at = (p) => (typeof p === 'number' ? [FXM + X[p] * FW, FXM + Y[p] * FH] : [FXM + p[0] * FW, FXM + p[1] * FH])
+      function fxKick() {
+        if (!fxRaf) fxRaf = requestAnimationFrame(fxFrame)
+      }
+      function fxFrame(now) {
+        fxRaf = 0
+        if (walker) walker.tick(now)
+        fxc.setTransform(dpr, 0, 0, dpr, 0, 0)
+        fxc.clearRect(0, 0, FW + FXM * 2, FH + FXM * 2)
+        fxc.globalCompositeOperation = 'lighter'
+        if (walker) walker.draw(now)
+        /* 효과가 도는 중에 새 효과를 더할 수 있어서, 목록을 떼어 낸 뒤 돌리고 다시 합친다 */
+        const list = effects
+        effects = []
+        const keep = list.filter((e) => e(now) !== false)
+        effects = keep.concat(effects)
+        fxc.globalCompositeOperation = 'source-over'
+        if (walker || effects.length) fxKick()
+      }
+      function fxClear() {
+        effects = []
+        cancelAnimationFrame(fxRaf)
+        fxRaf = 0
+        fxc.setTransform(1, 0, 0, 1, 0, 0)
+        fxc.clearRect(0, 0, fxCanvas.width, fxCanvas.height)
+      }
+      function glow(x, y, r, stops) {
+        const g = fxc.createRadialGradient(x, y, 0, x, y, r)
+        stops.forEach(([o, c]) => g.addColorStop(o, c))
+        fxc.fillStyle = g
+        fxc.beginPath()
+        fxc.arc(x, y, r, 0, Math.PI * 2)
+        fxc.fill()
+      }
+      /** 번쩍임: 빛이 퍼지며 사라진다 */
+      function flash(p, { r = 40, dur = 700, rgb = '255,255,255', a = 0.85 } = {}) {
+        if (reduced() || !FW) return
+        const t0 = performance.now()
+        effects.push((now) => {
+          const k = Math.max(0, (now - t0) / dur)
+          if (k >= 1) return false
+          const [x, y] = at(p)
+          const al = a * (1 - k) ** 2
+          glow(x, y, r * (0.3 + 0.7 * Math.sqrt(k)), [[0, `rgba(${rgb},${al})`], [0.35, `rgba(${rgb},${al * 0.35})`], [1, `rgba(${rgb},0)`]])
+        })
+        fxKick()
+      }
+      /** 별똥별: a에서 b로 떨어지며 꼬리를 끈다 */
+      function streak(a, b, { dur = 300, rgb = '255,255,255', len = 80, alpha = 1, onEnd } = {}) {
+        if (reduced() || !FW) {
+          onEnd && onEnd()
+          return
+        }
+        const t0 = performance.now()
+        let ended = false
+        effects.push((now) => {
+          const k = Math.min(1, Math.max(0, (now - t0) / dur))
+          const e = k ** 1.5
+          const [ax, ay] = at(a)
+          const [bx, by] = at(b)
+          const dx = bx - ax, dy = by - ay
+          const dl = Math.hypot(dx, dy) || 1
+          const hx = ax + dx * e, hy = ay + dy * e
+          const tl = Math.min(len, dl * e)
+          const tx = hx - (dx / dl) * tl, ty = hy - (dy / dl) * tl
+          const fade = k < 0.85 ? 1 : 1 - (k - 0.85) / 0.15
+          const g = fxc.createLinearGradient(tx, ty, hx, hy)
+          g.addColorStop(0, `rgba(${rgb},0)`)
+          g.addColorStop(1, `rgba(${rgb},${0.95 * alpha * fade})`)
+          fxc.strokeStyle = g
+          fxc.lineWidth = 1.7
+          fxc.lineCap = 'round'
+          fxc.beginPath()
+          fxc.moveTo(tx, ty)
+          fxc.lineTo(hx, hy)
+          fxc.stroke()
+          glow(hx, hy, 9, [[0, `rgba(255,255,255,${0.9 * alpha * fade})`], [0.4, `rgba(${rgb},${0.4 * alpha * fade})`], [1, `rgba(${rgb},0)`]])
+          if (k >= 1) {
+            if (!ended) {
+              ended = true
+              onEnd && onEnd()
+            }
+            return false
+          }
+        })
+        fxKick()
+      }
+
+      /* ── 넘겨받은 원국 ──────────────────────────────────── */
+      /* 오늘의 운세 결과의 "오늘의 행운 번호"가 남긴 프로필({y,m,d,time,calendar}). 앱은 메모리로 넘긴다 */
+      const PROFILE_KEY = 'unbbal.lotto.profile'
+      function storedProfile() {
+        try {
+          const v = JSON.parse(sessionStorage.getItem(PROFILE_KEY))
+          if (v && v.y && v.m && v.d) return { y: +v.y, m: +v.m, d: +v.d, time: v.time || '', calendar: v.calendar || 'solar' }
+        } catch {}
+        return null
+      }
+      const PILLAR_SUFFIX = { year: '년', month: '월', day: '일', hour: '시' }
+      const chartText = (chart) =>
+        ['year', 'month', 'day', 'hour']
+          .filter((k) => chart[k])
+          .map((k) => L.ganji(chart[k]) + PILLAR_SUFFIX[k])
+          .join(' ')
+      let isDemo = false
+      const srcHTML = (r) =>
+        `${isDemo ? '예시 원국' : narrow.matches ? '가져온 원국' : '오늘의 운세에서 가져온 원국'} · <b>${chartText(r.chart)}</b>`
+      $('#gateRandom').addEventListener('click', () => setMode('random'))
+
+      /* ── 안내 화면의 하늘: 오늘의 출발 별과 예시 별자리 ── */
+      const today = L.todayOf(Date.now(), L.localZone())
+      const todayStart = (L.sexagenary(today.day) % 45) + 1
+      const dayName = (d) => `${L.ganji(d)}일`
+      stars[todayStart].classList.add('today')
+      {
+        const pv = L.fortuneDraw(L.DEMO)
+        if (pv) {
+          const p = pv.orbit.picks
+          p.forEach((n, i) => {
+            stars[n].classList.add('pv')
+            if (i) addLine(gPreview, p[i - 1], n, 'pvl')
+          })
+        }
+      }
+
+      /* ── 하늘 머리글 ────────────────────────────────────── */
+      let draw = null
+      function skyHead() {
+        const st = html.dataset.state
+        const cname = $('#cname')
+        const src = $('#src')
+        if (st === 'random') {
+          cname.innerHTML = '별똥별 뽑기'
+          src.innerHTML = '누를 때마다 별 여섯 개가 떨어져요'
+        } else if (st === 'input' || !draw) {
+          cname.innerHTML = `오늘의 하늘 · ${dayName(today.day)} <span class="hj">${L.ganjiHanja(today.day)}</span>`
+          src.innerHTML = `오늘은 <b>${todayStart}번 별</b>에서 출발해요 · 선은 예시 별자리`
+        } else {
+          cname.innerHTML = `오늘의 별자리 · ${dayName(draw.today.day)} <span class="hj">${L.ganjiHanja(draw.today.day)}</span>`
+          src.innerHTML = srcHTML(draw)
+        }
+      }
+
+      /* ── 운세 모드의 하늘 칠하기 ─────────────────────────── */
+      function clearFortune() {
+        starsClear('gi', 'start', 'f-land', 'pass', 'flick', 'bloom', 'sel')
+        gConst.replaceChildren()
+        gRoute.replaceChildren()
+        field.classList.remove('climax', 'focus')
+      }
+      function markGi(o) {
+        for (let n = 1; n <= 45; n++) stars[n].classList.toggle('gi', L.cellElement(n) === o.gi)
+      }
+      function paintFortune(r) {
+        const o = r.orbit
+        clearFortune()
+        markGi(o)
+        stars[o.start].classList.add('start')
+        o.picks.forEach((n, i) => {
+          stars[n].classList.add('f-land')
+          stars[n].style.setProperty('--i', i)
+          if (i) addLine(gConst, o.picks[i - 1], n, 'cl', { attrs: { 'data-a': o.picks[i - 1], 'data-b': n } })
+        })
+        fillSlots(o.picks)
+        $('#cname').classList.remove('dim')
+      }
+      const ballSpan = (n, cls = '') =>
+        `<span class="ball ${cls}" data-range="${L.rangeColor(n)}" data-el="${L.elementColor(n)}">${pad2(n)}</span>`
+      function fillSlots(list = []) {
+        $('#slots').innerHTML = Array.from({ length: 6 }, (_, i) => (list[i] ? ballSpan(list[i]) : '<span class="slot"></span>')).join('')
+      }
+
+      /* ── 걷기: 빛 한 점이 1–45 길을 따라 별을 건너간다 ─────── */
+      const CAP = $('#caption')
+      function caption(h) {
+        CAP.innerHTML = h
+      }
+      function moveCaption(m) {
+        const head = `<span class="swap"><b class="cap-ch">${m.hanja}</b></span><span class="swap"><b>${pillarLabel(m)} ${m.char}</b> · ${ELEMENTS[m.el]}</span>`
+        if (!m.land)
+          return `${head}<span class="swap"><span class="num">${m.steps}</span>걸음 · 출발점만 옮겨요</span>`
+        return `${head}<span class="swap"><span class="num">${m.value}+${m.plus}=${m.steps}</span>걸음</span><span class="swap">${REL[m.rel]}이라 ${dirWord(m.dir)}으로</span>`
+      }
+      function makeWalker(r, slow) {
+        const o = r.orbit
+        const base = o.moves.map((m) => (m.land ? Math.min(1000, 420 + m.path.length * 30) : Math.min(560, 260 + m.path.length * 28)))
+        const pause = o.moves.map((m) => (m.land ? 260 : 140))
+        const sum = (a) => a.reduce((x, y) => x + y, 0)
+        const natural = 800 + sum(base) + sum(pause)
+        const sc = Math.min(1, 7300 / natural) * slow
+        let t = 800 * sc
+        const plan = o.moves.map((m, k) => {
+          const p = { m, k, t0: t, dur: base[k] * sc, pts: [m.from, ...m.path], fired: 0, started: false, done: false }
+          t += (base[k] + pause[k]) * sc
+          return p
+        })
+        const climaxT = t + 120 * slow
+        const endT = climaxT + 1500 * slow
+        const W = { t0: performance.now(), trail: [], pos: [X[o.start], Y[o.start]], landed: [], intro: false, climaxed: false }
+        const onHop = (p, j) => {
+          const n = p.pts[j]
+          const m = p.m
+          const hops = p.pts.length - 1
+          if (j >= hops) return
+          if (m.land && j >= m.steps) {
+            const s = m.skipped[j - m.steps]
+            stars[n].classList.remove('flick')
+            stars[n].getBoundingClientRect()
+            stars[n].classList.add('flick')
+            CAP.insertAdjacentHTML(
+              'beforeend',
+              `<span class="swap">${n}번은 ${s && s.why === 'taken' ? '이미 빛난 별' : '구름 속 기신 별'}이라 한 별 더</span>`
+            )
+          } else {
+            const s = stars[n]
+            s.classList.add('pass')
+            setTimeout(() => s.classList.remove('pass'), 230)
+            flash(n, { r: 16, dur: 380, rgb: '190,210,255', a: 0.6 })
+          }
+        }
+        const onEnd = (p) => {
+          const m = p.m
+          if (!m.land) {
+            flash(m.to, { r: 30, dur: 600, rgb: '150,180,255', a: 0.7 })
+            CAP.insertAdjacentHTML('beforeend', `<span class="swap cap-to">→ ${m.to}번 별에서 다시 출발</span>`)
+            return
+          }
+          const s = stars[m.to]
+          const i = W.landed.length
+          W.landed.push(m.to)
+          s.style.setProperty('--i', i)
+          s.classList.add('f-land', 'bloom')
+          setTimeout(() => s.classList.remove('bloom'), 1150)
+          flash(m.to, { r: 80, dur: 1000, rgb: '200,215,255', a: 0.75 })
+          flash(m.to, { r: 22, dur: 500, rgb: '255,255,255', a: 1 })
+          if (i) addLine(gConst, W.landed[i - 1], m.to, 'cl', { ms: 520, attrs: { 'data-a': W.landed[i - 1], 'data-b': m.to } })
+          const slot = $('#slots').children[i]
+          if (slot) {
+            slot.outerHTML = ballSpan(m.to, 'in')
+          }
+          CAP.insertAdjacentHTML('beforeend', `<span class="swap cap-to">→ <b>${m.to}번 별</b></span>`)
+        }
+        W.tick = (now) => {
+          const t = Math.max(0, now - W.t0)
+          if (!W.intro && t > 160) {
+            W.intro = true
+            flash(o.start, { r: 46, dur: 900, rgb: '150,180,255', a: 0.8 })
+          }
+          let cur = null
+          for (const p of plan) {
+            if (t < p.t0) break
+            cur = p
+            if (!p.started) {
+              p.started = true
+              caption(moveCaption(p.m))
+            }
+            const hops = p.pts.length - 1
+            const k = Math.min(1, (t - p.t0) / p.dur)
+            const e = 0.5 - Math.cos(Math.PI * k) / 2
+            const reach = Math.min(hops, Math.floor(e * hops + 1e-6))
+            while (p.fired < reach) {
+              p.fired++
+              onHop(p, p.fired)
+            }
+            if (k >= 1 && !p.done) {
+              p.done = true
+              onEnd(p)
+            }
+          }
+          if (cur) {
+            const hops = cur.pts.length - 1
+            const k = Math.min(1, (t - cur.t0) / cur.dur)
+            const e = (0.5 - Math.cos(Math.PI * k) / 2) * hops
+            const i = Math.min(hops - 1, Math.floor(e))
+            const f = e - i
+            const a = cur.pts[i], b = cur.pts[i + 1]
+            W.pos = [X[a] + (X[b] - X[a]) * f, Y[a] + (Y[b] - Y[a]) * f]
+          }
+          W.trail.push({ p: W.pos, t: now })
+          while (W.trail.length && now - W.trail[0].t > 460) W.trail.shift()
+          if (t >= climaxT && !W.climaxed) {
+            W.climaxed = true
+            climax(r)
+          }
+          if (t >= endT) finishWalk()
+        }
+        W.draw = (now) => {
+          const tr = W.trail
+          for (let i = 1; i < tr.length; i++) {
+            const a = Math.min(1, 1 - (now - tr[i].t) / 460)
+            if (a <= 0) continue
+            const [x0, y0] = at(tr[i - 1].p)
+            const [x1, y1] = at(tr[i].p)
+            fxc.strokeStyle = `rgba(190,210,255,${(a * 0.8).toFixed(3)})`
+            fxc.lineWidth = 0.4 + 3 * a
+            fxc.lineCap = 'round'
+            fxc.beginPath()
+            fxc.moveTo(x0, y0)
+            fxc.lineTo(x1, y1)
+            fxc.stroke()
+          }
+          if (W.climaxed) return
+          const [x, y] = at(W.pos)
+          const fade = Math.min(1, Math.max(0, (now - W.t0) / 400))
+          glow(x, y, 22, [[0, `rgba(255,255,255,${0.95 * fade})`], [0.25, `rgba(170,195,255,${0.5 * fade})`], [1, 'rgba(120,150,255,0)']])
+        }
+        return W
+      }
+      function climax(r) {
+        field.classList.add('climax')
+        r.orbit.picks.forEach((n, i) => setTimeout(() => flash(n, { r: 60, dur: 1100, rgb: '210,225,255', a: 0.7 }), i * 70))
+        const cn = $('#cname')
+        cn.classList.remove('dim')
+        cn.classList.add('reveal')
+        caption(`<span class="swap">여섯 별이 이어져 <b>오늘의 별자리</b>가 됐어요.</span>`)
+      }
+
+      function startWalk(r, slow = 1, { instant = false } = {}) {
+        stopTimers()
+        stopWalk()
+        draw = r
+        renderResult(r)
+        if (reduced()) {
+          paintFortune(r)
+          Mock.go('result', { instant })
+          skyHead()
+          return
+        }
+        clearFortune()
+        fillSlots()
+        Mock.go('analyzing', { instant })
+        skyHead()
+        markGi(r.orbit)
+        stars[r.orbit.start].classList.add('start')
+        const cn = $('#cname')
+        cn.classList.remove('reveal')
+        cn.classList.add('dim')
+        caption(
+          `<span class="swap">오늘 <b>${dayName(r.today.day)}</b>, <b>${r.orbit.start}번 별</b>에서 출발해요.</span><span class="swap">구름에 가린 ${ELEMENTS[r.orbit.gi]} 별(기신)은 건너뛰어요.</span>`
+        )
+        walker = makeWalker(r, slow)
+        fxKick()
+      }
+      function stopWalk() {
+        walker = null
+        fxClear()
+      }
+      function finishWalk() {
+        if (!walker && html.dataset.state !== 'analyzing') return
+        stopWalk()
+        if (draw) paintFortune(draw)
+        $('#cname').classList.remove('reveal')
+        if (html.dataset.state === 'analyzing') Mock.go('result')
+      }
+      $('#skip').addEventListener('click', finishWalk)
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && html.dataset.state === 'analyzing' && !e.target.closest('button, a')) {
+          e.preventDefault()
+          finishWalk()
+        }
+      })
+
+      /* ── 결과 ───────────────────────────────────────────── */
+      let selected = null
+      function summary(r) {
+        const o = r.orbit
+        if (narrow.matches)
+          return `오늘 ${dayName(r.today.day)}, <b>${o.start}번 별</b>에서 출발해 사주 여섯 글자로 별을 건넜어요. 구름 낀 ${ELEMENTS[o.gi]} 별은 비켜 가요. 공을 눌러 걸음을 보세요.`
+        const pre = o.moves.filter((m) => !m.land)
+        const preText = pre.length ? ` 태어난 시 ${L.ganji(r.chart.hour)}만큼 먼저 걸어 <b>${pre.at(-1).to}번</b>에서 시작했고,` : ''
+        return `오늘 ${dayName(r.today.day)}이라 <b>${o.start}번 별</b>에서 출발했어요.${preText} 사주 여섯 글자가 차례로 별을 건너 여섯 별에 내려앉았어요. 구름에 가린 기신 ${ELEMENTS[o.gi]} 별(끝자리 ${L.HADO_DIGITS[o.gi]})은 건너뛰었어요. 공을 누르면 그 걸음이 하늘에서 빛나요.`
+      }
+      function whyFor(r, m) {
+        const skipShort = m.skipped.length ? `${m.skipped.map((x) => x.cell).join('·')} 건너 ` : ''
+        if (narrow.matches)
+          return `<b>${pillarLabel(m)} ${m.char}(${m.hanja})</b> ${m.value}+${m.plus}=${m.steps}걸음 · ${ELEMENTS[m.fromEl]} 별과 ${ELEMENTS[m.el]}${topic(ELEMENTS[m.el])} ${REL[m.rel]}이라 ${dirWord(m.dir)}으로 · ${skipShort}<b>${m.to}번</b>`
+        const skip = m.skipped.length
+          ? ` ${m.skipped.map((s) => `${s.cell}번은 ${s.why === 'gi' ? `구름 속 기신 ${ELEMENTS[r.orbit.gi]} 별이라` : '이미 빛나서'}`).join(', ')} 지나쳐 <b>${m.to}번 별</b>에 내려앉았어요.`
+          : ` <b>${m.to}번 별</b>에 내려앉았어요.`
+        return `<b>${pillarLabel(m)} ${m.char}(${m.hanja})</b> · ${m.value}+${m.plus}=${m.steps}걸음. ${m.from}번 ${ELEMENTS[m.fromEl]} 별과 ${m.char}의 ${ELEMENTS[m.el]}${topic(ELEMENTS[m.el])} ${REL[m.rel]}이라 ${dirWord(m.dir)}으로 건넜어요.${skip}`
+      }
+      function renderResult(r) {
+        const o = r.orbit
+        field.setAttribute('aria-label', `오늘의 별자리: ${o.picks.join(', ')}번 별을 차례로 이은 모양`)
+        $('#picks').innerHTML = o.numbers
+          .map((n, i) => {
+            const m = o.moves.find((x) => x.land && x.to === n)
+            return L.ballHTML(n, {
+              tag: 'button',
+              cls: 'pick',
+              attrs: `data-i="${i}" data-n="${n}" aria-pressed="false" aria-label="${n}번, ${pillarLabel(m)} ${m.char} 걸음"`,
+            })
+          })
+          .join('')
+        const nd = L.nextDraw()
+        $('#meta').innerHTML = [
+          r.money != null ? `<span>${narrow.matches ? '' : '오늘 '}금전운 <b>${r.money}</b></span>` : '',
+          narrow.matches
+            ? `<span>좋은 시간 <b>${hourRange(r.best, r.today.shift)}</b></span>`
+            : `<span>좋은 시간 <b>${HOUR_NAMES[r.best]}</b> ${hourRange(r.best, r.today.shift)}</span>`,
+          narrow.matches
+            ? `<span>${nd.days ? `토 ${nd.m}.${nd.d} 추첨` : '<b>오늘 저녁 추첨</b>'}</span>`
+            : `<span>${nd.days ? `토요일(${nd.m}.${nd.d}) 추첨 · <b>${nd.days}일</b> 남음` : '<b>오늘(토) 저녁 추첨</b>'}</span>`,
+        ].join('')
+        select(null)
+      }
+      function select(n) {
+        selected = n
+        const r = draw
+        if (!r) return
+        const o = r.orbit
+        document.querySelectorAll('.pick').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.n === n)))
+        const k = n == null ? -1 : o.moves.findIndex((m) => m.land && m.to === n)
+        field.classList.toggle('focus', k >= 0)
+        starsClear('sel')
+        gRoute.replaceChildren()
+        gConst.querySelectorAll('.cl').forEach((l) => l.classList.toggle('on', +l.dataset.b === n))
+        if (k >= 0) {
+          const m = o.moves[k]
+          stars[n].classList.add('sel')
+          const pts = [m.from, ...m.path]
+          const pl = svgEl('polyline', { class: 'rt', points: pts.map(P).join(' ') })
+          gRoute.append(pl)
+          if (!reduced()) {
+            growPath(pl, pts, Math.min(900, 260 + pts.length * 28))
+            flash(n, { r: 54, dur: 800, rgb: '200,215,255', a: 0.7 })
+          }
+        }
+        $('#why').innerHTML = k >= 0 ? whyFor(r, o.moves[k]) : summary(r)
+      }
+      narrow.addEventListener('change', () => {
+        if (!draw) return
+        const prev = selected
+        renderResult(draw)
+        select(prev)
+        skyHead()
+      })
+      $('#picks').addEventListener('click', (e) => {
+        const b = e.target.closest('.pick')
+        if (!b) return
+        const n = +b.dataset.n
+        select(selected === n ? null : n)
+      })
+      $('#replay').addEventListener('click', () => startWalk(draw))
+      $('#toRandom').addEventListener('click', () => setMode('random'))
+
+      /* 안내 각주 */
+      const closeNotes = () => {
+        $('#notes').hidden = true
+        $('#notesBtn').setAttribute('aria-expanded', 'false')
+      }
+      $('#notesBtn').addEventListener('click', () => {
+        const open = $('#notes').hidden
+        $('#notes').hidden = !open
+        $('#notesBtn').setAttribute('aria-expanded', String(open))
+      })
+
+      async function copyText(text, btn, done) {
+        const label = btn.textContent
+        try {
+          await navigator.clipboard.writeText(text)
+          btn.textContent = done
+        } catch {
+          btn.textContent = '복사하지 못했어요'
+        }
+        setTimeout(() => (btn.textContent = label), 1400)
+      }
+      $('#copy').addEventListener('click', (e) =>
+        copyText(
+          `운빨데이 오늘의 별자리 (${draw.today.date.m}.${draw.today.date.d} ${dayName(draw.today.day)})\n${draw.orbit.numbers.map(pad2).join(' ')}`,
+          e.currentTarget,
+          '복사했어요'
+        )
+      )
+
+      /* ── 그냥 뽑기: 같은 하늘에 별똥별 ────────────────────── */
+      const GAME_COLORS = ['#9dbbff', '#ffd37f', '#ff9fb4', '#8ff0c8', '#cfaaff']
+      const GAME_RGB = ['157,187,255', '255,211,127', '255,159,180', '143,240,200', '207,170,255']
+      const board = $('#board')
+      {
+        let s = ''
+        for (let n = 1; n <= 45; n++) s += `<button type="button" class="cell" data-n="${n}" aria-label="${n}번">${n}</button>`
+        $('#bdGrid').innerHTML = s
+      }
+      const cellState = new Map()
+      let games = 1
+      let current = null
+      const history = []
+      let drawing = false
+      const fixedList = () => [...cellState].filter(([, s]) => s === 'fixed').map(([n]) => n)
+      const excludedList = () => [...cellState].filter(([, s]) => s === 'excluded').map(([n]) => n)
+      const HINT = '누를 때마다 <i class="gl g-fix"></i>고정 → <i class="gl g-ex"></i>제외 → 보통'
+      const rdHint = (h, bad = false) => {
+        $('#rdHint').innerHTML = h
+        $('#rdHint').classList.toggle('bad', bad)
+      }
+      function syncCount() {
+        $('#bdCount').textContent = `고정 ${fixedList().length} · 제외 ${excludedList().length}`
+      }
+      $('#bdGrid').addEventListener('click', (e) => {
+        const c = e.target.closest('button.cell')
+        if (!c || drawing) return
+        const n = +c.dataset.n
+        const s = cellState.get(n)
+        let next = s === 'fixed' ? 'excluded' : s === 'excluded' ? null : 'fixed'
+        if (next === 'fixed' && fixedList().length >= L.MAX_FIXED) {
+          next = 'excluded'
+          rdHint(`고정은 ${L.MAX_FIXED}개까지예요. ${n}번은 제외로 바꿨어요.`, true)
+        } else if (next === 'excluded' && excludedList().length >= L.MAX_EXCLUDED) {
+          next = null
+          rdHint(`제외는 ${L.MAX_EXCLUDED}개까지예요.`, true)
+        } else rdHint(HINT)
+        if (next) cellState.set(n, next)
+        else cellState.delete(n)
+        if (next) c.dataset.state = next
+        else delete c.dataset.state
+        c.setAttribute('aria-label', `${n}번${next === 'fixed' ? ', 고정' : next === 'excluded' ? ', 제외' : ''}`)
+        stars[n].classList.toggle('r-fixed', next === 'fixed')
+        stars[n].classList.toggle('r-excl', next === 'excluded')
+        syncCount()
+      })
+      $('#games').addEventListener('click', (e) => {
+        const b = e.target.closest('button')
+        if (!b) return
+        games = +b.dataset.n
+        $('#games').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+        if (!current) renderTickets()
+      })
+
+      /* 판 접기: 넓은 화면은 하늘 오른쪽에 붙고, 좁은 화면은 하늘을 덮는다 */
+      function setBoard(open) {
+        board.dataset.open = String(open)
+        scene.dataset.open = String(open)
+        $('#boardToggle').textContent = open ? '접기' : '판 펼치기'
+        $('#boardToggle').setAttribute('aria-expanded', String(open))
+      }
+      const syncBoardMode = () => (scene.dataset.board = wide.matches ? 'dock' : 'float')
+      wide.addEventListener('change', syncBoardMode)
+      syncBoardMode()
+      $('#boardToggle').addEventListener('click', () => setBoard(board.dataset.open !== 'true'))
+
+      function renderTickets() {
+        const cur = current
+          ? current.games
+              .map(
+                (g, i) =>
+                  `<div class="ticket" style="--gc:${GAME_COLORS[i]}" aria-label="${L.GAME_LABELS[i]} 게임"><span class="t-label">${L.GAME_LABELS[i]}</span><span class="t-balls">${
+                    current.filled ? g.numbers.map((n) => ballSpan(n, g.fixed.includes(n) ? 'fixed' : '')).join('') : g.order.map(() => '<span class="slot"></span>').join('')
+                  }</span></div>`
+              )
+              .join('')
+          : `<p class="tk-empty">뽑기를 누르면 별 여섯 개가 떨어지고, ${games}게임이 여기 놓여요.</p>`
+        const past = history.length
+          ? `<p class="label tk-past-head">이번 방문 기록</p>` +
+            history
+              .map((h) =>
+                h.games
+                  .map((g, i) => `<div class="ticket past"><span class="t-label">${L.GAME_LABELS[i]}</span><span class="t-balls">${g.numbers.map((n) => ballSpan(n)).join('')}</span></div>`)
+                  .join('')
+              )
+              .join('')
+          : ''
+        $('#tickets').innerHTML = cur + past
+      }
+      function paintRandom({ animate = false } = {}) {
+        starsClear('r-pick', 'bloom')
+        gRand.replaceChildren()
+        if (!current || animate) return
+        current.games.forEach((g, gi) => {
+          g.order.forEach((n, j) => {
+            stars[n].classList.add('r-pick')
+            stars[n].style.setProperty('--gc', GAME_COLORS[gi])
+            if (j) addLine(gRand, g.order[j - 1], n, 'rl', { attrs: { style: `--gc:${GAME_COLORS[gi]}` } })
+          })
+        })
+      }
+      function sortTickets() {
+        document.querySelectorAll('#tickets .ticket:not(.past) .t-balls').forEach((row) => {
+          const balls = [...row.children]
+          const before = new Map(balls.map((b) => [b, b.getBoundingClientRect().left]))
+          balls.sort((x, y) => +x.textContent - +y.textContent).forEach((b) => row.append(b))
+          if (reduced()) return
+          for (const b of balls) {
+            const dx = before.get(b) - b.getBoundingClientRect().left
+            if (dx) b.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' })
+          }
+        })
+      }
+      function doDraw() {
+        if (drawing) return
+        if (current) history.unshift(current)
+        history.splice(8)
+        const fixed = fixedList()
+        const excluded = excludedList()
+        current = { games: Array.from({ length: games }, () => L.drawRandom({ fixed, excluded })), filled: false }
+        /* 좁은 화면: 판을 접어 하늘을 보여 준다 */
+        if (!wide.matches) setBoard(false)
+        if (reduced()) {
+          current.filled = true
+          renderTickets()
+          paintRandom()
+          return
+        }
+        paintRandom({ animate: true })
+        renderTickets()
+        $('#tickets').scrollTop = 0
+        drawing = true
+        const queue = []
+        const rows = document.querySelectorAll('#tickets .ticket:not(.past)')
+        current.games.forEach((g, gi) => g.order.forEach((n, j) => queue.push([gi, j, n, rows[gi].querySelectorAll('.slot')[j]])))
+        const stagger = queue.length > 1 ? Math.min(230, 2200 / (queue.length - 1)) : 0
+        const rnd = mulberry32(Date.now() & 0xffff)
+        queue.forEach(([gi, j, n, slot], q) =>
+          later(q * stagger, () => {
+            const ang = -2.2 + rnd() * 0.9
+            const from = [X[n] + Math.cos(ang) * 0.18, Y[n] + Math.sin(ang) * 0.5]
+            streak(from, n, {
+              dur: 280,
+              rgb: GAME_RGB[gi],
+              len: 90,
+              onEnd: () => {
+                const s = stars[n]
+                s.style.setProperty('--gc', GAME_COLORS[gi])
+                s.classList.remove('bloom')
+                s.getBoundingClientRect()
+                s.classList.add('r-pick', 'bloom')
+                setTimeout(() => s.classList.remove('bloom'), 1100)
+                flash(n, { r: 50, dur: 800, rgb: GAME_RGB[gi], a: 0.7 })
+                if (j) addLine(gRand, current.games[gi].order[j - 1], n, 'rl', { ms: 260, attrs: { style: `--gc:${GAME_COLORS[gi]}` } })
+                if (slot && slot.isConnected) slot.outerHTML = ballSpan(n, current.games[gi].fixed.includes(n) ? 'fixed' : '')
+              },
+            })
+          })
+        )
+        later((queue.length - 1) * stagger + 420, () => {
+          sortTickets()
+          current.filled = true
+          drawing = false
+        })
+      }
+      $('#draw').addEventListener('click', doDraw)
+      $('#copy-all').addEventListener('click', (e) => {
+        if (!current) return rdHint('먼저 뽑아 주세요.')
+        copyText(L.ticketText(current.games.map((g) => g.numbers)), e.currentTarget, '복사했어요')
+      })
+      rdHint(HINT)
+      syncCount()
+      renderTickets()
+
+      /* 하늘이 고요할 때 가끔 별똥별이 지나간다 */
+      const amb = mulberry32(7)
+      Mock.idle(() => {
+        const st = html.dataset.state
+        if ((st !== 'result' && st !== 'input') || walker || effects.length || amb() > 0.45) return
+        const x = 0.25 + amb() * 0.7
+        const y = 0.02 + amb() * 0.3
+        streak([x, y], [x - 0.22, y + 0.38], { dur: 900, len: 110, rgb: '215,228,255', alpha: 0.6 })
+      }, 2600)
+
+      /* ── 모드 ───────────────────────────────────────────── */
+      function setMode(mode) {
+        if (mode === 'random') {
+          if (html.dataset.state === 'analyzing') {
+            stopTimers()
+            finishWalkSilently()
+          }
+          Mock.go('random', { instant: true })
+        } else {
+          if (draw && html.dataset.state === 'random') paintFortune(draw)
+          Mock.go(draw ? 'result' : 'input', { instant: true })
+        }
+      }
+      function finishWalkSilently() {
+        stopWalk()
+        if (draw) paintFortune(draw)
+      }
+      $('#mode-fortune').addEventListener('click', () => setMode('fortune'))
+      $('#mode-random').addEventListener('click', () => setMode('random'))
+      const syncMode = () => {
+        const st = html.dataset.state
+        const random = st === 'random'
+        $('#mode-fortune').setAttribute('aria-pressed', String(!random))
+        $('#mode-random').setAttribute('aria-pressed', String(random))
+        $('#rulesBtn').hidden = random
+        field.dataset.mode = random ? 'random' : st === 'input' ? 'preview' : 'fortune'
+        $('#method').innerHTML = random
+          ? '<b>그냥 뽑기</b>1–45에서 여섯 개를 고르게 뽑아요. 고정·제외만 반영해요'
+          : '<b>별 잇기</b>내 사주 여섯 글자가 오늘의 출발 별부터 길을 따라 걸어, 내려앉은 별로 별자리를 그려요'
+        if (random) {
+          closeRules()
+          field.setAttribute('aria-label', current ? `뽑은 별: ${current.games.map((g) => g.numbers.join(', ')).join(' / ')}` : '별 45개가 흩어진 밤하늘')
+        } else if (st === 'input') field.setAttribute('aria-label', `별 45개가 흩어진 밤하늘. 오늘은 ${todayStart}번 별에서 출발해요.`)
+        if (st !== 'result') closeNotes()
+        skyHead()
+      }
+      document.addEventListener('mock:state', syncMode)
+
+      const closeRules = () => {
+        $('#rules').hidden = true
+        $('#rulesBtn').setAttribute('aria-expanded', 'false')
+      }
+      $('#rulesBtn').addEventListener('click', () => {
+        const open = $('#rules').hidden
+        $('#rules').hidden = !open
+        $('#rulesBtn').setAttribute('aria-expanded', String(open))
+      })
+      document.addEventListener('click', (e) => {
+        if (!$('#rules').hidden && !e.target.closest('#rules, #rulesBtn')) closeRules()
+        if (!$('#notes').hidden && !e.target.closest('#notes, #notesBtn')) closeNotes()
+      })
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeRules()
+          closeNotes()
+        }
+      })
+
+      /* ── 시작: ?demo → 넘겨받은 원국 → 안내 ───────────────── */
+      fillSlots()
+      if (demo === 'random') Mock.go('random', { instant: true })
+      else if (demo === 'analyzing') {
+        isDemo = true
+        startWalk(L.fortuneDraw(L.DEMO), 1.5, { instant: true })
+      } else if (demo !== null) {
+        isDemo = true
+        draw = L.fortuneDraw(L.DEMO)
+        renderResult(draw)
+        paintFortune(draw)
+        Mock.go('result', { instant: true })
+      } else {
+        const stored = storedProfile()
+        const profile = stored || (params.get('from') === 'fortune' ? L.DEMO : null)
+        isDemo = !stored && !!profile
+        const r = profile && L.fortuneDraw(profile)
+        if (r) startWalk(r, 1, { instant: true })
+      }
+      syncMode()
+      })()
+    </script>
+  </body>
+</html>

@@ -1,34 +1,11 @@
-import { Fragment, type ReactNode } from 'react'
 import type { Dictionary } from '@/app/[lang]/dictionaries'
 import type { PyramidData } from '@/components/games/match/pyramid'
 import type { LovesReading } from '@/lib/name-match/loves'
 import type { StrokeReading } from '@/lib/name-match/strokes'
 
+export { compose, rich } from '@/components/games/shared'
+
 export type MatchCopy = Dictionary['match']
-
-/** 사전의 강조 배열(`["…", { "b": "…" }]`)을 그린다. */
-export function rich(parts: (string | { b: string })[]) {
-  return parts.map((p, i) =>
-    typeof p === 'string' ? (
-      <Fragment key={i}>{p}</Fragment>
-    ) : (
-      <b key={i} className="font-bold text-ink">
-        {p.b}
-      </b>
-    )
-  )
-}
-
-/** `{name}` 자리에 글이나 요소를 넣는다. */
-export function compose(template: string, vars: Record<string, ReactNode>) {
-  return template
-    .split(/(\{\w+\})/)
-    .map((part, i) => {
-      const key = /^\{(\w+)\}$/.exec(part)?.[1]
-      return key ? <Fragment key={i}>{vars[key]}</Fragment> : part
-    })
-    .filter((p) => p !== '')
-}
 
 /** 앞 이름의 받침에 맞는 '과/와'. 한글이 아니거나 비었으면 둘 다 적는다. */
 export function andParticle(copy: MatchCopy, name: string) {

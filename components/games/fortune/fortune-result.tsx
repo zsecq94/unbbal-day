@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   Fragment,
   useEffect,
@@ -17,8 +18,11 @@ import {
   type Profile,
 } from '@/lib/fortune'
 import type { Locale } from '@/lib/i18n'
+import { handOff } from '@/lib/lotto/handoff'
+import { gamePath } from '@/lib/routes'
 import type { TenGod } from '@/lib/saju/ganji'
 import type { Reason } from '@/lib/saju/reading'
+import { NAV_FORWARD } from '@/lib/transitions'
 import { ElementBars } from './element-bars'
 import { Tween, type FortuneCopy } from './fortune-screen'
 import {
@@ -411,10 +415,26 @@ export function FortuneResult({
         <p className="order-3 w-full text-[13px] font-semibold break-keep text-ink-3 md:order-0 md:w-auto">
           {whoLine}
         </p>
+        {/* 오늘의 행운 번호: 이 원국을 메모리로 넘기고 로또로 간다(로또는 생년월일을 다시 묻지 않는다) */}
+        <Link
+          href={gamePath(locale, 'lotto')}
+          prefetch={true}
+          transitionTypes={[NAV_FORWARD]}
+          onClick={() => handOff(p)}
+          className="ml-auto inline-flex items-center gap-2 text-[13px] font-bold text-ink transition-colors duration-200 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus-visible:outline-solid motion-reduce:transition-none"
+        >
+          {copy.toLotto}
+          <span
+            aria-hidden="true"
+            className="font-mono font-medium text-brand-hi"
+          >
+            →
+          </span>
+        </Link>
         <button
           type="button"
           onClick={onEdit}
-          className="ml-auto inline-flex items-center gap-2 text-[13px] font-bold text-ink-2 transition-colors duration-200 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus-visible:outline-solid motion-reduce:transition-none lit:text-ink"
+          className="inline-flex items-center gap-2 text-[13px] font-bold text-ink-2 transition-colors duration-200 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink focus-visible:outline-solid motion-reduce:transition-none lit:text-ink"
         >
           <span aria-hidden="true" className="font-mono font-medium">
             ←

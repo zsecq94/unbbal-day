@@ -44,7 +44,7 @@
     },
     "lotto": {
       "name": "Lucky Numbers",
-      "description": "Draw your lucky numbers from today's fortune."
+      "description": "Lucky numbers from today's fortune, or just draw."
     },
     "match": {
       "name": "Name Match",
@@ -904,7 +904,8 @@
           "a touch of black"
         ]
       ]
-    }
+    },
+    "toLotto": "Today's lucky numbers"
   },
   "match": {
     "method": {
@@ -1005,5 +1006,172 @@
     },
     "edit": "Edit names",
     "again": "Try other names"
+  },
+  "lotto": {
+    "modesLabel": "Draw mode",
+    "modes": {
+      "fortune": "From my fortune",
+      "random": "Just draw"
+    },
+    "method": {
+      "fortune": {
+        "title": "Star walk",
+        "text": "Your six saju characters walk from today's star and draw a constellation"
+      },
+      "random": {
+        "title": "Just draw",
+        "text": "Six numbers drawn evenly from 1–45. Only your keep and skip picks apply"
+      }
+    },
+    "rules": {
+      "button": "Rules",
+      "intro": [
+        {
+          "b": "Star walk"
+        },
+        " · A method made by Unbbal Day, built from classic saju pieces: the 60-day cycle, Hado numbers, the generating and controlling cycles, and the harmful element."
+      ],
+      "items": [
+        "The 45 stars link into one path in number order (45 loops back to 1). Each star's element comes from its last digit by the Hado numbers: 1·6 Water, 2·7 Fire, 3·8 Wood, 4·9 Metal, 5·0 Earth.",
+        "The walk starts at the star matching today's place in the 60-day cycle. If your birth hour is known, its two characters first move the starting point.",
+        "Each of the six year, month and day characters takes one walk, and the star it lands on becomes a number. Steps = the character's number (stems 1–10, branches 1–12) plus the matching character of today.",
+        "If the current star's element and the character's element control each other, the walk goes toward smaller numbers; otherwise toward larger ones.",
+        "Landing on a clouded star of the harmful element, or on one already lit, moves one star further."
+      ],
+      "outro": "The same birthday on the same day always draws the same constellation. Every number has the same odds."
+    },
+    "sky": {
+      "today": "Today's sky · {day}",
+      "todayStart": [
+        "Today starts at ",
+        {
+          "b": "star {n}"
+        },
+        " · lines show an example"
+      ],
+      "constellation": "Today's constellation · {day}",
+      "random": "Shooting stars",
+      "randomSource": "Each draw drops six stars",
+      "source": "Chart from today's fortune · {chart}",
+      "sourceShort": "From your fortune · {chart}",
+      "day": "{g} day",
+      "ariaPreview": "A night sky of 45 stars. Today starts at star {n}.",
+      "ariaConstellation": "Today's constellation: stars {list} linked in order",
+      "ariaRandom": "Drawn stars: {list}",
+      "ariaEmpty": "A night sky of 45 stars"
+    },
+    "gate": {
+      "label": "From my fortune",
+      "title": "Link the stars with the saju from your fortune.",
+      "aside": "This mode walks with the saju from Today's Fortune, so it doesn't ask for your birthday here. Tap \"Today's lucky numbers\" on your fortune result, and your saju characters cross the sky from today's starting star to draw your own constellation.",
+      "toFortune": "See today's fortune",
+      "toRandom": "Just draw"
+    },
+    "walk": {
+      "start": [
+        "Today is ",
+        {
+          "b": "{day}"
+        },
+        ". Starting at ",
+        {
+          "b": "star {n}"
+        },
+        "."
+      ],
+      "gi": "Clouded {el} stars (harmful element) are skipped.",
+      "pillars": {
+        "hour": "Hour",
+        "year": "Year",
+        "month": "Month",
+        "day": "Day"
+      },
+      "sides": {
+        "stem": " stem",
+        "branch": " branch"
+      },
+      "label": "{pillar}{side}",
+      "steps": "{expr} steps",
+      "hourSteps": "{n} steps · only moves the start",
+      "relations": {
+        "same": "Same element",
+        "gen": "Generating",
+        "clash": "Controlling"
+      },
+      "directions": {
+        "up": "larger numbers",
+        "down": "smaller numbers"
+      },
+      "relDir": "{rel}, toward {dir}",
+      "skipGi": "Star {n} is clouded (harmful element), one more",
+      "skipTaken": "Star {n} is already lit, one more",
+      "restart": "→ restart from star {n}",
+      "land": "→ star {n}",
+      "climax": [
+        "Six stars link into ",
+        {
+          "b": "today's constellation"
+        },
+        "."
+      ],
+      "skip": "Skip"
+    },
+    "result": {
+      "picksLabel": "Today's numbers",
+      "pickAria": "Number {n}, the {label} {char} walk",
+      "summary": "Today is {day}, so the walk started at {start}.{pre} The six saju characters crossed the sky in turn and landed on six stars. Clouded stars of the harmful element, {el} (last digit {digits}), were skipped. Tap a ball to light up its walk.",
+      "summaryPre": " The birth hour {hour} first moved the start to {n},",
+      "summaryShort": "Today is {day}: from {start}, six saju characters crossed the sky. Clouded {el} stars are skipped. Tap a ball to see its walk.",
+      "star": "star {n}",
+      "why": "{head} · {expr} steps. From star {from} ({fromEl}), {char} ({el}) is {rel}, so it walked toward {dir}.{end}",
+      "whyLand": " It landed on {to}.",
+      "whySkip": " It passed {skips} and landed on {to}.",
+      "skipGi": "star {n} (clouded {el})",
+      "skipTaken": "star {n} (already lit)",
+      "whyShort": "{head} {expr} steps · {fromEl} to {el}: {rel}, toward {dir} · {skips}{to}",
+      "skipShort": "past {list}, ",
+      "money": "Money luck today {score}",
+      "best": "Best time {name} {range}",
+      "drawIn": "Draw Sat {m}/{d} · {days} days left",
+      "drawToday": "Draw tonight (Sat)",
+      "back": "Today's fortune",
+      "replay": "Walk again",
+      "toRandom": "Just draw",
+      "notes": "Notes",
+      "copy": "Copy numbers",
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy",
+      "copyText": "Unbbal Day today's constellation ({m}/{d} {day})\n{numbers}",
+      "notesText": [
+        "Every number has the same jackpot odds: 1 in 8,145,060. These are simply the path your saju walked today.",
+        "Korean Lotto 6/45 is for adults 19 and over, up to ₩100,000 per draw.",
+        "The bonus number is set by the draw. If one of your numbers matches it, it decides the second prize."
+      ]
+    },
+    "random": {
+      "games": "Games",
+      "draw": "Draw",
+      "copyAll": "Copy all",
+      "empty": "Tap Draw and six stars fall; {n} game(s) will land here.",
+      "past": "Earlier this visit",
+      "note": "Every number has the same chance. No \"hot number\" or other statistical filters.",
+      "gameAria": "Game {label}",
+      "drawFirst": "Draw first.",
+      "board": {
+        "label": "Keep and skip board",
+        "count": "Keep {fixed} · Skip {excluded}",
+        "fold": "Hide",
+        "open": "Show board",
+        "hint": "Tap to cycle {fix}keep → {skip}skip → off",
+        "maxFixed": "You can keep up to {max}. Number {n} was set to skip.",
+        "maxExcluded": "You can skip up to {max}.",
+        "cell": "Number {n}",
+        "cellFixed": "Number {n}, keep",
+        "cellExcluded": "Number {n}, skip"
+      }
+    },
+    "particles": {
+      "topic": ["", ""]
+    }
   }
 }

@@ -1,0 +1,114 @@
+/* lib/saju/solar-terms-data.ts에서 생성됨(mockups/tools/build-saju.mjs) */
+// scripts/gen-solar-terms.mjs가 만든 파일이다. 직접 고치지 않는다.
+
+/** 표의 첫 해. 이 해의 소한부터 시작한다. */
+export const TERMS_FIRST_YEAR = 1899
+/** 표의 마지막 해. 이 해의 대설까지 들어 있다. */
+export const TERMS_LAST_YEAR = 2100
+/** 첫 절기(소한)의 UTC 시각, 1970년부터 센 분 */
+export const TERMS_START = -37335583
+/** 이웃한 절기 사이 분에서 뺀 값 */
+export const TERMS_BASE = 42000
+/** 이웃한 절기 사이 분 - TERMS_BASE를 36진수 세 자리씩 이어 붙였다 */
+export const TERMS_PACKED =
+  '0d20o716j1rd2972is2hf25c1m811f0ki0bn0d00o616j1re2982iv2hh25e1m811f0kg0bl' +
+  '0cz0o716l1ri29a2iw2he25c1m811g0kj0bn0cy0o616h1re2952iq2hc25c1mb11l0kn0br' +
+  '0cz0o416f1rb2962iu2hf25e1mc11j0km0bq0cz0o416f1rc2962iv2hg25e1ma11h0kk0bq' +
+  '0d10o616g1rc2942iq2hd25d1ma11i0kl0bq0d30o816j1rd2952iq2hd25c1mb11k0km0bq' +
+  '0d00o416g1rb2932iq2hd25e1md11l0kn0bq0cy0o316e1ra2952it2hf25d1mb11j0km0bp' +
+  '0d00o416g1re2972iu2he25d1m811i0km0br0d10o616e1r82912ip2hc25d1mb11k0ko0bs' +
+  '0d10o516e1r72922ir2hf25h1me11k0kl0bn0cz0o316f1rb2942iu2hg25h1md11k0kk0bn' +
+  '0cx0o216f1rb2922iq2hd25e1me11m0kn0bq0cy0o316e1ra2942ir2he25f1mf11o0kq0br' +
+  '0cx0nz1691r62912is2hg25h1mg11p0kq0bs0cy0nz1691r42902is2hh25i1mf11m0ko0br' +
+  '0d10o316d1r82912ir2hg25h1mf11n0ko0br0d10o416c1r528x2il2hb25g1mh11r0kr0bt' +
+  '0d00o216c1r528z2io2hd25i1mh11r0kq0br0cx0o116c1r82932it2hf25h1me11o0kp0bs' +
+  '0cy0o116c1r72912iq2hc25f1md11n0kp0bu0d10o416c1r72912ir2hg25h1mf11o0kq0br' +
+  '0cy0o016a1r42902is2hi25l1mi11p0kp0bp0cw0ny1691r52902ir2hj25m1mi11p0ko0bo' +
+  '0cw0nz16a1r82922it2hi25l1mj11r0kq0bq0cw0ny1661r228y2io2he25k1ml11v0kv0bu' +
+  '0cx0nw1641qz28w2ip2hh25m1mm11u0kt0bt0cx0nx1661r028y2ir2hk25m1mk11s0kr0bt' +
+  '0cz0nz1671r128v2il2hd25j1mj11s0kt0bv0d00o21681r228v2im2hd25j1ml11v0kv0bt' +
+  '0cx0nx1661r228w2io2hf25k1mm11v0ku0bt0cw0nw1651r128x2io2hg25j1mj11s0ks0bt' +
+  '0cy0ny1671r428z2ir2hi25j1mj11r0ks0bt0d00ny1661qz28u2in2hg25k1ml11u0ku0bt' +
+  '0cz0nx1641qy28u2io2hi25o1mo11u0kr0bq0cu0nw1661r228y2ir2hl25q1mn11v0kr0bq' +
+  '0cu0nu1651r228w2in2hf25m1mo11w0kv0bt0cw0nv1631qy28w2io2hi25n1mp11z0ky0bu' +
+  '0cu0ns15z1qw28v2iq2hl25r1mr11z0kx0bv0cw0ns15z1qt28s2io2hj25q1mp11x0kv0bu' +
+  '0cy0nw1631qx28t2io2hj25q1mq11y0kw0bu0cz0nw1631qv28q2ij2he25o1ms1210l00bw' +
+  '0cx0nv1601qu28q2ik2hg25o1mr1210ky0bu0cw0nt1621qy28v2ip2hj25p1mp11y0kx0bu' +
+  '0cx0nv1621qx28s2im2he25l1mn11x0ky0bw0d00nx1621qu28s2im2hh25n1mq11y0kx0bu' +
+  '0cw0nu1601qv28s2ip2hl25s1ms11z0kw0bs0cu0ns15z1qv28s2in2hj25r1mr11z0kv0br' +
+  '0cu0ns1611qx28u2ip2hj25r1mt1210kx0bu0cu0nq15x1qt28q2im2hi25r1mu1240l20bw' +
+  '0cv0nq15u1qo28o2il2hj25t1mu1230kz0bw0cv0nq15w1qr28q2ip2hm25v1mu1220ky0bu' +
+  '0cw0ns15z1qr28o2ij2hg25q1mt1230l00bw0cy0nu15y1qr28n2ii2hg25r1mv1260l10bw' +
+  '0cu0np15w1qr28p2in2hk25u1mw1250l20bv0cu0no15v1qr28q2im2hi25r1mt1220l00bw' +
+  '0cx0nr15x1qr28r2in2hk25s1mu1220l00bw0cx0ns15v1qp28n2il2hk25u1mw1250l20bw' +
+  '0cw0nr15u1qo28l2ik2hk25w1my1240kz0bt0ct0np15w1qr28q2io2hn25x1n01250l00bt' +
+  '0cr0np15v1qr28p2il2hh25t1my1270l40bx0cu0no15t1qn28m2ik2hj25t1mz1290l60bx' +
+  '0cu0nl15q1ql28m2io2hn25z1n01280l50bx0cv0nn15q1ql28l2ik2hk25v1mz1250l20bx' +
+  '0cw0nr15u1qn28k2ij2hk25v1mz1280l30bw0cw0np15t1qm28k2ih2hi25v1n112a0l70by' +
+  '0cv0nn15r1qk28j2ih2hi25v1mz1280l40bx0ct0nn15r1qn28n2in2hl25w1mz1270l30bx' +
+  '0cu0no15s1qn28l2il2hi25t1my1260l40bz0cw0no15s1qk28i2ij2hj25w1n01280l30bw' +
+  '0cs0nm15p1qk28l2im2hp2621n512a0l30bu0cq0nk15p1qk28l2il2hl25z1n31290l40bu' +
+  '0cr0nl15p1qk28l2ik2hm25y1n412d0l60by0cs0nj15m1qh28i2ij2hm2601n612f0lb0c1' +
+  '0ct0nj15k1qd28f2ih2hm2601n512d0l70bz0cu0nl15m1qg28h2ik2hn2621n612d0l60by' +
+  '0cu0nn15q1qi28g2ig2hi25y1n412e0l90c00cw0nn15p1qi28e2ie2hh25w1n512f0la0c0' +
+  '0cs0nk15m1qh28i2ik2hm2611n612f0l90bz0cs0nj15n1qh28k2ik2hl25w1n212b0l70c0' +
+  '0cu0nm15o1qi28i2ij2hl25y1n312a0l70c00cu0nm15m1qf28g2ij2hn2621n612e0l80bz' +
+  '0ct0nj15l1qf28f2ih2hn2621n712d0l60bv0cq0ni15l1qh28i2ik2hp2641n912f0l60bv' +
+  '0cp0ng15m1qh28h2ij2hl2611n812g0lb0c00cs0ng15i1qd28d2ih2hl2611n812i0lc0c0' +
+  '0cr0ne15e1qa28d2ik2hq2671nc12i0la0c00cr0ng15g1qb28d2ii2hn2641n912g0l90c0' +
+  '0ct0nj15k1qc28b2ie2hl2621n912j0lb0c00ct0nh15i1qa28b2ie2hm2631nd12m0le0c2' +
+  '0cs0ng15h1qa28b2if2hk2621na12j0lc0c10cr0ng15h1qc28d2ii2hn2631n912i0lb0c1' +
+  '0cs0ni15i1qd28d2ih2hm2621n812i0lc0c20cv0nj15i1qa28b2ie2hl2631na12j0lb0bz' +
+  '0cr0nf15g1qa28c2ij2hr2691ne12l0la0bx0cp0ne15g1qc28f2ij2hp2651nd12k0lb0by' +
+  '0cq0ne15g1qb28e2ig2hn2651nc12m0le0c10cr0nc15c1q628a2ih2hq2681ng12o0li0c3' +
+  '0cs0nd15b1q42882ig2hp2681ne12m0ld0c20cr0nf15d1q62892if2hp2681nf12m0ld0c0' +
+  '0cs0nf15g1q92892id2hl2661nf12o0lg0c30cs0ng15e1q72882ib2hj2641ne12p0lg0c2' +
+  '0cp0nc15b1q628a2ig2ho2681nh12o0lg0c20cp0nc15b1q728c2ih2hp2651nc12m0le0c2' +
+  '0cs0ne15d1q72892if2hm2661nc12l0lf0c20cs0ne15b1q32862ie2hq26a1ni12q0lg0c1' +
+  '0cq0nc15b1q32872if2hp26a1ni12p0le0bz0cn0nb15b1q52892if2hp26a1nj12q0lf0c0' +
+  '0co0na15a1q52882ie2ho2691ni12s0lk0c50cr0na1591q12852id2hn2681nh12t0lj0c5' +
+  '0cq0n91561pz2842if2hr26d1nl12s0li0c30cq0nb1591q22862if2hq26a1nj12q0lh0c3' +
+  '0cr0ne15b1q42852ic2hl2681nj12r0lj0c30cr0nb1591q02842ic2hn26b1nn12v0ll0c5' +
+  '0cp0na1571q22852ie2hp26b1nj12s0li0c30cq0na1581q22872ie2hq26a1ni12r0lh0c3' +
+  '0cq0nb1581q22862ie2hp26b1nj12s0lj0c40cs0nb1591q02842id2hp26b1nl12t0li0c1' +
+  '0cn0n81551q02832if2hs26g1np12u0lj0bz0cl0n61551q12872ig2hs26e1nn12v0lk0c1' +
+  '0co0n71551q02852id2hp26b1nm12w0lm0c50cp0n51501pu2802ic2hr26f1nq1300lo0c7' +
+  '0cq0n51511pu27z2id2hs26g1np12w0ll0c40cq0n81531pw2802ia2hp26e1np12w0ll0c4' +
+  '0cp0n91561pw2802i82hn26c1np12z0lp0c60cr0n91551px27z2i92hm26a1no12z0lp0c5' +
+  '0co0n61521pv2812ib2hq26d1np12y0ln0c50co0n61521px2842ie2hr26d1nn12u0lm0c5' +
+  '0cr0n91541py2822ic2hq26c1nm12v0ll0c50cp0n71521pt27z2ia2hs26i1ns1300ln0c3' +
+  '0cn0n51511pv2812id2hu26j1nt12z0ll0c10cl0n31521pw2822id2hs26h1ns1300ln0c3' +
+  '0cm0n21501pu27z2ic2hr26g1nu1330ls0c80co0n314y1pr27y2ib2hr26h1nt1330lr0c7' +
+  '0co0n214w1pp27w2ia2ht26l1nv1320lq0c60co0n414y1pr27y2ib2hr26i1nu1320lp0c6' +
+  '0cq0n61521pt27y2i82ho26f1ns1320lr0c80cp0n414x1pq27v2i72ho26h1nw1350lt0c9' +
+  '0co0n214x1pq27y2ia2hs26i1nt1320lq0c70co0n314z1pr27z2ib2hr26g1ns12z0lp0c6' +
+  '0cp0n514z1pq27v2i92hq26h1nt1320lr0c70cq0n514z1pq27v2i92hs26j1nv1330lp0c4' +
+  '0cm0n114w1pq27w2ia2ht26l1ny1340lp0c40cj0n014v1pr27y2ic2ht26k1nw1350lr0c6' +
+  '0cl0n114w1pr27x2ib2hs26i1nv1350lu0c80cn0mz14r1pk27r2i82ht26m1o01370lv0c9' +
+  '0co0mz14s1pk27s2ia2hv26o1o01350ls0c60co0n114v1po27t2i92hs26l1nz1360ls0c6' +
+  '0cm0n214v1pn27r2i52hp26k1nz13a0lw0c90co0n114u1pn27t2i72hr26k1nz13a0lw0c8' +
+  '0cm0my14s1pl27u2i92hs26l1o01370lv0c80cm0mz14r1pm27v2ia2ht26l1ny1360lu0c8' +
+  '0cp0n214w1pn27u2i92ht26l1nx1360lu0c80co0n014r1pj27q2i62ht26p1o213a0lw0c7' +
+  '0cl0my14q1pk27s2i92hw26r1o313a0lu0c50cj0mx14s1pm27u2ia2hu26n1o213a0lw0c7' +
+  '0cl0mw14q1pi27p2i72hr26m1o213d0m00cc0co0mx14o1pg27p2i72ht26p1o313c0ly0ca' +
+  '0cn0mx14o1pf27o2i72hu26q1o413b0lw0c80cm0my14q1ph27p2i52hs26o1o313b0lx0c9' +
+  '0cn0n014s1pl27q2i52hr26m1o113c0ly0cb0cm0mw14o1pg27o2i32hr26n1o513e0m00ca' +
+  '0cm0mv14n1pf27q2i82hu26q1o313b0lx0c80cm0mw14p1pj27r2ia2hu26o1o213a0lv0c9' +
+  '0cm0mx14p1pf27n2i52hs26p1o413d0ly0ca0cm0mx14o1pf27n2i62hv26s1o813e0ly0c6' +
+  '0ci0mu14m1pf27p2i82hw26t1o913f0lz0c60ci0ms14l1pf27p2i72hu26r1o713g0m10ca' +
+  '0cl0mu14l1pf27o2i82hv26r1o613g0m30ce0cm0ms14i1p927j2i42hv26t1o913j0m30cd' +
+  '0cn0mu14i1p827j2i52hw26v1oa13h0m00ca0cm0mw14n1pe27m2i52hu26s1o813h0m00cb' +
+  '0cm0mw14m1pd27j2i02hp26p1o813j0m40ce0cn0mv14l1pc27l2i32hs26r1o913j0m20cc' +
+  '0cl0ms14k1pd27n2i62hv26s1o713h0m00cb0cl0mt14j1pc27n2i52hv26q1o613e0m00cb' +
+  '0cn0mw14m1pd27n2i62hv26t1o813f0m00cb0ck0mt14i1pa27j2i42hv26w1oc13j0m20c8' +
+  '0ci0mq14g1p927k2i62hx26x1od13k0m10c80cg0mp14i1pc27n2i82hx26v1oc13l0m30ca' +
+  '0ci0mp14e1p727h2i32ht26u1oc13m0m70cf0cl0mq14d1p427f2i32hw26y1of13m0m60cc' +
+  '0ck0mq14e1p627g2i42hx26y1oe13n0m40cb0ck0mq14f1p727g2i02ht26u1od13n0m50cd' +
+  '0cm0mt14h1p927i2i12ht26u1od13o0m70cf0ck0mq14e1p527g2i12ht26v1of13p0m80cf' +
+  '0ck0mp14d1p427g2i32hw26w1oe13l0m50cd0cl0mr14g1p827j2i62hy26w1oc13l0m40cc' +
+  '0cm0ms14f1p627f2i02hu26v1oe13n0m60ce0cl0ms14e1p527e2i22hw26z1oi13p0m50ca' +
+  '0ch0mn14e1p727i2i62hy2701oi13q0m60ca0cg0mm14c1p527i2i32hv26w1og13p0m80ce' +
+  '0ck0mn14c1p427h2i42hx26y1og13q0m90cg0ck0mm1491p027c2i22hy2701oj13s0m90cf' +
+  '0ck0mn1491oz27a2i12hy2701oj13r0m70cc0cj0mo14d1p427e2i32hw2701oi13r0m80cd' +
+  '0cj0mo14c1p227c2hx2hs26w1oi13t0mc0cg0cl0mn1491p027a2hz2hv26y1oj13t0ma0ce' +
+  '0ci0mm1481p227f2i42hy2701oi13r0m80ce0cj0mn1491p127d2i12hv26x1og13p0m8'

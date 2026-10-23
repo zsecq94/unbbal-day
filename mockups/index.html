@@ -215,7 +215,35 @@
             <span class="demo">?demo=ko · long · en · endless · slow · input · &amp;analyzing · ?lang=en</span>
           </a>
         </li>
+        <li>
+          <a class="tile" href="./lotto-stars.html">
+            <span class="row"><span>06</span><span>확정 · 2026-10</span></span>
+            <h2>로또 번호 뽑기 · 밤하늘</h2>
+            <p>오늘의 운세 결과에서 넘어와, 45개 번호가 별인 밤하늘에서 내 사주 글자가 별을 건너 오늘의 별자리를 그립니다(상생 궤도). 앱에서는 내려앉은 별에 실제 로또 공 색을 입히고, 별이 공이 되어 아래 줄로 떨어지게 더했습니다.</p>
+            <span class="demo">?demo · ?demo=analyzing · ?demo=random · fortune-sentence.html?demo&amp;lotto=stars</span>
+          </a>
+        </li>
       </ul>
+      <section class="report" aria-label="로또 시안 공통">
+        <div>
+          <h3>로또 · 상생 궤도(번호를 고르는 계산)</h3>
+          <ol>
+            <li>1–45를 원 둘레에 놓고, 칸의 오행은 하도 끝자리로 정한다(1·6 수, 2·7 화, 3·8 목, 4·9 금, 5·0 토 · 오행마다 9칸).</li>
+            <li>출발점은 오늘 일진의 60갑자 순번을 45로 나눈 나머지 칸. 시주를 알면 시간·시지만큼 먼저 걸어 출발점을 옮긴다.</li>
+            <li>원국의 년·월·일 여섯 글자로 한 번씩 걷고, 걸을 때마다 공 하나를 놓는다. 걸음 수 = 글자 번호(천간 1–10, 지지 1–12) + 오늘 일진의 같은 쪽 글자 번호.</li>
+            <li>지금 칸과 글자의 오행이 상극이면 반시계, 상생이거나 같으면 시계 방향.</li>
+            <li>기신 칸이나 이미 뽑힌 칸이면 같은 방향으로 한 칸씩 더 간다.</li>
+          </ol>
+        </div>
+        <div>
+          <h3>시뮬레이션(무작위 원국 20만 개)</h3>
+          <ul>
+            <li>번호별 빈도: 평균의 0.96–1.03배. 서로 다른 조합 96.5%. 다음 날과 겹치는 번호 평균 1.05개, 완전히 같은 날 0.01%.</li>
+            <li>오늘 글자를 걸음 수에 더하지 않고 출발점만 바꾸면 다음 날과 똑같은 날이 4.9%라 버렸다(비켜 가기 때문에 궤적이 합쳐진다).</li>
+          </ul>
+          <p>사주 값은 <code>lib/saju</code>에서 타입만 지워 옮긴 <code>shared/saju/</code>(<code>node mockups/tools/build-saju.mjs</code>)로 계산해 앱과 같습니다. 로또 엔진은 <code>shared/lotto.js</code>, 공 색은 <code>?balls=lotto|element|mono</code> 또는 상단바의 스위치로 바꿔 봅니다.</p>
+        </div>
+      </section>
       <section class="report" aria-label="언어 전환 검증">
         <div>
           <h3>언어 전환 · 통과 기준</h3>

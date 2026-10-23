@@ -1,0 +1,100 @@
+/* ───────────────────────────────────────────────────────────────
+   운빨데이 · 로또 시안 공용: 공과 공 색
+   html[data-balls='lotto']   실제 로또 6/45 공 색(번호대별, 기본)
+   html[data-balls='element'] 오행 색(하도 끝자리)
+   html[data-balls='mono']    잉크 한 가지
+   ─────────────────────────────────────────────────────────────── */
+:root {
+  --ball-yellow: #f6c33b;
+  --ball-blue: #5fb4ef;
+  --ball-red: #ff6b6b;
+  --ball-gray: #a3a39d;
+  --ball-green: #8fcf4a;
+  --el-wood: #45c08a;
+  --el-fire: #ff5f57;
+  --el-earth: #d9a441;
+  --el-metal: #dcdcd6;
+  --el-water: #4f86ff;
+}
+
+.ball {
+  --ball: var(--ink);
+  --ball-ink: var(--canvas);
+  --size: 40px;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: var(--ball);
+  color: var(--ball-ink);
+  font: 600 calc(var(--size) * 0.4) / 1 var(--font-mono);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+/* 빈 공(아직 안 뽑힘) */
+.ball.empty {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink-3);
+}
+
+html[data-balls='lotto'] .ball[data-range='yellow'] { --ball: var(--ball-yellow); }
+html[data-balls='lotto'] .ball[data-range='blue'] { --ball: var(--ball-blue); }
+html[data-balls='lotto'] .ball[data-range='red'] { --ball: var(--ball-red); }
+html[data-balls='lotto'] .ball[data-range='gray'] { --ball: var(--ball-gray); }
+html[data-balls='lotto'] .ball[data-range='green'] { --ball: var(--ball-green); }
+
+html[data-balls='element'] .ball[data-el='wood'] { --ball: var(--el-wood); }
+html[data-balls='element'] .ball[data-el='fire'] { --ball: var(--el-fire); }
+html[data-balls='element'] .ball[data-el='earth'] { --ball: var(--el-earth); }
+html[data-balls='element'] .ball[data-el='metal'] { --ball: var(--el-metal); }
+html[data-balls='element'] .ball[data-el='water'] { --ball: var(--el-water); --ball-ink: #fff; }
+
+/* 오행 표시 점(공 색과 별개로 오행을 알릴 때) */
+.el-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+.el-dot[data-el='wood'] { background: var(--el-wood); }
+.el-dot[data-el='fire'] { background: var(--el-fire); }
+.el-dot[data-el='earth'] { background: var(--el-earth); }
+.el-dot[data-el='metal'] { background: var(--el-metal); }
+.el-dot[data-el='water'] { background: var(--el-water); }
+
+/* 공 색 비교 스위치(시안 전용, 상단바의 언어 칩 앞) */
+.ball-scheme {
+  margin-left: auto;
+  display: flex;
+  border: 1px solid var(--line-strong);
+  background: var(--canvas);
+  font: 500 10px var(--font-mono);
+  letter-spacing: 0.1em;
+}
+.ball-scheme button {
+  height: 24px;
+  padding: 0 8px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+.ball-scheme button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--canvas);
+}
+.ball-scheme + .locale {
+  margin-left: 0;
+}
+@media (max-width: 639px) {
+  .ball-scheme {
+    display: none;
+  }
+  .ball-scheme + .locale {
+    margin-left: auto;
+  }
+}

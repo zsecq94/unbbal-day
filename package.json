@@ -10,7 +10,8 @@
     "format": "prettier --write .",
     "check": "next typegen && tsc --noEmit && eslint && prettier --check .",
     "verify:saju": "node --no-warnings scripts/verify-saju.mjs",
-    "verify:match": "node --no-warnings scripts/verify-match.mjs"
+    "verify:match": "node --no-warnings scripts/verify-match.mjs",
+    "verify:lotto": "node --no-warnings scripts/verify-lotto.mjs"
   },
   "dependencies": {
     "korean-lunar-calendar": "^0.4.0",

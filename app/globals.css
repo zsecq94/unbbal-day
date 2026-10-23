@@ -14,6 +14,12 @@
   --color-brand-hi: #4f86ff;
   /* 입력이 계산할 수 없는 글자일 때의 밑줄과 안내 */
   --color-warn: #e0916f;
+  /* 로또 공: 실제 6/45 공의 번호대 색(1–10, 11–20, 21–30, 31–40, 41–45) */
+  --color-ball-yellow: #f6c33b;
+  --color-ball-blue: #5fb4ef;
+  --color-ball-red: #ff6b6b;
+  --color-ball-gray: #a3a39d;
+  --color-ball-green: #8fcf4a;
 
   --font-sans:
     'Wanted Sans Variable', 'Wanted Sans', -apple-system, BlinkMacSystemFont,
