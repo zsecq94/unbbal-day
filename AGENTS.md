@@ -58,7 +58,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - `lib/games.ts`에는 언어 무관 메타(`key`, `kind`, `motion`)만 둔다. 이름과 설명은 사전의 `games.<key>`에 둔다.
 - 게임을 추가할 때 손대는 곳은 `GameKey`와 `GAMES`, 두 사전의 `games.<key>`, `components/game-symbol.tsx`의 `SYMBOLS`, `components/game-hub.tsx`의 `PLACEMENT`다. 화면이 준비되면 `components/games/registry.ts`에 등록한다.
-- 허브 심볼은 48×48 그리드의 라인 아이콘이다. 채울 패스에는 `className="f"`를 붙인다.
+- 허브 심볼은 48×48 그리드의 라인 아이콘이다. 채울 패스에는 `className="f"`를 붙이고, 채움은 심볼마다 하나("결과"나 "고른 것")에만 쓴다. 스테이지 헤더에서 28px·선 2.4px로 그려지므로 선과 선 사이·빈 칸은 8칸 이상 띄운다. 새 심볼은 `mockups/icons-refined-line.html`에서 크기별로 비교해 본다.
 
 ## 오늘의 운세 계산
 

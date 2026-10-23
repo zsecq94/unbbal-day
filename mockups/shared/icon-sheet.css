@@ -1,0 +1,251 @@
+/* ───────────────────────────────────────────────────────────────
+   운빨데이 · 게임 아이콘 시안 비교 시트
+   심볼 규칙은 components/game-symbol.tsx와 같다: 48×48, 선은 px로 고정
+   (non-scaling-stroke), 네모 끝, .f는 채움.
+   ─────────────────────────────────────────────────────────────── */
+
+.icon-sheet {
+  display: grid;
+  /* 열이 줄바꿈 없는 헤더 칩 폭만큼 늘어나지 않게 */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 16px 16px 8px;
+}
+@media (min-width: 640px) {
+  .icon-sheet {
+    padding: 24px 24px 8px;
+  }
+}
+@media (min-width: 1280px) {
+  .icon-sheet {
+    padding: 40px 40px 8px;
+  }
+}
+
+.sym {
+  flex: none;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: square;
+}
+.sym * {
+  vector-effect: non-scaling-stroke;
+}
+.sym .f {
+  fill: currentColor;
+  stroke: none;
+}
+.s-152 {
+  width: 152px;
+  height: 152px;
+  stroke-width: 1.8;
+}
+.s-112 {
+  width: 112px;
+  height: 112px;
+  stroke-width: 1.4;
+}
+.s-64 {
+  width: 64px;
+  height: 64px;
+  stroke-width: 1.6;
+}
+.s-28 {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.4;
+}
+
+/* 머리말 */
+.is-head {
+  display: grid;
+  gap: 12px;
+  padding: 28px 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--tile);
+}
+@media (min-width: 640px) {
+  .is-head {
+    padding: 34px 40px 32px;
+  }
+}
+.is-eyebrow {
+  font: 500 12px var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+.is-head h1 {
+  font-size: clamp(28px, 3.2vw, 44px);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+.is-sum {
+  max-width: 68ch;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  word-break: keep-all;
+}
+.is-rules {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-3);
+  word-break: keep-all;
+}
+
+/* 표: 게임 · 이전 · 큰 타일 · 작은 타일(평소/강조) · 헤더 · 준비 중 */
+.is-legend,
+.is-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) 120px 184px 168px 190px 144px;
+  gap: 12px;
+  align-items: center;
+}
+.is-legend {
+  padding: 0 20px;
+  font: 500 11px var(--font-mono);
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+.is-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.is-row {
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--tile);
+}
+.is-name {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.is-name b {
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+.is-no {
+  font: 500 12px var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+.is-name p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  word-break: keep-all;
+}
+.is-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 160px;
+  color: var(--ink-3);
+}
+.is-now {
+  flex-direction: column;
+  gap: 14px;
+  opacity: 0.75;
+}
+.is-pair .lit {
+  color: var(--brand-hi);
+}
+/* 스테이지 헤더 한 줄을 흉내 낸다 */
+.is-hd {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--canvas);
+  color: var(--brand-hi);
+}
+.is-hd b {
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.is-now .is-hd b {
+  font-size: 13px;
+}
+.is-soon {
+  color: var(--ink-3);
+}
+
+/* 좁은 화면: 표를 카드로 접는다 */
+@media (max-width: 1099px) {
+  .is-legend {
+    display: none;
+  }
+  .is-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* 이름과 헤더 칩은 한 줄을 다 쓴다 */
+  .is-name,
+  .is-now,
+  .is-cell:has(> .is-hd) {
+    grid-column: 1 / -1;
+  }
+  .is-cell {
+    min-width: 0;
+  }
+  .is-cell {
+    min-height: 120px;
+  }
+  .s-152 {
+    width: 120px;
+    height: 120px;
+  }
+  .is-soon {
+    display: none;
+  }
+}
+
+/* 한 줄로 보기 */
+.is-strip {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--tile);
+  color: var(--ink-3);
+}
+.is-strip p {
+  font: 500 12px var(--font-mono);
+  letter-spacing: 0.12em;
+}
+.is-strip div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+.is-strip .tiny {
+  gap: 20px;
+  color: var(--brand-hi);
+}
+.is-hub-note {
+  padding: 4px 4px 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
