@@ -7,7 +7,7 @@
 ;(function () {
   const LEAF = 'M19 19H10A9 9 0 0 1 1 10A9 9 0 0 1 10 1A9 9 0 0 1 19 10Z'
   const FORTUNE_SYMBOL =
-    '<circle cx="24" cy="24" r="16"/><path d="M24 15.5 L26.2 21.8 L32.5 24 L26.2 26.2 L24 32.5 L21.8 26.2 L15.5 24 L21.8 21.8 Z"/>'
+    '<circle cx="24" cy="24" r="17"/><path d="M24 13 L26.6 21.4 L35 24 L26.6 26.6 L24 35 L21.4 26.6 L13 24 L21.4 21.4 Z"/>'
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const html = document.documentElement
@@ -37,15 +37,18 @@
         <button type="button" lang="en">en</button>
       </nav>`
     frame.insertBefore(top, stage)
+    /* 스테이지 헤더. 운세가 아닌 게임은 .stage의 data-index·data-title·data-kind와
+       window.STAGE_SYMBOL(48×48 심볼 마크업)로 바꾼다 */
+    const d = stage.dataset
     const head = document.createElement('header')
     head.className = 'stage-head'
     head.innerHTML = `
-      <span class="index" aria-hidden="true">01</span>
+      <span class="index" aria-hidden="true">${d.index || '01'}</span>
       <span class="title">
-        <svg class="symbol" viewBox="0 0 48 48" aria-hidden="true" style="stroke-width:2.4">${FORTUNE_SYMBOL}</svg>
-        <h1 id="game-title">오늘의 운세</h1>
+        <svg class="symbol" viewBox="0 0 48 48" aria-hidden="true" style="stroke-width:2.4">${window.STAGE_SYMBOL || FORTUNE_SYMBOL}</svg>
+        <h1 id="game-title">${d.title || '오늘의 운세'}</h1>
       </span>
-      <span class="kind">혼자</span>`
+      <span class="kind">${d.kind || '혼자'}</span>`
     stage.insertBefore(head, stage.firstChild)
   }
 

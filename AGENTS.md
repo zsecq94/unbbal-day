@@ -30,7 +30,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - 허브는 `/[lang]`, 게임은 `/[lang]/games/[game]`이다. 경로 문자열은 `lib/routes.ts`의 `hubPath()`, `gamePath()`로만 만든다.
 - `app/[lang]/games/[game]/page.tsx`는 `GAMES`로 `generateStaticParams`해 모든 게임·로케일을 정적 생성한다. 로케일 아래 어떤 라우트에도 안 걸리는 경로는 `app/[lang]/[...rest]/page.tsx`가 `notFound()`로 보내고 `app/[lang]/not-found.tsx`가 그린다. 모르는 게임 키는 `[game]` 라우트가 먼저 잡으므로 `proxy.ts`가 `/[lang]/404`로 리라이트한다(정적 셸이 먼저 스트리밍되면 200이 나가서 페이지 안의 `notFound()`만으로는 부족하다).
-- 게임 화면은 `components/games/registry.ts`의 `GAME_SCREENS`에 키로 등록한다. 등록이 없으면 `components/game-coming-soon.tsx`가 나온다. 스테이지는 `components/game-stage.tsx`, 허브 밖 페이지의 본문 틀과 상단바(홈 링크·로고·언어)는 `components/page-frame.tsx`, `components/top-bar.tsx`다.
+- 게임 화면은 `components/games/registry.ts`의 `GAME_SCREENS`에 키로 등록한다. 게임끼리 함께 쓰는 도구(`fill`, `useReducedMotion`)는 `components/games/shared.ts`에 있다. 등록이 없으면 `components/game-coming-soon.tsx`가 나온다. 스테이지는 `components/game-stage.tsx`, 허브 밖 페이지의 본문 틀과 상단바(홈 링크·로고·언어)는 `components/page-frame.tsx`, `components/top-bar.tsx`다.
 - 게임 페이지의 `title`은 게임 이름만 넣는다. 루트 레이아웃의 `title.template`이 브랜드명을 붙인다.
 - `partialPrefetching`이 켜져 있다. `params`는 페이지 최상위에서 `await`하지 않고 `<Suspense>` 안의 자식 컴포넌트에서 읽는다(`app/[lang]/games/[game]/page.tsx`의 `Stage`). URL에 안 묶이는 상단바는 바깥에 둔다. 게임으로 가는 링크는 `prefetch={true}`로 URL별 내용까지 미리 받아야 전환 모프가 성립한다.
 
@@ -72,9 +72,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 한국어 조사는 `components/games/fortune/shared.ts`의 `josa()`로 붙인다(은/는, 이/가, 을/를, 으로/로).
 - 운세 보기를 누르면 분석 화면(`components/games/fortune/fortune-analyzing.tsx`)이 실제 계산 단계와 그 값(원국, 오행, 용신, 일진, 시간대)을 차례로 보여 준 뒤 결과로 넘어간다. 보여 주는 값은 모두 `Fortune`에 담긴 실제 계산값이다.
 
+## 이름 궁합 계산
+
+- `lib/name-match/`에 있다. 두 이름이 모두 한글이면 획수 궁합(`strokes.ts`), 모두 로마자면 LOVES 놀이(`loves.ts`)다. 화면 언어가 아니라 입력한 글자로 고른다(`index.ts`의 `nameMatch`). 난수와 날짜를 쓰지 않는다.
+- 획수표는 이름 궁합 계산기·글 19곳의 글자별 다수결이다(꺾일 때마다 1획: ㄱ2 ㄴ2 ㄷ3 ㄹ5 ㅁ4 …). 쌍자음·겹받침·겹모음은 구성 자모 획수의 합으로 센다. 사람들이 손으로 하거나 다른 곳에서 해 본 결과와 맞추는 것이 기준이라 표를 함부로 바꾸지 않는다.
+- 획수 궁합은 성을 포함한 두 이름을 번갈아 놓고(길이가 다르면 남는 글자를 뒤에), 이웃한 두 수의 합의 일의 자리를 두 자리가 남을 때까지 줄인다. 1·0·0에서 멈추거나 00이 남으면 100점이다. 먼저 쓴 이름에 따라 결과가 달라지므로 두 방향을 모두 계산해 보여 준다.
+- LOVES는 두 이름 안의 L·O·V·E·S 개수를 같은 방식으로 줄이되, 합이 10 이상이면 두 자리로 쪼갠다. 순서와 무관하고 최대 99다. 끝나지 않는 쌍(순환하거나 계속 길어짐)은 `endless`로 알린다.
+- 계산을 바꾸면 `npm run verify:match`로 출처의 손 계산 예시·계산기 결과·논문 예시와 대조한다.
+- 이름은 브라우저 안에서만 계산하고 저장하거나 보내지 않는다. 오늘의 운세 계산에 이름을 섞지 않는다.
+- 화면은 `components/games/match/`에 있다. 입력은 빈칸 두 개짜리 문장(`match-screen.tsx`), 궁합 보기를 누르면 실제 피라미드를 한 줄씩 여는 계산 화면(`match-analyzing.tsx`), 두 방향 점수 카드·한 문단·근거 피라미드의 결과(`match-result.tsx`)다. 피라미드는 `pyramid.tsx`가 상자에 맞춰 칸 크기를 정하고, 긴 피라미드는 가운데 줄을 접는다. 확정 시안은 `mockups/name-match.html`이다.
+- 문구는 사전 `match`에 있다. 점수 구간 문구(`bands`)는 구간마다 여러 개이고 두 이름의 해시로 고른다. 조사(과/와)는 `andParticle()`로 붙인다.
+- 이름 입력칸은 리렌더해도 요소를 새로 만들지 않는다(한글 조합이 끊긴다). 조합 중(`compositionstart`~`compositionend`)에는 덜 된 글자로 오류를 띄우지 않고, 조합을 확정하는 Enter는 다음 칸 이동으로 처리하지 않는다.
+- 여러 사람을 한 번에 계산하는 모드는 설계만 하고 넣지 않았다(전통 규칙이 없다). 시안은 저장소 밖에 보관했다.
+
 ## 스타일
 
-- 디자인 토큰(색, 폰트, 반경, 이징)은 `app/globals.css`의 `@theme`에 정의되어 있다. 토큰이 있는 값은 토큰 클래스를 쓴다.
+- 디자인 토큰(색, 폰트, 반경, 이징)은 `app/globals.css`의 `@theme`에 정의되어 있다. 토큰이 있는 값은 토큰 클래스를 쓴다. 입력 오류의 밑줄과 안내는 `warn` 색이다.
 - 커스텀 variant `lit`, `group-lit`(호버 가능 기기의 hover + focus-visible)과 `fit`(허브가 한 화면에 들어가는 데스크톱)이 정의되어 있다.
 - 포커스 링은 `focus-visible:outline-2 focus-visible:outline-offset-* focus-visible:outline-ink` 패턴을 쓴다.
 

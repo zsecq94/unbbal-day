@@ -12,6 +12,8 @@
   --color-line-strong: rgb(255 255 255 / 0.14);
   --color-brand: #1f5bff;
   --color-brand-hi: #4f86ff;
+  /* 입력이 계산할 수 없는 글자일 때의 밑줄과 안내 */
+  --color-warn: #e0916f;
 
   --font-sans:
     'Wanted Sans Variable', 'Wanted Sans', -apple-system, BlinkMacSystemFont,

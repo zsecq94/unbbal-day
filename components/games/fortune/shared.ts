@@ -1,14 +1,12 @@
-import { useSyncExternalStore } from 'react'
 import type { Dictionary } from '@/app/[lang]/dictionaries'
+import { fill } from '@/components/games/shared'
 import type { Chart } from '@/lib/saju/chart'
 import type { Pillar, TenGod } from '@/lib/saju/ganji'
 import type { Reason } from '@/lib/saju/reading'
 
-type Copy = Dictionary['fortune']
+export { fill, useReducedMotion } from '@/components/games/shared'
 
-/** `{name}` 자리를 채운다. */
-export const fill = (template: string, vars: Record<string, string | number>) =>
-  template.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ''))
+type Copy = Dictionary['fortune']
 
 /** 하루 중 분을 `HH:MM`으로. */
 const clock = (minutes: number) => {
@@ -97,17 +95,3 @@ export function scramble(
   raf = requestAnimationFrame(step)
   return () => cancelAnimationFrame(raf)
 }
-
-const query = '(prefers-reduced-motion: reduce)'
-const subscribe = (cb: () => void) => {
-  const mq = matchMedia(query)
-  mq.addEventListener('change', cb)
-  return () => mq.removeEventListener('change', cb)
-}
-/** 동작 줄이기 설정. 서버와 첫 렌더에서는 꺼진 것으로 본다. */
-export const useReducedMotion = () =>
-  useSyncExternalStore(
-    subscribe,
-    () => matchMedia(query).matches,
-    () => false
-  )

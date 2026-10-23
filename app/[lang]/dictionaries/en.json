@@ -905,5 +905,105 @@
         ]
       ]
     }
+  },
+  "match": {
+    "method": {
+      "label": "Method",
+      "none": {
+        "name": "Picked from the names",
+        "how": "Latin letters play LOVES; Korean names use stroke counts"
+      },
+      "strokes": {
+        "name": "Stroke count",
+        "how": "Interleave the two names, add neighbouring stroke counts down to two digits"
+      },
+      "loves": {
+        "name": "The LOVES game",
+        "how": "Count L·O·V·E·S in both names, add neighbours down to two digits"
+      }
+    },
+    "rules": {
+      "button": "Rules",
+      "strokes": [
+        {
+          "b": "Stroke table"
+        },
+        " · the majority of 19 Korean name-match calculators. Double consonants count twice; clusters add up their parts."
+      ],
+      "loves": [
+        {
+          "b": "The LOVES game"
+        },
+        " · a playground classic. Count L, O, V, E and S in both names, then keep adding neighbours. A sum of 10 or more splits into two digits (12 → 1, 2)."
+      ],
+      "common": "The same two names always give the same result. No dates, no dice, and the names never leave this screen.",
+      "consonants": "Consonants",
+      "vowels": "Vowels",
+      "table": "Korean letter strokes"
+    },
+    "blanks": {
+      "a": "Your name",
+      "b": "Their name"
+    },
+    "sentence": "{a} {loves} {b}",
+    "and": ["", ""],
+    "andUnknown": "",
+    "preview": {
+      "label": "Preview",
+      "idle": "Type both names to see what gets counted."
+    },
+    "hint": {
+      "idle": "Full names work too. Spaces and hyphens are ignored.",
+      "strokes": "Who writes first changes the score, so we work out both ways.",
+      "loves": "Ready. LOVES counts both names together, so order does not matter.",
+      "mixed": "Use the same alphabet for both names.",
+      "unsupported": "Letters only, please.",
+      "long": "That name is a little too long."
+    },
+    "go": "Match",
+    "analyzing": {
+      "strokes": ["Interleave", "Count strokes", "Reduce", "Swap and repeat"],
+      "loves": ["Count L·O·V·E·S", "Reduce"],
+      "hint": "This is the real calculation, step by step.",
+      "skip": "Skip"
+    },
+    "first": "{name} first",
+    "unit": {
+      "strokes": "%",
+      "loves": "%"
+    },
+    "bands": [
+      ["Written in the stars.", "Made for each other."],
+      ["You finish each other’s sentences.", "On the same wavelength."],
+      ["Time flies when you’re together.", "Always good company."],
+      ["You bicker, then make up.", "A little push and pull."],
+      [
+        "More fun the better you know each other.",
+        "A slow-burn kind of match."
+      ],
+      ["Opposites attract.", "Different, and curious about it."]
+    ],
+    "answer": {
+      "strokes": "{a} and {b}: {band} {gap}",
+      "even": "Both ways score about the same.",
+      "lead": "Writing {lead} first scores {gap} higher.",
+      "loves": "{a} LOVES {b}: {band}",
+      "endless": "This is {band}. The numbers loop forever and never settle.",
+      "endlessBand": "endless love"
+    },
+    "pyramid": {
+      "strokes": "Stroke pyramid",
+      "loves": "LOVES pyramid",
+      "loop": "↺ back to row {n}",
+      "grow": "… and it keeps growing",
+      "skipped": "… {n} more rows …"
+    },
+    "note": {
+      "strokes": "Interleaved letters, stroke counts, then neighbours added keeping the last digit. 1·0·0 or 00 counts as 100.",
+      "loves": "Counts of L·O·V·E·S, then neighbours added. Sums of 10+ split into two digits (underlined).",
+      "endless": "Mathematicians studying this game call these pairs “endless love”."
+    },
+    "edit": "Edit names",
+    "again": "Try other names"
   }
 }
